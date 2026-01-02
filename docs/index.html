@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>GTD Voice Capture - Shreyas</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 15px;
+            padding-bottom: 80px;
+        }
+        .container { max-width: 800px; margin: 0 auto; }
+        
+        header { text-align: center; padding: 15px 0 20px; }
+        h1 { font-size: 1.8rem; margin-bottom: 5px; }
+        .subtitle { color: #a0a0a0; font-size: 0.9rem; }
+        
+        /* Stats */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 12px 8px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-number { font-size: 1.5rem; font-weight: bold; }
+        .stat-label { color: #a0a0a0; font-size: 0.7rem; }
+        .stat.critical .stat-number { color: #ff6b6b; }
+        .stat.high .stat-number { color: #ffa94d; }
+        
+        /* Voice Section */
+        .voice-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        #mic-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #ff6b6b, #ee5a5a);
+            color: white;
+            font-size: 2.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(255,107,107,0.3);
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mic-btn:active { transform: scale(0.95); }
+        #mic-btn.listening {
+            background: linear-gradient(145deg, #4ecdc4, #44b3ab);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(78,205,196,0.5); }
+            50% { box-shadow: 0 0 0 15px rgba(78,205,196,0); }
+        }
+        
+        #transcript {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            min-height: 50px;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+        #transcript.listening { border: 2px solid #4ecdc4; }
+        
+        /* Parsed Result */
+        .parsed-result {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(78,205,196,0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        .parsed-result.show { display: block; }
+        .parsed-tags { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+        .tag {
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .tag.category { background: #4a90a4; }
+        .tag.priority-critical { background: #ff6b6b; }
+        .tag.priority-high { background: #ffa94d; color: #000; }
+        .tag.priority-medium { background: #ffd93d; color: #000; }
+        .tag.priority-low { background: #6bcb77; color: #000; }
+        .tag.context { background: #9b59b6; }
+        .tag.project { background: #2c3e50; }
+        .tag.status { background: #4ecdc4; color: #000; }
+        
+        .action-buttons { display: flex; gap: 8px; justify-content: center; margin-top: 15px; }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .btn-primary { background: #4ecdc4; color: #000; font-weight: 600; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn:active { transform: scale(0.95); }
+        
+        /* Quick Add Form */
+        .quick-form { display: none; margin-top: 15px; text-align: left; }
+        .quick-form.show { display: block; }
+        .form-row { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 140px; }
+        .form-group label { display: block; margin-bottom: 4px; color: #a0a0a0; font-size: 0.8rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1rem;
+            -webkit-appearance: none;
+        }
+        .form-group textarea { min-height: 70px; resize: vertical; }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .tab {
+            padding: 8px 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 0.85rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .tab:active, .tab.active {
+            background: rgba(78,205,196,0.2);
+            border-color: #4ecdc4;
+        }
+        
+        /* Search */
+        .search-box {
+            position: relative;
+            margin-bottom: 15px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 12px 12px 40px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1rem;
+        }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        /* Items List */
+        .items-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 15px;
+        }
+        .items-list { max-height: 400px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+        .item-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-card.completed { opacity: 0.5; }
+        .item-card.completed .item-title { text-decoration: line-through; }
+        
+        .item-priority {
+            width: 6px;
+            height: 35px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+        .item-priority.critical { background: #ff6b6b; }
+        .item-priority.high { background: #ffa94d; }
+        .item-priority.medium { background: #ffd93d; }
+        .item-priority.low { background: #6bcb77; }
+        
+        .item-content { flex: 1; min-width: 0; }
+        .item-title { font-weight: 500; margin-bottom: 3px; font-size: 0.95rem; }
+        .item-meta { font-size: 0.75rem; color: #a0a0a0; display: flex; gap: 8px; flex-wrap: wrap; }
+        
+        .item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+        .item-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .item-btn.complete { background: #6bcb77; }
+        .item-btn.delete { background: #ff6b6b; }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #4ecdc4;
+            color: #000;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        
+        /* Bottom Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
+        }
+        .nav-btn {
+            background: none;
+            border: none;
+            color: #a0a0a0;
+            font-size: 0.7rem;
+            text-align: center;
+            cursor: pointer;
+            padding: 5px 15px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-btn.active { color: #4ecdc4; }
+        .nav-btn span { display: block; font-size: 1.3rem; margin-bottom: 2px; }
+        
+        /* Views */
+        .view { display: none; }
+        .view.active { display: block; }
+        
+        /* Export Section */
+        .export-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .export-section h3 { margin-bottom: 15px; }
+        .export-btn {
+            width: 100%;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            border-radius: 10px;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .export-btn:active { background: rgba(255,255,255,0.15); }
+        .export-btn span { font-size: 1.5rem; }
+        
+        .danger-zone {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,0,0,0.3);
+        }
+        .danger-zone h4 { color: #ff6b6b; margin-bottom: 10px; }
+        .btn-danger {
+            background: rgba(255,107,107,0.2);
+            border: 1px solid #ff6b6b;
+            color: #ff6b6b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 GTD Voice Capture</h1>
+            <p class="subtitle">Speak your mind, capture everything</p>
+        </header>
+        
+        <!-- Capture View -->
+        <div class="view active" id="view-capture">
+            <div class="stats-bar">
+                <div class="stat"><div class="stat-number" id="stat-total">-</div><div class="stat-label">Total</div></div>
+                <div class="stat critical"><div class="stat-number" id="stat-critical">-</div><div class="stat-label">Critical</div></div>
+                <div class="stat high"><div class="stat-number" id="stat-high">-</div><div class="stat-label">High</div></div>
+                <div class="stat"><div class="stat-number" id="stat-actions">-</div><div class="stat-label">Actions</div></div>
+            </div>
+            
+            <div class="voice-section">
+                <button id="mic-btn">🎤</button>
+                <div id="transcript">Tap the microphone and speak...</div>
+                
+                <div class="parsed-result" id="parsed-result">
+                    <strong>📝 Parsed:</strong>
+                    <div class="parsed-tags" id="parsed-tags"></div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="add-btn">✓ Add</button>
+                        <button class="btn btn-secondary" id="edit-btn">✎ Edit</button>
+                        <button class="btn btn-secondary" id="cancel-btn">✗</button>
+                    </div>
+                </div>
+                
+                <div class="quick-form" id="quick-form">
+                    <div class="form-row">
+                        <div class="form-group" style="flex: 2;">
+                            <label>Item</label>
+                            <input type="text" id="form-item" placeholder="What needs to be done?">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Category</label>
+                            <select id="form-category">
+                                <option value="Personal">Personal</option>
+                                <option value="Professional">Professional</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Priority</label>
+                            <select id="form-priority">
+                                <option value="Critical">🔴 Critical</option>
+                                <option value="High">🟠 High</option>
+                                <option value="Medium" selected>🟡 Medium</option>
+                                <option value="Low">🟢 Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Context</label>
+                            <select id="form-context">
+                                <option value="@Anywhere">@Anywhere</option>
+                                <option value="@Computer">@Computer</option>
+                                <option value="@Phone">@Phone</option>
+                                <option value="@Office">@Office</option>
+                                <option value="@Home">@Home</option>
+                                <option value="@Errands">@Errands</option>
+                                <option value="@Thinking">@Thinking</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="form-status">
+                                <option value="Next Action">Next Action</option>
+                                <option value="Project">Project</option>
+                                <option value="Waiting For">Waiting For</option>
+                                <option value="Someday/Maybe">Someday/Maybe</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Project/Area</label>
+                            <input type="text" id="form-project" placeholder="e.g., World Bank">
+                        </div>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="save-btn">✓ Save</button>
+                        <button class="btn btn-secondary" id="cancel-form-btn">✗ Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- List View -->
+        <div class="view" id="view-list">
+            <div class="items-section">
+                <div class="tabs">
+                    <button class="tab active" data-filter="all">All</button>
+                    <button class="tab" data-filter="Next Action">Actions</button>
+                    <button class="tab" data-filter="Project">Projects</button>
+                    <button class="tab" data-filter="Waiting For">Waiting</button>
+                    <button class="tab" data-filter="Professional">Work</button>
+                    <button class="tab" data-filter="Personal">Personal</button>
+                    <button class="tab" data-filter="Critical">🔴</button>
+                    <button class="tab" data-filter="High">🟠</button>
+                </div>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search items...">
+                </div>
+                <div class="items-list" id="items-list"></div>
+            </div>
+        </div>
+        
+        <!-- Settings View -->
+        <div class="view" id="view-settings">
+            <div class="export-section">
+                <h3>📤 Export & Backup</h3>
+                <button class="export-btn" id="export-json">
+                    <span>💾</span>
+                    <div><strong>Download JSON</strong><br><small>Backup all your data</small></div>
+                </button>
+                <button class="export-btn" id="export-csv">
+                    <span>📊</span>
+                    <div><strong>Download CSV</strong><br><small>Open in Excel/Sheets</small></div>
+                </button>
+                <button class="export-btn" id="import-json">
+                    <span>📥</span>
+                    <div><strong>Import JSON</strong><br><small>Restore from backup</small></div>
+                </button>
+                <input type="file" id="import-file" accept=".json" style="display:none">
+                
+                <div class="danger-zone">
+                    <h4>⚠️ Danger Zone</h4>
+                    <button class="btn btn-danger" id="clear-completed">Clear Completed Items</button>
+                    <button class="btn btn-danger" id="clear-all" style="margin-top:10px">Reset All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <nav class="bottom-nav">
+        <button class="nav-btn active" data-view="capture"><span>🎤</span>Capture</button>
+        <button class="nav-btn" data-view="list"><span>📋</span>Items</button>
+        <button class="nav-btn" data-view="settings"><span>⚙️</span>Settings</button>
+    </nav>
+    
+    <script>
+        // Data Management
+        const STORAGE_KEY = 'gtd_items';
+        let items = [];
+        let currentParsed = null;
+        let currentFilter = 'all';
+        
+        function loadItems() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                items = JSON.parse(stored);
+            } else {
+                items = getInitialItems();
+                saveItems();
+            }
+            renderItems();
+            updateStats();
+        }
+        
+        function saveItems() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+        }
+        
+        function getInitialItems() {
+            // Start with empty or sample items
+            return [
+                {item: "Welcome to GTD Voice Capture!", category: "Personal", project: "Getting Started", context: "@Anywhere", priority: "High", status: "Next Action", next_action: "Tap the mic and add your first item", notes: ""},
+            ];
+        }
+        
+        // Voice Recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onresult = (event) => {
+                const transcript = Array.from(event.results)
+                    .map(result => result[0].transcript)
+                    .join('');
+                document.getElementById('transcript').textContent = transcript;
+                
+                if (event.results[0].isFinal) {
+                    currentParsed = parseVoiceInput(transcript);
+                    showParsedResult(currentParsed);
+                }
+            };
+            
+            recognition.onend = () => {
+                document.getElementById('mic-btn').classList.remove('listening');
+                document.getElementById('transcript').classList.remove('listening');
+            };
+            
+            recognition.onerror = (event) => {
+                showToast('Error: ' + event.error);
+                document.getElementById('mic-btn').classList.remove('listening');
+            };
+        }
+        
+        function parseVoiceInput(text) {
+            const textLower = text.toLowerCase();
+            const result = {
+                item: text,
+                category: 'Personal',
+                project: '',
+                context: '@Anywhere',
+                priority: 'Medium',
+                status: 'Next Action',
+                next_action: text,
+                notes: `Added ${new Date().toLocaleDateString()}`
+            };
+            
+            // Category
+            if (/work|professional|office|upside|client|meeting/.test(textLower)) {
+                result.category = 'Professional';
+            }
+            
+            // Priority
+            if (/critical|urgent|asap|emergency/.test(textLower)) result.priority = 'Critical';
+            else if (/high priority|important|high/.test(textLower)) result.priority = 'High';
+            else if (/low priority|someday|eventually|low/.test(textLower)) result.priority = 'Low';
+            
+            // Context
+            const contexts = {
+                '@Computer': /computer|laptop|online|email|digital/,
+                '@Phone': /call|phone|ring|text/,
+                '@Office': /office|meeting|upside/,
+                '@Home': /home|house/,
+                '@Errands': /buy|shop|pick up|store|errand/,
+                '@Thinking': /think|decide|plan|strategy|consider/,
+            };
+            for (const [ctx, regex] of Object.entries(contexts)) {
+                if (regex.test(textLower)) { result.context = ctx; break; }
+            }
+            
+            // Projects
+            const projects = {
+                'World Bank Group': /world bank|wb|skills framework/,
+                'HPE': /hpe|clearbook|hewlett/,
+                'CAA': /caa|cybersecurity|axiom/,
+                'Riyadh Air': /riyadh|safety sense/,
+                'AstraZeneca': /astrazeneca|az/,
+                'BAT': /bat|british american/,
+                'Business Planning': /business plan|startup|new business/,
+                'Family': /ananya|daughter|mmd|wife|parents/,
+                'Health': /health|doctor|gym|exercise|diet/,
+                'AI Skills': /ai|artificial intelligence|prompt|claude/,
+            };
+            for (const [proj, regex] of Object.entries(projects)) {
+                if (regex.test(textLower)) {
+                    result.project = proj;
+                    if (['World Bank Group','HPE','CAA','Riyadh Air','AstraZeneca','BAT'].includes(proj)) {
+                        result.category = 'Professional';
+                    }
+                    break;
+                }
+            }
+            
+            // Status
+            if (/waiting for|waiting on/.test(textLower)) result.status = 'Waiting For';
+            else if (/someday|maybe|later/.test(textLower)) result.status = 'Someday/Maybe';
+            else if (/project/.test(textLower)) result.status = 'Project';
+            
+            return result;
+        }
+        
+        // UI Functions
+        function showParsedResult(parsed) {
+            document.getElementById('parsed-tags').innerHTML = `
+                <span class="tag category">${parsed.category}</span>
+                <span class="tag priority-${parsed.priority.toLowerCase()}">${parsed.priority}</span>
+                <span class="tag status">${parsed.status}</span>
+                <span class="tag context">${parsed.context}</span>
+                ${parsed.project ? `<span class="tag project">${parsed.project}</span>` : ''}
+            `;
+            document.getElementById('parsed-result').classList.add('show');
+        }
+        
+        function showEditForm(parsed) {
+            document.getElementById('parsed-result').classList.remove('show');
+            document.getElementById('quick-form').classList.add('show');
+            document.getElementById('form-item').value = parsed.item;
+            document.getElementById('form-category').value = parsed.category;
+            document.getElementById('form-priority').value = parsed.priority;
+            document.getElementById('form-status').value = parsed.status;
+            document.getElementById('form-context').value = parsed.context;
+            document.getElementById('form-project').value = parsed.project || '';
+        }
+        
+        function addItem(data) {
+            items.unshift(data);
+            saveItems();
+            renderItems();
+            updateStats();
+            showToast('✓ Item added!');
+            resetCapture();
+        }
+        
+        function completeItem(index) {
+            items[index].status = 'Completed';
+            saveItems();
+            renderItems();
+            updateStats();
+            showToast('✓ Completed!');
+        }
+        
+        function deleteItem(index) {
+            if (confirm('Delete this item?')) {
+                items.splice(index, 1);
+                saveItems();
+                renderItems();
+                updateStats();
+                showToast('Deleted');
+            }
+        }
+        
+        function renderItems(searchQuery = '') {
+            const container = document.getElementById('items-list');
+            const query = searchQuery.toLowerCase();
+            
+            let filtered = items.filter(item => {
+                if (currentFilter !== 'all') {
+                    if (['Professional', 'Personal'].includes(currentFilter)) {
+                        if (item.category !== currentFilter) return false;
+                    } else if (['Critical', 'High', 'Medium', 'Low'].includes(currentFilter)) {
+                        if (item.priority !== currentFilter) return false;
+                    } else {
+                        if (item.status !== currentFilter) return false;
+                    }
+                }
+                if (query) {
+                    return (item.item || '').toLowerCase().includes(query) || 
+                           (item.project || '').toLowerCase().includes(query);
+                }
+                return true;
+            });
+            
+            const priorityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+            filtered.sort((a, b) => (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4));
+            
+            container.innerHTML = filtered.length === 0 
+                ? '<p style="text-align:center;color:#a0a0a0;padding:20px;">No items found</p>'
+                : filtered.slice(0, 100).map((item, i) => {
+                    const realIndex = items.indexOf(item);
+                    const isCompleted = item.status === 'Completed';
+                    return `
+                        <div class="item-card ${isCompleted ? 'completed' : ''}">
+                            <div class="item-priority ${(item.priority || 'medium').toLowerCase()}"></div>
+                            <div class="item-content">
+                                <div class="item-title">${item.item || 'Untitled'}</div>
+                                <div class="item-meta">
+                                    <span>${item.project || '-'}</span>
+                                    <span>${item.context || '@Anywhere'}</span>
+                                </div>
+                            </div>
+                            <div class="item-actions">
+                                <button class="item-btn complete" onclick="completeItem(${realIndex})">✓</button>
+                                <button class="item-btn delete" onclick="deleteItem(${realIndex})">×</button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+        }
+        
+        function updateStats() {
+            document.getElementById('stat-total').textContent = items.length;
+            document.getElementById('stat-critical').textContent = items.filter(i => i.priority === 'Critical').length;
+            document.getElementById('stat-high').textContent = items.filter(i => i.priority === 'High').length;
+            document.getElementById('stat-actions').textContent = items.filter(i => i.status === 'Next Action').length;
+        }
+        
+        function resetCapture() {
+            document.getElementById('parsed-result').classList.remove('show');
+            document.getElementById('quick-form').classList.remove('show');
+            document.getElementById('transcript').textContent = 'Tap the microphone and speak...';
+            currentParsed = null;
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+        
+        function switchView(viewName) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`view-${viewName}`).classList.add('active');
+            document.querySelector(`[data-view="${viewName}"]`).classList.add('active');
+        }
+        
+        // Export Functions
+        function exportJSON() {
+            const data = JSON.stringify(items, null, 2);
+            downloadFile(data, 'gtd-backup.json', 'application/json');
+        }
+        
+        function exportCSV() {
+            const headers = ['Item', 'Category', 'Project', 'Context', 'Priority', 'Status', 'Notes'];
+            const rows = items.map(i => [
+                `"${(i.item || '').replace(/"/g, '""')}"`,
+                i.category || '',
+                i.project || '',
+                i.context || '',
+                i.priority || '',
+                i.status || '',
+                `"${(i.notes || '').replace(/"/g, '""')}"`
+            ].join(','));
+            const csv = [headers.join(','), ...rows].join('\n');
+            downloadFile(csv, 'gtd-export.csv', 'text/csv');
+        }
+        
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Downloaded!');
+        }
+        
+        function importJSON(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        items = imported;
+                        saveItems();
+                        renderItems();
+                        updateStats();
+                        showToast(`Imported ${imported.length} items!`);
+                    }
+                } catch (err) {
+                    showToast('Invalid file');
+                }
+            };
+            reader.readAsText(file);
+        }
+        
+        // Event Listeners
+        document.getElementById('mic-btn').addEventListener('click', () => {
+            if (!recognition) {
+                showToast('Speech not supported');
+                return;
+            }
+            const btn = document.getElementById('mic-btn');
+            if (btn.classList.contains('listening')) {
+                recognition.stop();
+            } else {
+                btn.classList.add('listening');
+                document.getElementById('transcript').classList.add('listening');
+                document.getElementById('transcript').textContent = 'Listening...';
+                recognition.start();
+            }
+        });
+        
+        document.getElementById('add-btn').addEventListener('click', () => {
+            if (currentParsed) addItem(currentParsed);
+        });
+        
+        document.getElementById('edit-btn').addEventListener('click', () => {
+            if (currentParsed) showEditForm(currentParsed);
+        });
+        
+        document.getElementById('cancel-btn').addEventListener('click', resetCapture);
+        document.getElementById('cancel-form-btn').addEventListener('click', resetCapture);
+        
+        document.getElementById('save-btn').addEventListener('click', () => {
+            addItem({
+                item: document.getElementById('form-item').value,
+                category: document.getElementById('form-category').value,
+                priority: document.getElementById('form-priority').value,
+                status: document.getElementById('form-status').value,
+                context: document.getElementById('form-context').value,
+                project: document.getElementById('form-project').value,
+                next_action: document.getElementById('form-item').value,
+                notes: `Added ${new Date().toLocaleDateString()}`
+            });
+        });
+        
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentFilter = tab.dataset.filter;
+                renderItems(document.getElementById('search-input').value);
+            });
+        });
+        
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            renderItems(e.target.value);
+        });
+        
+        document.querySelectorAll('.nav-btn').forEach(btn => {
+            btn.addEventListener('click', () => switchView(btn.dataset.view));
+        });
+        
+        document.getElementById('export-json').addEventListener('click', exportJSON);
+        document.getElementById('export-csv').addEventListener('click', exportCSV);
+        document.getElementById('import-json').addEventListener('click', () => {
+            document.getElementById('import-file').click();
+        });
+        document.getElementById('import-file').addEventListener('change', (e) => {
+            if (e.target.files[0]) importJSON(e.target.files[0]);
+        });
+        
+        document.getElementById('clear-completed').addEventListener('click', () => {
+            if (confirm('Remove all completed items?')) {
+                items = items.filter(i => i.status !== 'Completed');
+                saveItems();
+                renderItems();
+                updateStats();
+                showToast('Cleared completed');
+            }
+        });
+        
+        document.getElementById('clear-all').addEventListener('click', () => {
+            if (confirm('Delete ALL data? This cannot be undone!')) {
+                items = [];
+                saveItems();
+                renderItems();
+                updateStats();
+                showToast('All data cleared');
+            }
+        });
+        
+        // Initialize
+        loadItems();
+    </script>
+</body>
+</html>
