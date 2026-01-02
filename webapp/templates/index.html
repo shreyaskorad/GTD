@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTD Voice Capture - Shreyas</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Aptos', 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        header {
+            text-align: center;
+            padding: 20px 0 30px;
+        }
+        h1 { font-size: 2.5rem; margin-bottom: 5px; }
+        .subtitle { color: #a0a0a0; font-size: 1rem; }
+        
+        /* Voice Section */
+        .voice-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        #mic-btn {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(145deg, #ff6b6b, #ee5a5a);
+            color: white;
+            font-size: 3rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(255,107,107,0.3);
+        }
+        #mic-btn:hover { transform: scale(1.05); }
+        #mic-btn.listening {
+            background: linear-gradient(145deg, #4ecdc4, #44b3ab);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(78,205,196,0.5); }
+            50% { box-shadow: 0 0 0 20px rgba(78,205,196,0); }
+        }
+        
+        #transcript {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            min-height: 60px;
+            font-size: 1.2rem;
+        }
+        #transcript.listening { border: 2px solid #4ecdc4; }
+        
+        /* Parsed Result */
+        .parsed-result {
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(78,205,196,0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        .parsed-result.show { display: block; }
+        .parsed-tags { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+        .tag {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        .tag.category { background: #4a90a4; }
+        .tag.priority-critical { background: #ff6b6b; }
+        .tag.priority-high { background: #ffa94d; color: #000; }
+        .tag.priority-medium { background: #ffd93d; color: #000; }
+        .tag.priority-low { background: #6bcb77; color: #000; }
+        .tag.context { background: #9b59b6; }
+        .tag.project { background: #2c3e50; }
+        .tag.status { background: #4ecdc4; color: #000; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #4ecdc4; color: #000; }
+        .btn-secondary { background: rgba(255,255,255,0.1); color: #fff; }
+        .btn:hover { transform: translateY(-2px); }
+        
+        /* Quick Add Form */
+        .quick-form {
+            display: none;
+            margin-top: 20px;
+            text-align: left;
+        }
+        .quick-form.show { display: block; }
+        .form-row { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; }
+        .form-group { flex: 1; min-width: 200px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #a0a0a0; font-size: 0.9rem; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1rem;
+        }
+        .form-group textarea { min-height: 80px; resize: vertical; }
+        
+        /* Stats */
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-number { font-size: 2rem; font-weight: bold; }
+        .stat-label { color: #a0a0a0; font-size: 0.85rem; }
+        .stat.critical .stat-number { color: #ff6b6b; }
+        .stat.high .stat-number { color: #ffa94d; }
+        
+        /* Items List */
+        .items-section {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 20px;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 20px;
+            background: transparent;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            background: rgba(255,255,255,0.1);
+            border-color: #4ecdc4;
+        }
+        
+        .items-list { max-height: 500px; overflow-y: auto; }
+        .item-card {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.2s;
+        }
+        .item-card:hover { background: rgba(0,0,0,0.3); }
+        .item-card.completed { opacity: 0.5; text-decoration: line-through; }
+        
+        .item-priority {
+            width: 8px;
+            height: 40px;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .item-priority.critical { background: #ff6b6b; }
+        .item-priority.high { background: #ffa94d; }
+        .item-priority.medium { background: #ffd93d; }
+        .item-priority.low { background: #6bcb77; }
+        
+        .item-content { flex: 1; }
+        .item-title { font-weight: 500; margin-bottom: 5px; }
+        .item-meta { font-size: 0.85rem; color: #a0a0a0; }
+        .item-meta span { margin-right: 15px; }
+        
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .item-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .item-btn.complete { background: #6bcb77; }
+        .item-btn.delete { background: #ff6b6b; }
+        .item-btn:hover { transform: scale(1.1); }
+        
+        /* Search */
+        .search-box {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 1rem;
+        }
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #4ecdc4;
+            color: #000;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-weight: 500;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+        .toast.show { transform: translateX(0); }
+        
+        /* Mobile */
+        @media (max-width: 768px) {
+            h1 { font-size: 1.8rem; }
+            .stats-bar { gap: 10px; }
+            .stat { padding: 10px 15px; }
+            .stat-number { font-size: 1.5rem; }
+            .filters { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎯 GTD Voice Capture</h1>
+            <p class="subtitle">Speak your mind, capture everything</p>
+        </header>
+        
+        <div class="stats-bar" id="stats-bar">
+            <div class="stat"><div class="stat-number" id="stat-total">-</div><div class="stat-label">Total Items</div></div>
+            <div class="stat critical"><div class="stat-number" id="stat-critical">-</div><div class="stat-label">Critical</div></div>
+            <div class="stat high"><div class="stat-number" id="stat-high">-</div><div class="stat-label">High Priority</div></div>
+            <div class="stat"><div class="stat-number" id="stat-actions">-</div><div class="stat-label">Next Actions</div></div>
+        </div>
+        
+        <div class="voice-section">
+            <button id="mic-btn">🎤</button>
+            <div id="transcript">Tap the microphone and speak...</div>
+            
+            <div class="parsed-result" id="parsed-result">
+                <h3>📝 Parsed Item:</h3>
+                <div class="parsed-tags" id="parsed-tags"></div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="add-btn">✓ Add Item</button>
+                    <button class="btn btn-secondary" id="edit-btn">✎ Edit First</button>
+                    <button class="btn btn-secondary" id="cancel-btn">✗ Cancel</button>
+                </div>
+            </div>
+            
+            <div class="quick-form" id="quick-form">
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Item</label>
+                        <input type="text" id="form-item" placeholder="What needs to be done?">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="form-category">
+                            <option value="Personal">Personal</option>
+                            <option value="Professional">Professional</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="form-priority">
+                            <option value="Critical">🔴 Critical</option>
+                            <option value="High">🟠 High</option>
+                            <option value="Medium" selected>🟡 Medium</option>
+                            <option value="Low">🟢 Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Status</label>
+                        <select id="form-status">
+                            <option value="Next Action">Next Action</option>
+                            <option value="Project">Project</option>
+                            <option value="Waiting For">Waiting For</option>
+                            <option value="Someday/Maybe">Someday/Maybe</option>
+                            <option value="Recurring - Daily">Recurring - Daily</option>
+                            <option value="Recurring - Weekly">Recurring - Weekly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Context</label>
+                        <select id="form-context">
+                            <option value="@Anywhere">@Anywhere</option>
+                            <option value="@Computer">@Computer</option>
+                            <option value="@Phone">@Phone</option>
+                            <option value="@Office">@Office</option>
+                            <option value="@Home">@Home</option>
+                            <option value="@Errands">@Errands</option>
+                            <option value="@Thinking">@Thinking</option>
+                            <option value="@Reading">@Reading</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Project/Area</label>
+                        <input type="text" id="form-project" placeholder="e.g., World Bank Group">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Next Action</label>
+                        <textarea id="form-next-action" placeholder="What's the next physical action?"></textarea>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="save-btn">✓ Save Item</button>
+                    <button class="btn btn-secondary" id="cancel-form-btn">✗ Cancel</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="items-section">
+            <div class="section-header">
+                <h2>📋 Your Items</h2>
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="Next Action">Actions</button>
+                    <button class="filter-btn" data-filter="Project">Projects</button>
+                    <button class="filter-btn" data-filter="Waiting For">Waiting</button>
+                    <button class="filter-btn" data-filter="Professional">Work</button>
+                    <button class="filter-btn" data-filter="Personal">Personal</button>
+                </div>
+            </div>
+            
+            <div class="search-box">
+                <input type="text" id="search-input" placeholder="Search items...">
+            </div>
+            
+            <div class="items-list" id="items-list"></div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast"></div>
+    
+    <script>
+        const API_URL = '';
+        let items = [];
+        let currentParsed = null;
+        let currentFilter = 'all';
+        
+        // Speech Recognition
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+        
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+            
+            recognition.onresult = (event) => {
+                const transcript = Array.from(event.results)
+                    .map(result => result[0].transcript)
+                    .join('');
+                document.getElementById('transcript').textContent = transcript;
+                
+                if (event.results[0].isFinal) {
+                    parseVoiceInput(transcript);
+                }
+            };
+            
+            recognition.onend = () => {
+                document.getElementById('mic-btn').classList.remove('listening');
+                document.getElementById('transcript').classList.remove('listening');
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                showToast('Speech recognition error: ' + event.error);
+            };
+        }
+        
+        // Event Listeners
+        document.getElementById('mic-btn').addEventListener('click', () => {
+            if (!recognition) {
+                showToast('Speech recognition not supported in this browser');
+                return;
+            }
+            
+            const btn = document.getElementById('mic-btn');
+            if (btn.classList.contains('listening')) {
+                recognition.stop();
+            } else {
+                btn.classList.add('listening');
+                document.getElementById('transcript').classList.add('listening');
+                document.getElementById('transcript').textContent = 'Listening...';
+                recognition.start();
+            }
+        });
+        
+        document.getElementById('add-btn').addEventListener('click', () => {
+            if (currentParsed) {
+                addItem(currentParsed);
+            }
+        });
+        
+        document.getElementById('edit-btn').addEventListener('click', () => {
+            if (currentParsed) {
+                showEditForm(currentParsed);
+            }
+        });
+        
+        document.getElementById('cancel-btn').addEventListener('click', () => {
+            document.getElementById('parsed-result').classList.remove('show');
+            currentParsed = null;
+        });
+        
+        document.getElementById('save-btn').addEventListener('click', saveFormItem);
+        document.getElementById('cancel-form-btn').addEventListener('click', () => {
+            document.getElementById('quick-form').classList.remove('show');
+        });
+        
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                renderItems();
+            });
+        });
+        
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            renderItems(e.target.value);
+        });
+        
+        // API Functions
+        async function loadItems() {
+            try {
+                const res = await fetch(`${API_URL}/api/items`);
+                items = await res.json();
+                renderItems();
+                updateStats();
+            } catch (err) {
+                console.error('Error loading items:', err);
+            }
+        }
+        
+        async function parseVoiceInput(text) {
+            try {
+                const res = await fetch(`${API_URL}/api/parse`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text })
+                });
+                currentParsed = await res.json();
+                showParsedResult(currentParsed);
+            } catch (err) {
+                console.error('Error parsing:', err);
+            }
+        }
+        
+        async function addItem(data) {
+            try {
+                const res = await fetch(`${API_URL}/api/items`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('✓ Item added!');
+                    document.getElementById('parsed-result').classList.remove('show');
+                    document.getElementById('transcript').textContent = 'Tap the microphone and speak...';
+                    currentParsed = null;
+                    loadItems();
+                }
+            } catch (err) {
+                console.error('Error adding item:', err);
+            }
+        }
+        
+        async function completeItem(index) {
+            try {
+                await fetch(`${API_URL}/api/items/${index}/complete`, { method: 'POST' });
+                showToast('✓ Item completed!');
+                loadItems();
+            } catch (err) {
+                console.error('Error completing item:', err);
+            }
+        }
+        
+        async function deleteItem(index) {
+            if (!confirm('Delete this item?')) return;
+            try {
+                await fetch(`${API_URL}/api/items/${index}`, { method: 'DELETE' });
+                showToast('Item deleted');
+                loadItems();
+            } catch (err) {
+                console.error('Error deleting item:', err);
+            }
+        }
+        
+        // UI Functions
+        function showParsedResult(parsed) {
+            const container = document.getElementById('parsed-result');
+            const tags = document.getElementById('parsed-tags');
+            
+            tags.innerHTML = `
+                <span class="tag category">${parsed.category}</span>
+                <span class="tag priority-${parsed.priority.toLowerCase()}">${parsed.priority}</span>
+                <span class="tag status">${parsed.status}</span>
+                <span class="tag context">${parsed.context}</span>
+                ${parsed.project ? `<span class="tag project">${parsed.project}</span>` : ''}
+            `;
+            
+            container.classList.add('show');
+        }
+        
+        function showEditForm(parsed) {
+            document.getElementById('parsed-result').classList.remove('show');
+            document.getElementById('quick-form').classList.add('show');
+            
+            document.getElementById('form-item').value = parsed.item;
+            document.getElementById('form-category').value = parsed.category;
+            document.getElementById('form-priority').value = parsed.priority;
+            document.getElementById('form-status').value = parsed.status;
+            document.getElementById('form-context').value = parsed.context;
+            document.getElementById('form-project').value = parsed.project || '';
+            document.getElementById('form-next-action').value = parsed.next_action || parsed.item;
+        }
+        
+        function saveFormItem() {
+            const data = {
+                item: document.getElementById('form-item').value,
+                category: document.getElementById('form-category').value,
+                priority: document.getElementById('form-priority').value,
+                status: document.getElementById('form-status').value,
+                context: document.getElementById('form-context').value,
+                project: document.getElementById('form-project').value,
+                next_action: document.getElementById('form-next-action').value
+            };
+            
+            addItem(data);
+            document.getElementById('quick-form').classList.remove('show');
+        }
+        
+        function renderItems(searchQuery = '') {
+            const container = document.getElementById('items-list');
+            const query = searchQuery.toLowerCase();
+            
+            let filtered = items.filter(item => {
+                if (currentFilter !== 'all') {
+                    if (['Professional', 'Personal'].includes(currentFilter)) {
+                        if (item.category !== currentFilter) return false;
+                    } else {
+                        if (item.status !== currentFilter) return false;
+                    }
+                }
+                if (query) {
+                    return item.item?.toLowerCase().includes(query) || 
+                           item.project?.toLowerCase().includes(query);
+                }
+                return true;
+            });
+            
+            // Sort by priority
+            const priorityOrder = { 'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3 };
+            filtered.sort((a, b) => (priorityOrder[a.priority] || 4) - (priorityOrder[b.priority] || 4));
+            
+            container.innerHTML = filtered.slice(0, 50).map((item, displayIdx) => {
+                const realIndex = items.indexOf(item);
+                const isCompleted = item.status === 'Completed';
+                return `
+                    <div class="item-card ${isCompleted ? 'completed' : ''}">
+                        <div class="item-priority ${item.priority?.toLowerCase() || 'medium'}"></div>
+                        <div class="item-content">
+                            <div class="item-title">${item.item || 'Untitled'}</div>
+                            <div class="item-meta">
+                                <span>${item.project || 'No project'}</span>
+                                <span>${item.context || '@Anywhere'}</span>
+                                <span>${item.status || 'Next Action'}</span>
+                            </div>
+                        </div>
+                        <div class="item-actions">
+                            <button class="item-btn complete" onclick="completeItem(${realIndex})" title="Complete">✓</button>
+                            <button class="item-btn delete" onclick="deleteItem(${realIndex})" title="Delete">×</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function updateStats() {
+            document.getElementById('stat-total').textContent = items.length;
+            document.getElementById('stat-critical').textContent = items.filter(i => i.priority === 'Critical').length;
+            document.getElementById('stat-high').textContent = items.filter(i => i.priority === 'High').length;
+            document.getElementById('stat-actions').textContent = items.filter(i => i.status === 'Next Action').length;
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+        
+        // Init
+        loadItems();
+    </script>
+</body>
+</html>

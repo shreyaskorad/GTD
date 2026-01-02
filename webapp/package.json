@@ -1,0 +1,8 @@
+{
+  "name": "gtd-voice-app",
+  "version": "1.0.0",
+  "description": "GTD Voice Capture App for Shreyas",
+  "scripts": {
+    "start": "python server.py"
+  }
+}
