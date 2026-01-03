@@ -69,7 +69,7 @@ header h1 { font-size:18px; font-weight:600; }
 .nav-btn.active { color:var(--accent); }
 .settings { padding:16px; }
 .settings-group { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; overflow:hidden; }
-.settings-item { padding:14px 16px; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; -webkit-tap-highlight-color:rgba(0,0,0,0.1); user-select:none; -webkit-user-select:none; }
+.settings-item { display:block; width:100%; text-align:left; padding:14px 16px; border:none; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; background:var(--surface); color:var(--text); font-family:inherit; }
 .settings-item:last-child { border-bottom:none; }
 .settings-item:active { background:var(--surface2); }
 .settings-label { font-size:12px; color:var(--text2); padding:16px 16px 8px; font-weight:500; text-transform:uppercase; }
@@ -205,24 +205,24 @@ header h1 { font-size:18px; font-weight:600; }
         <div class="settings">
             <div class="settings-label">AI Setup</div>
             <div class="settings-group">
-                <div class="settings-item" role="button" ontouchstart="" onclick="setupGitHubToken()">GitHub Token <span id="token-status" style="float:right;color:var(--text3)">Not set</span></div>
+                <button class="settings-item" type="button" onclick="setupGitHubToken()">GitHub Token <span id="token-status" style="float:right;color:var(--text3)">Not set</span></button>
             </div>
             <div class="settings-label">Security</div>
             <div class="settings-group">
-                <div class="settings-item" role="button" ontouchstart="" onclick="changePin()">Change PIN</div>
-                <div class="settings-item" role="button" ontouchstart="" onclick="lockApp()">Lock App</div>
+                <button class="settings-item" type="button" onclick="changePin()">Change PIN</button>
+                <button class="settings-item" type="button" onclick="lockApp()">Lock App</button>
             </div>
             <div class="settings-label">Data</div>
             <div class="settings-group">
-                <div class="settings-item" role="button" ontouchstart="" onclick="exportJSON()">Export JSON</div>
-                <div class="settings-item" role="button" ontouchstart="" onclick="document.getElementById('import-file').click()">Import JSON</div>
+                <button class="settings-item" type="button" onclick="exportJSON()">Export JSON</button>
+                <button class="settings-item" type="button" onclick="document.getElementById('import-file').click()">Import JSON</button>
                 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this.files[0])">
             </div>
             <div class="settings-label">Manage</div>
             <div class="settings-group">
-                <div class="settings-item" role="button" ontouchstart="" onclick="clearCompleted()">Clear completed</div>
-                <div class="settings-item" role="button" ontouchstart="" onclick="reloadSampleData()">Reload sample data (101 items)</div>
-                <div class="settings-item danger" role="button" ontouchstart="" onclick="resetAll()">Reset all data</div>
+                <button class="settings-item" type="button" onclick="clearCompleted()">Clear completed</button>
+                <button class="settings-item" type="button" onclick="reloadSampleData()">Reload sample data (101 items)</button>
+                <button class="settings-item danger" type="button" onclick="resetAll()">Reset all data</button>
             </div>
             <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.2 - AI Powered</div>
         </div>
