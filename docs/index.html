@@ -10,18 +10,9 @@
     <script src="data.js"></script>
     <style>
 :root {
-    --bg: #fafafa;
-    --surface: #fff;
-    --surface2: #f0f0f0;
-    --border: #e0e0e0;
-    --text: #222;
-    --text2: #666;
-    --text3: #999;
-    --accent: #0066cc;
-    --critical: #d32f2f;
-    --high: #f57c00;
-    --medium: #fbc02d;
-    --low: #388e3c;
+    --bg: #fafafa; --surface: #fff; --surface2: #f5f5f5; --border: #e0e0e0;
+    --text: #222; --text2: #666; --text3: #999;
+    --accent: #0066cc; --critical: #d32f2f; --high: #f57c00; --medium: #fbc02d; --low: #388e3c;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
@@ -51,7 +42,6 @@ header h1 { font-size: 18px; font-weight: 600; }
 .item-priority.low { background: var(--low); }
 .item-meta { font-size: 12px; color: var(--text2); margin-top: 8px; }
 .item-meta span { margin-right: 16px; }
-.item.done .item-title { text-decoration: line-through; color: var(--text3); }
 
 .capture { padding: 16px; }
 .section-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
@@ -59,14 +49,28 @@ header h1 { font-size: 18px; font-weight: 600; }
 .mic-btn { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; }
 .mic-btn.recording { border-color: var(--critical); color: var(--critical); }
 .mic-status { margin-top: 12px; font-size: 13px; color: var(--text2); }
-.mic-time { font-size: 28px; font-weight: 300; margin-top: 8px; color: var(--text); font-variant-numeric: tabular-nums; }
-.transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; min-height: 100px; max-height: 250px; overflow-y: auto; font-size: 14px; line-height: 1.6; color: var(--text2); }
-.parsed-section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-.parsed-count { font-size: 13px; color: var(--text2); margin-bottom: 12px; }
-.parsed-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--surface2); }
-.parsed-item:last-child { border-bottom: none; }
-.parsed-item input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; }
-.parsed-item-text { flex: 1; font-size: 13px; line-height: 1.4; }
+.mic-time { font-size: 28px; font-weight: 300; margin-top: 8px; font-variant-numeric: tabular-nums; }
+
+.transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; min-height: 80px; max-height: 200px; overflow-y: auto; font-size: 14px; line-height: 1.6; color: var(--text2); white-space: pre-wrap; }
+
+.analysis-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
+.analysis-header { padding: 12px 16px; background: var(--surface2); font-size: 13px; font-weight: 500; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+.analysis-status { font-size: 12px; color: var(--text2); font-weight: normal; }
+.analysis-status.processing { color: var(--accent); }
+
+.task-card { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.task-card:last-child { border-bottom: none; }
+.task-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+.task-checkbox { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; }
+.task-text { flex: 1; font-size: 14px; line-height: 1.4; }
+.task-attrs { display: flex; flex-wrap: wrap; gap: 6px; margin-left: 30px; }
+.task-attr { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: var(--surface2); color: var(--text2); }
+.task-attr.priority-critical { background: #ffebee; color: var(--critical); }
+.task-attr.priority-high { background: #fff3e0; color: var(--high); }
+.task-attr.project { background: #e3f2fd; color: var(--accent); }
+.task-attr.context { background: #f3e5f5; color: #7b1fa2; }
+.task-attr.waiting { background: #fff8e1; color: #f9a825; }
+
 .btn { padding: 12px 20px; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
 .btn-primary { background: var(--accent); color: #fff; }
 .btn-secondary { background: var(--surface2); color: var(--text); }
@@ -93,14 +97,13 @@ header h1 { font-size: 18px; font-weight: 600; }
 .settings-group { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
 .settings-item { padding: 14px 16px; border-bottom: 1px solid var(--border); font-size: 14px; cursor: pointer; }
 .settings-item:last-child { border-bottom: none; }
-.settings-label { font-size: 12px; color: var(--text2); padding: 16px 16px 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+.settings-label { font-size: 12px; color: var(--text2); padding: 16px 16px 8px; font-weight: 500; text-transform: uppercase; }
 .danger { color: var(--critical); }
-
 .view { display: none; }
 .view.active { display: block; }
-
 .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(50px); background: var(--text); color: var(--surface); padding: 12px 24px; border-radius: 8px; font-size: 13px; transition: transform 0.2s; z-index: 200; }
 .toast.show { transform: translateX(-50%) translateY(0); }
+.hint { font-size: 12px; color: var(--text3); margin-top: 8px; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -133,21 +136,26 @@ header h1 { font-size: 18px; font-weight: 600; }
 
     <div class="view" id="v-capture">
         <div class="capture">
-            <div class="section-title">Voice Capture</div>
+            <div class="section-title">Smart Voice Capture</div>
             <div class="mic-area">
                 <button class="mic-btn" id="mic-btn">Start</button>
                 <div class="mic-status" id="mic-status">Tap to start recording</div>
                 <div class="mic-time" id="mic-time">0:00</div>
             </div>
-            <div class="transcript-box" id="transcript">Your transcription will appear here. Speak naturally and separate tasks with phrases like "next item", "also", or "and then".</div>
-            <div class="parsed-section" id="parsed-section" style="display:none;">
-                <div class="parsed-count" id="parsed-count">0 items detected</div>
-                <div id="parsed-list"></div>
+            <div class="transcript-box" id="transcript">Speak naturally for as long as you want. I will analyze your entire dictation and extract all tasks with their priorities, projects, contexts, and dependencies.</div>
+            <div class="analysis-box" id="analysis-box" style="display:none;">
+                <div class="analysis-header">
+                    <span>Analyzed Tasks</span>
+                    <span class="analysis-status" id="analysis-status">Ready</span>
+                </div>
+                <div id="tasks-list"></div>
             </div>
             <div class="btn-row">
                 <button class="btn btn-secondary" onclick="clearCapture()">Clear</button>
-                <button class="btn btn-primary" style="flex:1" onclick="addSelectedItems()">Add Selected</button>
+                <button class="btn btn-secondary" onclick="reanalyze()">Re-analyze</button>
+                <button class="btn btn-primary" style="flex:1" onclick="addSelectedTasks()">Add Selected</button>
             </div>
+            <div class="hint">Tip: Speak naturally. Mention projects like "World Bank", "Riyadh Air". Say "waiting for" to mark dependencies. Use "urgent", "critical", "high priority" for prioritization.</div>
         </div>
     </div>
 
@@ -229,9 +237,7 @@ header h1 { font-size: 18px; font-weight: 600; }
                 <div class="settings-item" onclick="clearCompleted()">Clear completed</div>
                 <div class="settings-item danger" onclick="resetAll()">Reset all data</div>
             </div>
-            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">
-                GTD v3.0
-            </div>
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v3.2 - Smart Capture</div>
         </div>
     </div>
 </div>
@@ -243,29 +249,60 @@ header h1 { font-size: 18px; font-weight: 600; }
     <button class="nav-btn" data-v="settings">Settings</button>
 </nav>
 
-<div class="modal" id="modal-detail">
-    <div class="modal-content" id="detail-content"></div>
-</div>
-
+<div class="modal" id="modal-detail"><div class="modal-content" id="detail-content"></div></div>
 <div class="toast" id="toast"></div>
 
 <script>
 let items = [];
 let filters = { status: 'all', priority: null, category: null, search: '' };
+let analyzedTasks = [];
 
-const PROJECTS = [
-    '', 'World Bank Group', 'HPE ClearBook', 'CAA Axiom', 'Riyadh Air', 'AstraZeneca', 'BAT',
-    'Business Planning', 'AI Skills', 'Health', 'Family', 'Finance', 'Learning', 'Upside Learning'
+// Project patterns for smart detection
+const PROJECT_PATTERNS = {
+    'World Bank Group': /world bank|wbg|skills framework|qii|climate toolkit/i,
+    'HPE ClearBook': /hpe|clearbook|hewlett/i,
+    'CAA Axiom': /caa|axiom|cybersecurity project|sap project/i,
+    'Riyadh Air': /riyadh|riyadh air|safety sense|design thinking/i,
+    'AstraZeneca': /astrazeneca|astra zeneca|az\b/i,
+    'BAT': /\bbat\b|british american|webinar tours/i,
+    'Business Planning': /business plan|revenue|margin|pipeline|forecast/i,
+    'AI Skills': /\bai\b|artificial intelligence|machine learning|prompt|gpt|copilot/i,
+    'AI Integration': /ai workflow|ai clinic|ai enhancement/i,
+    'Health': /health|gym|exercise|workout|doctor|medical|sleep|diet/i,
+    'Family - Divya': /divya|wife/i,
+    'Family - Ananya': /ananya|daughter|baby/i,
+    'Family - Parents': /parents|mom|dad|mother|father/i,
+    'Finance': /finance|investment|insurance|loan|tax|sip|mutual fund/i,
+    'Upside Learning': /upside|upside learning/i,
+    'Home Renovations': /renovation|contractor|kitchen|bathroom|garden|house/i
+};
+
+// Context patterns
+const CONTEXT_PATTERNS = {
+    '@Computer': /computer|laptop|email|online|website|document|spreadsheet|presentation/i,
+    '@Phone': /call|phone|whatsapp|message|text/i,
+    '@Office': /office|meeting|team|colleague/i,
+    '@Home': /home|house|evening|weekend/i,
+    '@Errands': /errand|shop|buy|store|pick up|drop off/i,
+    '@Thinking': /think about|consider|decide|plan|strategy|brainstorm/i
+};
+
+// Person patterns for waiting-for detection
+const PERSON_PATTERNS = [
+    /waiting (?:for|on) (\w+)/i,
+    /(\w+) (?:will|to) (?:send|share|provide|get back|confirm)/i,
+    /need (?:input|response|feedback|approval) from (\w+)/i,
+    /(\w+) is supposed to/i,
+    /depends on (\w+)/i,
+    /blocked by (\w+)/i
 ];
+
+const PROJECTS = ['', 'World Bank Group', 'HPE ClearBook', 'CAA Axiom', 'Riyadh Air', 'AstraZeneca', 'BAT', 'Business Planning', 'AI Skills', 'Health', 'Family - Divya', 'Family - Ananya', 'Finance', 'Upside Learning'];
 
 function init() {
     const stored = localStorage.getItem('gtd_items_v3');
-    if (stored) {
-        items = JSON.parse(stored);
-    } else if (typeof GTD_INITIAL_DATA !== 'undefined') {
-        items = GTD_INITIAL_DATA.map((item, i) => ({...item, id: item.id || i + 1}));
-        save();
-    }
+    if (stored) items = JSON.parse(stored);
+    else if (typeof GTD_INITIAL_DATA !== 'undefined') { items = GTD_INITIAL_DATA.map((item, i) => ({...item, id: item.id || i + 1})); save(); }
     populateProjects();
     render();
     updateStats();
@@ -277,9 +314,7 @@ function save() { localStorage.setItem('gtd_items_v3', JSON.stringify(items)); }
 function populateProjects() {
     const existing = [...new Set(items.map(i => i.project).filter(Boolean))];
     const all = [...new Set([...PROJECTS, ...existing])].sort();
-    document.getElementById('f-project').innerHTML = all.map(p => 
-        `<option value="${p}">${p || 'None'}</option>`
-    ).join('');
+    document.getElementById('f-project').innerHTML = all.map(p => `<option value="${p}">${p || 'None'}</option>`).join('');
 }
 
 function render() {
@@ -291,15 +326,12 @@ function render() {
         if (filters.category && item.category !== filters.category) return false;
         if (filters.search) {
             const q = filters.search.toLowerCase();
-            const searchable = `${item.item} ${item.project} ${item.notes}`.toLowerCase();
-            if (!searchable.includes(q)) return false;
+            if (!`${item.item} ${item.project} ${item.notes}`.toLowerCase().includes(q)) return false;
         }
         return true;
     });
-
     const order = {Critical:0, High:1, Medium:2, Low:3};
     filtered.sort((a,b) => (order[a.priority]||4) - (order[b.priority]||4));
-
     list.innerHTML = filtered.length ? filtered.map(item => `
         <div class="item" onclick="showDetail(${item.id})">
             <div class="item-row">
@@ -332,13 +364,12 @@ function showDetail(id) {
         </div>
         <div style="margin-bottom:20px;">
             <div style="font-size:15px;line-height:1.5;margin-bottom:12px;">${item.item}</div>
-            <div style="font-size:13px;color:var(--text2);">
-                ${item.priority} / ${item.status} / ${item.category}
-            </div>
+            <div style="font-size:13px;color:var(--text2);">${item.priority} / ${item.status} / ${item.category}</div>
         </div>
         <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px;">
             ${item.project ? `<div>Project: ${item.project}</div>` : ''}
             <div>Context: ${item.context || '@Anywhere'}</div>
+            ${item.waiting_for ? `<div>Waiting for: ${item.waiting_for}</div>` : ''}
             ${item.time ? `<div>Time: ${item.time}</div>` : ''}
             ${item.notes ? `<div>Notes: ${item.notes}</div>` : ''}
         </div>
@@ -351,18 +382,8 @@ function showDetail(id) {
 }
 
 function closeModal() { document.getElementById('modal-detail').classList.remove('open'); }
-
-function complete(id) {
-    const item = items.find(i => i.id === id);
-    if (item) { item.status = 'Completed'; save(); render(); updateStats(); closeModal(); toast('Done'); }
-}
-
-function deleteItem(id) {
-    if (confirm('Delete this item?')) {
-        items = items.filter(i => i.id !== id);
-        save(); render(); updateStats(); closeModal(); toast('Deleted');
-    }
-}
+function complete(id) { const item = items.find(i => i.id === id); if (item) { item.status = 'Completed'; save(); render(); updateStats(); closeModal(); toast('Done'); } }
+function deleteItem(id) { if (confirm('Delete?')) { items = items.filter(i => i.id !== id); save(); render(); updateStats(); closeModal(); toast('Deleted'); } }
 
 function addItem() {
     const item = {
@@ -391,20 +412,18 @@ function switchView(name) {
     document.querySelector(`[data-v="${name}"]`).classList.add('active');
 }
 
-// Voice capture
+// Smart Voice Capture
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let isRecording = false;
 let recordingTime = 0;
 let recordingTimer = null;
 let transcript = '';
-let parsedTasks = [];
 
 if (SR) {
     recognition = new SR();
     recognition.continuous = true;
     recognition.interimResults = true;
-    
     recognition.onresult = (e) => {
         let interim = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -413,18 +432,13 @@ if (SR) {
             else interim = t;
         }
         document.getElementById('transcript').textContent = transcript + interim;
-        parseMultipleTasks(transcript);
     };
-    
-    recognition.onend = () => {
-        if (isRecording) recognition.start();
-    };
+    recognition.onend = () => { if (isRecording) recognition.start(); };
 }
 
 document.getElementById('mic-btn').onclick = () => {
     if (!recognition) { toast('Speech not supported'); return; }
-    if (isRecording) stopRecording();
-    else startRecording();
+    if (isRecording) stopRecording(); else startRecording();
 };
 
 function startRecording() {
@@ -434,9 +448,9 @@ function startRecording() {
     document.getElementById('transcript').textContent = 'Listening...';
     document.getElementById('mic-btn').classList.add('recording');
     document.getElementById('mic-btn').textContent = 'Stop';
-    document.getElementById('mic-status').textContent = 'Recording...';
+    document.getElementById('mic-status').textContent = 'Recording... speak naturally';
+    document.getElementById('analysis-box').style.display = 'none';
     recognition.start();
-    
     recordingTimer = setInterval(() => {
         recordingTime++;
         const m = Math.floor(recordingTime / 60);
@@ -451,142 +465,210 @@ function stopRecording() {
     clearInterval(recordingTimer);
     document.getElementById('mic-btn').classList.remove('recording');
     document.getElementById('mic-btn').textContent = 'Start';
-    document.getElementById('mic-status').textContent = 'Tap to start recording';
-    parseMultipleTasks(transcript);
+    document.getElementById('mic-status').textContent = 'Processing...';
+    setTimeout(() => {
+        analyzeTranscript(transcript);
+        document.getElementById('mic-status').textContent = 'Tap to start recording';
+    }, 300);
 }
 
-function parseMultipleTasks(text) {
+function analyzeTranscript(text) {
     if (!text.trim()) return;
     
-    const separators = /(?:next item|next task|also|and then|another one|number \d+|\d+\.|then I need to|plus|additionally|and also|another thing)[,:]?\s*/gi;
-    let chunks = text.replace(separators, '|||').split('|||');
-    chunks = chunks.flatMap(chunk => chunk.length > 120 ? chunk.split(/[.!?]+/).filter(s => s.trim().length > 8) : chunk);
+    document.getElementById('analysis-status').textContent = 'Analyzing...';
+    document.getElementById('analysis-status').classList.add('processing');
     
-    parsedTasks = chunks.map(s => s.trim()).filter(s => s.length > 5).map((task, i) => ({
-        id: i,
-        text: task,
+    // Smart sentence/task splitting
+    const taskIndicators = /(?:i need to|i have to|i should|i must|i want to|need to|have to|should|must|want to|going to|will|let me|remind me to|don't forget to|make sure to|remember to|todo|task|item|action|next|also|another thing|plus|and then|additionally|furthermore|one more thing|oh and|by the way)/gi;
+    
+    // First, split by clear task indicators
+    let rawChunks = text.replace(taskIndicators, '|||$&').split('|||').filter(s => s.trim());
+    
+    // Then split long chunks by sentence boundaries
+    let chunks = [];
+    rawChunks.forEach(chunk => {
+        if (chunk.length > 150) {
+            const sentences = chunk.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
+            chunks.push(...sentences);
+        } else if (chunk.trim().length > 10) {
+            chunks.push(chunk.trim());
+        }
+    });
+    
+    // Analyze each chunk
+    analyzedTasks = chunks.map((chunk, i) => analyzeTask(chunk, i));
+    
+    // Render results
+    renderAnalyzedTasks();
+    
+    document.getElementById('analysis-status').textContent = `${analyzedTasks.length} tasks found`;
+    document.getElementById('analysis-status').classList.remove('processing');
+}
+
+function analyzeTask(text, id) {
+    const task = {
+        id: id,
+        text: cleanTaskText(text),
         selected: true,
-        priority: /urgent|critical|asap/.test(task.toLowerCase()) ? 'Critical' : 
-                  /important|must|need/.test(task.toLowerCase()) ? 'High' : 'Medium',
-        category: /work|office|client|meeting/.test(task.toLowerCase()) ? 'Professional' : 'Personal'
-    }));
+        priority: 'Medium',
+        status: 'Next Action',
+        category: 'Personal',
+        project: '',
+        context: '@Anywhere',
+        waiting_for: '',
+        time: '',
+        notes: ''
+    };
     
-    if (parsedTasks.length > 0) {
-        document.getElementById('parsed-section').style.display = 'block';
-        document.getElementById('parsed-count').textContent = `${parsedTasks.length} items detected`;
-        document.getElementById('parsed-list').innerHTML = parsedTasks.map(t => `
-            <div class="parsed-item">
-                <input type="checkbox" ${t.selected ? 'checked' : ''} onchange="toggleTask(${t.id})">
-                <div class="parsed-item-text">${t.text}</div>
-            </div>
-        `).join('');
+    const lower = text.toLowerCase();
+    
+    // Priority detection
+    if (/urgent|critical|asap|immediately|right now|top priority|very important|crucial|emergency/.test(lower)) {
+        task.priority = 'Critical';
+    } else if (/important|high priority|priority|must|need to.*soon|this week|pressing/.test(lower)) {
+        task.priority = 'High';
+    } else if (/maybe|someday|eventually|when.*time|low priority|not urgent|can wait/.test(lower)) {
+        task.priority = 'Low';
     }
+    
+    // Category detection
+    if (/work|office|client|meeting|project|upside|professional|account|deal|proposal|team|colleague|business|revenue|sales/.test(lower)) {
+        task.category = 'Professional';
+    }
+    
+    // Project detection
+    for (const [project, pattern] of Object.entries(PROJECT_PATTERNS)) {
+        if (pattern.test(lower)) {
+            task.project = project;
+            if (['World Bank Group', 'HPE ClearBook', 'CAA Axiom', 'Riyadh Air', 'AstraZeneca', 'BAT', 'Upside Learning', 'AI Integration'].includes(project)) {
+                task.category = 'Professional';
+            }
+            break;
+        }
+    }
+    
+    // Context detection
+    for (const [context, pattern] of Object.entries(CONTEXT_PATTERNS)) {
+        if (pattern.test(lower)) {
+            task.context = context;
+            break;
+        }
+    }
+    
+    // Waiting-for detection
+    for (const pattern of PERSON_PATTERNS) {
+        const match = lower.match(pattern);
+        if (match) {
+            task.waiting_for = match[1].charAt(0).toUpperCase() + match[1].slice(1);
+            task.status = 'Waiting For';
+            break;
+        }
+    }
+    
+    // Someday/Maybe detection
+    if (/someday|maybe|one day|would be nice|dream|wish|future|eventually/.test(lower)) {
+        task.status = 'Someday/Maybe';
+    }
+    
+    // Time estimation
+    if (/quick|5 minutes?|10 minutes?|few minutes/.test(lower)) task.time = '5-10 min';
+    else if (/half hour|30 minutes?|half an hour/.test(lower)) task.time = '30 min';
+    else if (/hour|60 minutes?/.test(lower)) task.time = '1 hour';
+    else if (/couple hours|few hours|2 hours?|3 hours?/.test(lower)) task.time = '2-3 hours';
+    
+    return task;
+}
+
+function cleanTaskText(text) {
+    // Remove filler words and clean up
+    return text
+        .replace(/^(i need to|i have to|i should|i must|i want to|need to|have to|should|must|want to|going to|will|let me|remind me to|don't forget to|make sure to|remember to|todo|task|item|action|next|also|another thing|plus|and then|additionally|furthermore|one more thing|oh and|by the way)\s*/i, '')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .replace(/^./, c => c.toUpperCase());
+}
+
+function renderAnalyzedTasks() {
+    document.getElementById('analysis-box').style.display = 'block';
+    document.getElementById('tasks-list').innerHTML = analyzedTasks.map(task => `
+        <div class="task-card">
+            <div class="task-header">
+                <input type="checkbox" class="task-checkbox" ${task.selected ? 'checked' : ''} onchange="toggleTask(${task.id})">
+                <div class="task-text">${task.text}</div>
+            </div>
+            <div class="task-attrs">
+                <span class="task-attr priority-${task.priority.toLowerCase()}">${task.priority}</span>
+                ${task.project ? `<span class="task-attr project">${task.project}</span>` : ''}
+                <span class="task-attr context">${task.context}</span>
+                <span class="task-attr">${task.category}</span>
+                ${task.status !== 'Next Action' ? `<span class="task-attr">${task.status}</span>` : ''}
+                ${task.waiting_for ? `<span class="task-attr waiting">Waiting: ${task.waiting_for}</span>` : ''}
+                ${task.time ? `<span class="task-attr">${task.time}</span>` : ''}
+            </div>
+        </div>
+    `).join('');
 }
 
 function toggleTask(id) {
-    const task = parsedTasks.find(t => t.id === id);
+    const task = analyzedTasks.find(t => t.id === id);
     if (task) task.selected = !task.selected;
 }
 
-function addSelectedItems() {
-    const selected = parsedTasks.filter(t => t.selected);
-    if (selected.length === 0) { toast('Select items first'); return; }
+function reanalyze() {
+    if (transcript.trim()) analyzeTranscript(transcript);
+    else toast('No transcript to analyze');
+}
+
+function addSelectedTasks() {
+    const selected = analyzedTasks.filter(t => t.selected);
+    if (selected.length === 0) { toast('Select tasks first'); return; }
     
     selected.forEach(task => {
         items.unshift({
             id: Date.now() + Math.random(),
             item: task.text,
             priority: task.priority,
-            status: 'Next Action',
+            status: task.status,
             category: task.category,
-            project: '',
-            context: '@Anywhere',
+            project: task.project,
+            context: task.context,
+            waiting_for: task.waiting_for,
+            time: task.time,
             notes: ''
         });
     });
     
-    save(); render(); updateStats(); clearCapture();
-    toast(`Added ${selected.length} items`);
+    save(); render(); updateStats(); populateProjects(); clearCapture();
+    toast(`Added ${selected.length} tasks`);
     switchView('list');
 }
 
 function clearCapture() {
     transcript = '';
-    parsedTasks = [];
-    document.getElementById('transcript').textContent = 'Your transcription will appear here. Speak naturally and separate tasks with phrases like "next item", "also", or "and then".';
-    document.getElementById('parsed-section').style.display = 'none';
+    analyzedTasks = [];
+    document.getElementById('transcript').textContent = 'Speak naturally for as long as you want. I will analyze your entire dictation and extract all tasks with their priorities, projects, contexts, and dependencies.';
+    document.getElementById('analysis-box').style.display = 'none';
     document.getElementById('mic-time').textContent = '0:00';
 }
 
-function exportJSON() {
-    const blob = new Blob([JSON.stringify(items, null, 2)], {type: 'application/json'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-backup.json'; a.click();
-    toast('Downloaded');
-}
-
-function exportCSV() {
-    const headers = ['Item','Category','Project','Context','Priority','Status','Notes'];
-    const rows = items.map(i => headers.map(h => `"${(i[h.toLowerCase()]||'').toString().replace(/"/g,'""')}"`).join(','));
-    const blob = new Blob([[headers.join(','), ...rows].join('\n')], {type: 'text/csv'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-export.csv'; a.click();
-    toast('Downloaded');
-}
-
-function importJSON(file) {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-        try {
-            const data = JSON.parse(e.target.result);
-            if (Array.isArray(data)) { items = data; save(); render(); updateStats(); populateProjects(); toast(`Imported ${data.length} items`); }
-        } catch(e) { toast('Invalid file'); }
-    };
-    reader.readAsText(file);
-}
-
-function clearCompleted() {
-    if (confirm('Clear completed items?')) { items = items.filter(i => i.status !== 'Completed'); save(); render(); updateStats(); toast('Cleared'); }
-}
-
-function resetAll() {
-    if (confirm('Reset all data?')) { localStorage.removeItem('gtd_items_v3'); items = typeof GTD_INITIAL_DATA !== 'undefined' ? [...GTD_INITIAL_DATA] : []; save(); render(); updateStats(); populateProjects(); toast('Reset'); }
-}
-
-function toast(msg) {
-    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2000);
-}
+// Export/Import
+function exportJSON() { const blob = new Blob([JSON.stringify(items, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-backup.json'; a.click(); toast('Downloaded'); }
+function exportCSV() { const headers = ['Item','Category','Project','Context','Priority','Status','Notes']; const rows = items.map(i => headers.map(h => `"${(i[h.toLowerCase()]||'').toString().replace(/"/g,'""')}"`).join(',')); const blob = new Blob([[headers.join(','), ...rows].join('\n')], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-export.csv'; a.click(); toast('Downloaded'); }
+function importJSON(file) { if (!file) return; const reader = new FileReader(); reader.onload = e => { try { const data = JSON.parse(e.target.result); if (Array.isArray(data)) { items = data; save(); render(); updateStats(); populateProjects(); toast(`Imported ${data.length} items`); } } catch(e) { toast('Invalid file'); } }; reader.readAsText(file); }
+function clearCompleted() { if (confirm('Clear completed?')) { items = items.filter(i => i.status !== 'Completed'); save(); render(); updateStats(); toast('Cleared'); } }
+function resetAll() { if (confirm('Reset all data?')) { localStorage.removeItem('gtd_items_v3'); items = typeof GTD_INITIAL_DATA !== 'undefined' ? [...GTD_INITIAL_DATA] : []; save(); render(); updateStats(); populateProjects(); toast('Reset'); } }
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
 function setupListeners() {
     document.querySelectorAll('.tab').forEach(tab => {
-        tab.onclick = () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            filters.status = tab.dataset.status;
-            render();
-        };
+        tab.onclick = () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); filters.status = tab.dataset.status; render(); };
     });
-    
     document.querySelectorAll('.filter[data-p]').forEach(btn => {
-        btn.onclick = () => {
-            const wasActive = btn.classList.contains('active');
-            document.querySelectorAll('.filter[data-p]').forEach(b => b.classList.remove('active'));
-            filters.priority = wasActive ? null : btn.dataset.p;
-            if (!wasActive) btn.classList.add('active');
-            render();
-        };
+        btn.onclick = () => { const wasActive = btn.classList.contains('active'); document.querySelectorAll('.filter[data-p]').forEach(b => b.classList.remove('active')); filters.priority = wasActive ? null : btn.dataset.p; if (!wasActive) btn.classList.add('active'); render(); };
     });
-    
     document.querySelectorAll('.filter[data-c]').forEach(btn => {
-        btn.onclick = () => {
-            const wasActive = btn.classList.contains('active');
-            document.querySelectorAll('.filter[data-c]').forEach(b => b.classList.remove('active'));
-            filters.category = wasActive ? null : btn.dataset.c;
-            if (!wasActive) btn.classList.add('active');
-            render();
-        };
+        btn.onclick = () => { const wasActive = btn.classList.contains('active'); document.querySelectorAll('.filter[data-c]').forEach(b => b.classList.remove('active')); filters.category = wasActive ? null : btn.dataset.c; if (!wasActive) btn.classList.add('active'); render(); };
     });
-    
     document.getElementById('search').oninput = e => { filters.search = e.target.value; render(); };
     document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => switchView(btn.dataset.v); });
     document.getElementById('modal-detail').onclick = e => { if (e.target.id === 'modal-detail') closeModal(); };

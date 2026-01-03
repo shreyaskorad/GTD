@@ -129,7 +129,7 @@ const GTD_INITIAL_DATA = [
   
   // FAMILY
   {id:80, item:"Be more present with Ananya", category:"Personal", project:"Family - Ananya", context:"@Home", priority:"Critical", status:"Ongoing", energy:"Low", time:"Ongoing", notes:"Put away devices"},
-  {id:81, item:"Think about making MMD's life better", category:"Personal", project:"Family - MMD", context:"@Thinking", priority:"High", status:"Project", energy:"Medium", time:"1 hour", notes:""},
+  {id:81, item:"Think about making Divya's life better", category:"Personal", project:"Family - Divya", context:"@Thinking", priority:"High", status:"Project", energy:"Medium", time:"1 hour", notes:""},
   {id:82, item:"Meet parents twice a quarter", category:"Personal", project:"Family - Parents", context:"@Phone", priority:"High", status:"Recurring - Quarterly", energy:"Low", time:"Ongoing", notes:"8x per year both sets"},
   {id:83, item:"Call parents regularly", category:"Personal", project:"Family - Parents", context:"@Phone", priority:"Medium", status:"Recurring - Weekly", energy:"Low", time:"30 min", notes:""},
   
