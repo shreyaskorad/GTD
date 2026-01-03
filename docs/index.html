@@ -420,17 +420,37 @@ var DEFAULT_PROJECTS = [
 ];
 
 function init() {
+    console.log('GTD init starting...');
+    console.log('GTD_INITIAL_DATA available:', typeof GTD_INITIAL_DATA !== 'undefined' ? GTD_INITIAL_DATA.length : 'NO');
+    
     var stored = localStorage.getItem(STORAGE_KEY);
+    console.log('Stored data:', stored ? 'YES' : 'NO');
+    
     if (stored) { 
         try {
             var data = JSON.parse(stored); 
             items = data.items || []; 
-            projects = data.projects || DEFAULT_PROJECTS; 
+            projects = data.projects || DEFAULT_PROJECTS;
+            console.log('Loaded from storage:', items.length, 'items');
+            
+            // If items is empty but we have initial data, reload it
+            if (items.length === 0 && typeof GTD_INITIAL_DATA !== 'undefined') {
+                console.log('Empty items, reloading from GTD_INITIAL_DATA');
+                items = GTD_INITIAL_DATA.map(function(item, i) { 
+                    var newItem = {};
+                    for (var key in item) { if (key !== 'context') newItem[key] = item[key]; }
+                    newItem.id = item.id || i + 1;
+                    return newItem;
+                }); 
+                save();
+            }
         } catch(e) {
+            console.error('Parse error:', e);
             items = [];
             projects = DEFAULT_PROJECTS;
         }
-    } else if (typeof GTD_INITIAL_DATA !== 'undefined') { 
+    } else if (typeof GTD_INITIAL_DATA !== 'undefined') {
+        console.log('No stored data, loading GTD_INITIAL_DATA');
         items = GTD_INITIAL_DATA.map(function(item, i) { 
             var newItem = {};
             for (var key in item) { if (key !== 'context') newItem[key] = item[key]; }
@@ -440,6 +460,7 @@ function init() {
         projects = DEFAULT_PROJECTS; 
         save(); 
     } else {
+        console.log('No data available');
         items = [];
         projects = DEFAULT_PROJECTS;
     }
