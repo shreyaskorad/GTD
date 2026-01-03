@@ -320,11 +320,11 @@ function updateTokenStatus() {
 }
 
 // ========== DATA ==========
-let items = [];
-let projects = [];
-let filters = { status: 'all', priority: null, search: '' };
+var items = [];
+var projects = [];
+var filters = { status: 'all', priority: null, search: '' };
 
-const DEFAULT_PROJECTS = [
+var DEFAULT_PROJECTS = [
     { id:'p1', name:'World Bank Group', status:'Active', startDate:'2025-10-01', deadline:'2026-03-31', owner:'Shreyas', stakeholders:'Anurag, WB Team', notes:'Skills Framework, QII, Climate Toolkit', category:'Professional' },
     { id:'p2', name:'HPE ClearBook', status:'Active', startDate:'2025-11-15', deadline:'2026-02-28', owner:'Shreyas', stakeholders:'HPE Sales', notes:'Gamified sales experience', category:'Professional' },
     { id:'p3', name:'CAA Axiom', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', stakeholders:'CAA Team', notes:'Cybersecurity, SAP, Axiom Hub', category:'Professional' },
