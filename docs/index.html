@@ -765,28 +765,47 @@ function processWithAI(text) {
     console.log('Voice transcript:', text);
     
     var projectList = projects.map(function(p) { return p.name; }).join(', ');
-    var existingTasks = items.filter(function(i) { return i.status !== 'Completed'; }).slice(0, 20).map(function(i) { return '"' + i.item.substring(0, 40) + '"'; }).join(', ');
+    var existingTasks = items.filter(function(i) { return i.status !== 'Completed'; }).slice(0, 30).map(function(i) { return '"' + i.item.substring(0, 50) + '" [' + (i.project || 'No project') + ']'; }).join(', ');
     
-    var prompt = 'You are a GTD task assistant. Extract actions from natural voice recordings.\n\n' +
-        'USER CAN:\n' +
-        '1. ADD tasks: "I need to...", "Remind me to...", "Add...", "Want to...", any action mentioned\n' +
-        '2. COMPLETE tasks: "I finished...", "Done with...", "Completed...", "Already did..."\n' +
-        '3. DELETE tasks: "Remove...", "Delete...", "Cancel...", "Nevermind about..."\n' +
-        '4. UPDATE priority: "Make X urgent", "X is high priority"\n\n' +
-        'RULES:\n' +
-        '- Extract EVERY action as a separate item\n' +
-        '- Split compound statements: "call X and email Y" = 2 actions\n' +
-        '- Clean up filler words but keep meaning\n' +
-        '- Match projects when mentioned: ' + projectList + '\n' +
-        '- Match completions/deletions to these existing tasks: ' + existingTasks + '\n\n' +
-        'PRIORITY: Critical (urgent/ASAP), High (important), Medium (default), Low (someday)\n\n' +
-        'RESPOND WITH ONLY THIS JSON:\n' +
-        '{"actions":[...],"summary":"Brief description"}\n\n' +
-        'Action types:\n' +
-        '{"type":"add","task":"clean task text","project":"project name or null","priority":"Medium"}\n' +
-        '{"type":"complete","match":"keywords to find the task"}\n' +
-        '{"type":"delete","match":"keywords to find the task"}\n' +
-        '{"type":"priority","match":"keywords","priority":"High"}';
+    var prompt = 'You are an AGGRESSIVE GTD task extractor. Your job is to find EVERY possible task in voice recordings.\n\n' +
+        'CRITICAL: Extract MORE tasks, not fewer. When in doubt, CREATE A TASK.\n\n' +
+        'OPERATIONS:\n' +
+        '1. ADD: Any verb phrase = task. "need to", "should", "want to", "have to", "going to", "will", "must", "gotta", "planning to", or just action verbs\n' +
+        '2. COMPLETE: "finished", "done", "completed", "already did", "checked off"\n' +
+        '3. DELETE: "remove", "delete", "cancel", "forget about", "nevermind"\n' +
+        '4. PRIORITY: "urgent", "important", "high priority", "critical", "ASAP"\n\n' +
+        'TASK EXTRACTION RULES:\n' +
+        '- SPLIT everything: "call X and email Y and review Z" = 3 separate tasks\n' +
+        '- Lists are multiple tasks: "buy milk, eggs, bread" = 3 tasks OR 1 task "Buy groceries: milk, eggs, bread"\n' +
+        '- "Also" or "and also" = new task\n' +
+        '- Different subjects = different tasks\n' +
+        '- Follow-ups are tasks: "then after that..." = new task\n' +
+        '- Reminders are tasks: "remind me", "don\'t forget" = task\n' +
+        '- Questions about action = task: "should I call?" = "Call [person] - decide"\n\n' +
+        'PROJECT MATCHING (use EXACT names from this list):\n' + projectList + '\n\n' +
+        'Project assignment rules:\n' +
+        '- "World Bank" or "WB" or "Anurag" → "World Bank Group"\n' +
+        '- "HPE" or "Clearbook" or "sales gamification" → "HPE"\n' +
+        '- "CAA" or "Axiom" or "cybersecurity" → "CAA"\n' +
+        '- "Riyadh" or "airline" or "safety sense" → "Riyadh Air"\n' +
+        '- "AstraZeneca" or "AZ" → "AstraZeneca"\n' +
+        '- "BAT" or "webinar" → "BAT"\n' +
+        '- "Divya" or "wife" → "Family - Divya"\n' +
+        '- "Ananya" or "daughter" → "Family - Ananya"\n' +
+        '- "health" or "exercise" or "weight" or "doctor" → "Health" or specific health project\n' +
+        '- "AI" or "artificial intelligence" → "AI Strategic" or "AI Skills"\n' +
+        '- Work/client mentions → match to client project\n' +
+        '- Personal/home/family → match to personal project\n' +
+        '- If unclear, use null (no project)\n\n' +
+        'EXISTING TASKS (for complete/delete matching):\n' + existingTasks + '\n\n' +
+        'PRIORITY GUIDE:\n' +
+        '- Critical: "urgent", "ASAP", "emergency", "today", "right now"\n' +
+        '- High: "important", "priority", "soon", "this week"\n' +
+        '- Medium: default for most tasks\n' +
+        '- Low: "someday", "when I have time", "eventually", "maybe"\n\n' +
+        'OUTPUT FORMAT (JSON only, no markdown):\n' +
+        '{"actions":[{"type":"add","task":"Clean task description","project":"Exact Project Name or null","priority":"Medium"},...],"summary":"X tasks added, Y completed"}\n\n' +
+        'REMEMBER: Extract MORE tasks. If someone rambles for 1 minute, there are probably 4-8 tasks embedded. Find them ALL.';
 
     fetch(GITHUB_MODELS_URL, {
         method: 'POST',
