@@ -299,7 +299,17 @@ function unlockApp() {
 function lockApp() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
 function changePin() { const p = prompt('New PIN (4-6 digits):'); if (p && p.length >= 4 && /^\d+$/.test(p)) { setupPin(p); toast('PIN updated'); } }
 
-document.getElementById('auth-pin').addEventListener('keyup', e => { if (e.key === 'Enter') checkAuth(); });
+document.getElementById('auth-pin').addEventListener('keyup', function(e) { if (e.key === 'Enter') checkAuth(); });
+
+// Allow ?reset=1 in URL to clear all data
+if (window.location.search.indexOf('reset=1') > -1) {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(PIN_KEY);
+    localStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_KEY);
+    window.location.href = window.location.pathname;
+}
+
 if (isSessionValid()) unlockApp();
 else if (isFirstTime()) { document.getElementById('auth-title').textContent = 'Set Your PIN'; document.getElementById('auth-desc').textContent = 'Create a 4-6 digit PIN to secure your GTD'; }
 
@@ -341,9 +351,17 @@ var DEFAULT_PROJECTS = [
 ];
 
 function init() {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) { const data = JSON.parse(stored); items = data.items || []; projects = data.projects || DEFAULT_PROJECTS; }
-    else if (typeof GTD_INITIAL_DATA !== 'undefined') { 
+    var stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) { 
+        try {
+            var data = JSON.parse(stored); 
+            items = data.items || []; 
+            projects = data.projects || DEFAULT_PROJECTS; 
+        } catch(e) {
+            items = [];
+            projects = DEFAULT_PROJECTS;
+        }
+    } else if (typeof GTD_INITIAL_DATA !== 'undefined') { 
         items = GTD_INITIAL_DATA.map(function(item, i) { 
             var newItem = {};
             for (var key in item) { if (key !== 'context') newItem[key] = item[key]; }
@@ -352,15 +370,23 @@ function init() {
         }); 
         projects = DEFAULT_PROJECTS; 
         save(); 
+    } else {
+        items = [];
+        projects = DEFAULT_PROJECTS;
+    }
+    // Ensure projects is always an array
+    if (!projects || !Array.isArray(projects)) {
+        projects = DEFAULT_PROJECTS;
     }
     populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus();
 }
 
-function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items, projects, lastModified: new Date().toISOString() })); }
+function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: items, projects: projects, lastModified: new Date().toISOString() })); }
 
 function populateProjects() {
-    const names = projects.map(p => p.name).sort();
-    document.getElementById('f-project').innerHTML = '<option value="">None</option>' + names.map(n => `<option value="${n}">${n}</option>`).join('');
+    if (!projects || !Array.isArray(projects)) return;
+    var names = projects.map(function(p) { return p.name; }).sort();
+    document.getElementById('f-project').innerHTML = '<option value="">None</option>' + names.map(function(n) { return '<option value="' + n + '">' + n + '</option>'; }).join('');
 }
 
 function render() {
