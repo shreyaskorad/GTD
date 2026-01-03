@@ -492,34 +492,54 @@ async function processWithAI(text) {
     const token = getGitHubToken();
     
     if (!token) {
-        // Fallback to simple pattern matching
         document.getElementById('result-content').innerHTML = '<div style="color:var(--critical)">No GitHub token set. Using basic mode.</div>';
         setTimeout(() => fallbackProcess(text), 500);
         return;
     }
     
+    // Show what was captured for debugging
+    console.log('Voice transcript:', text);
+    
     const projectNames = projects.map(p => p.name).join(', ');
     const taskSummary = items.filter(i => i.status !== 'Completed').slice(0, 30).map(i => `- "${i.item}" (${i.project || 'no project'}, ${i.priority})`).join('\n');
     
-    const systemPrompt = `You are a GTD (Getting Things Done) assistant. Analyze the user's voice input and determine what actions to take.
+    const systemPrompt = `You are an expert GTD assistant that extracts actionable tasks from messy, natural voice recordings.
 
-Current projects: ${projectNames}
+CRITICAL: The user speaks naturally with filler words (um, uh, like, you know, so, basically, I mean), pauses, repetition, and rambling. Your job is to find EVERY actionable item hidden in their speech.
 
-Sample of current tasks:
+RULES:
+1. ALWAYS extract at least one action. If the speech mentions anything to do, add it.
+2. Clean up the task text - remove filler words but keep the core action.
+3. Be AGGRESSIVE about finding tasks. "I need to maybe think about calling John" = task to call John.
+4. Split compound statements: "call John and email Sarah" = 2 tasks.
+5. Look for these patterns indicating tasks:
+   - "need to", "have to", "should", "gotta", "want to", "going to", "will"
+   - "remind me", "don't forget", "make sure"  
+   - "follow up", "check on", "look into", "figure out"
+   - Anything someone mentions they haven't done yet
+6. If user mentions completing/finishing something, mark it complete.
+7. If unclear, default to ADDING a task rather than doing nothing.
+
+PROJECTS: ${projectNames}
+(Match by partial name - "World Bank" = "World Bank Group", "CAA" = "CAA Axiom")
+
+CURRENT TASKS:
 ${taskSummary}
 
-Return a JSON object with an "actions" array. Each action can be:
-- {"type": "add", "task": "task description", "project": "project name or null", "priority": "Critical/High/Medium/Low", "waiting_for": "person name or null"}
-- {"type": "complete", "match": "partial task text to match"}
-- {"type": "delete", "match": "partial task text to match"}
-- {"type": "update_project", "project": "project name", "field": "deadline/status/notes", "value": "new value"}
+OUTPUT FORMAT - Return ONLY this JSON:
+{
+  "actions": [
+    {"type": "add", "task": "clean task description", "project": "matched project or null", "priority": "Medium", "waiting_for": null},
+    {"type": "complete", "match": "keywords to match existing task"},
+    {"type": "delete", "match": "keywords to match"},
+    {"type": "update_project", "project": "name", "field": "deadline", "value": "2026-02-15"}
+  ],
+  "raw_interpretation": "brief note on what you understood"
+}
 
-Be smart about matching. If user says "finished the World Bank skills thing", match tasks containing "World Bank" and "skills".
-If user says "waiting on Anurag for the proposal", create a waiting-for task.
-If user mentions priority (urgent, important, critical, can wait), set appropriate priority.
-Match projects by partial name (e.g., "World Bank" matches "World Bank Group").
+Priority guide: "urgent/asap/critical/emergency" = Critical, "important/priority/soon" = High, "whenever/maybe/someday" = Low, else Medium.
 
-Return ONLY valid JSON, no explanation.`;
+NEVER return empty actions array if the user said ANYTHING actionable. When in doubt, add a task.`;
 
     try {
         const response = await fetch(GITHUB_MODELS_URL, {
@@ -532,20 +552,22 @@ Return ONLY valid JSON, no explanation.`;
                 model: MODEL,
                 messages: [
                     { role: 'system', content: systemPrompt },
-                    { role: 'user', content: `Voice input: "${text}"` }
+                    { role: 'user', content: `Voice recording transcript: "${text}"` }
                 ],
-                temperature: 0.3,
-                max_tokens: 1000
+                temperature: 0.5,
+                max_tokens: 1500
             })
         });
 
         if (!response.ok) {
             const err = await response.text();
-            throw new Error(`API error: ${response.status} - ${err}`);
+            console.error('API Response:', err);
+            throw new Error(`API ${response.status}`);
         }
 
         const data = await response.json();
         const content = data.choices[0].message.content;
+        console.log('AI Response:', content);
         
         // Parse JSON from response (handle markdown code blocks)
         let json;
@@ -553,10 +575,13 @@ Return ONLY valid JSON, no explanation.`;
             const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
             json = JSON.parse(jsonMatch ? jsonMatch[1] : content);
         } catch (e) {
-            json = JSON.parse(content);
+            // Try to extract JSON object from text
+            const objMatch = content.match(/\{[\s\S]*\}/);
+            if (objMatch) json = JSON.parse(objMatch[0]);
+            else throw new Error('Could not parse AI response');
         }
         
-        executeActions(json.actions || []);
+        executeActions(json.actions || [], text, json.raw_interpretation);
         
     } catch (error) {
         console.error('AI Error:', error);
@@ -565,12 +590,12 @@ Return ONLY valid JSON, no explanation.`;
     }
 }
 
-function executeActions(actions) {
+function executeActions(actions, transcript = '', interpretation = '') {
     let added = 0, completed = 0, deleted = 0, updated = 0;
     const actionLog = [];
     
     actions.forEach(action => {
-        if (action.type === 'add') {
+        if (action.type === 'add' && action.task) {
             const proj = projects.find(p => p.name.toLowerCase().includes((action.project || '').toLowerCase()));
             items.unshift({
                 id: Date.now() + Math.random(),
@@ -583,34 +608,43 @@ function executeActions(actions) {
                 notes: ''
             });
             added++;
-            actionLog.push(`Added: "${action.task}"${proj ? ` to ${proj.name}` : ''}`);
+            actionLog.push(`+ "${action.task}"${proj ? ` → ${proj.name}` : ''}`);
         }
-        else if (action.type === 'complete') {
+        else if (action.type === 'complete' && action.match) {
             const match = items.find(i => i.status !== 'Completed' && i.item.toLowerCase().includes(action.match.toLowerCase()));
-            if (match) { match.status = 'Completed'; completed++; actionLog.push(`Completed: "${match.item}"`); }
+            if (match) { match.status = 'Completed'; completed++; actionLog.push(`✓ "${match.item}"`); }
         }
-        else if (action.type === 'delete') {
+        else if (action.type === 'delete' && action.match) {
             const idx = items.findIndex(i => i.item.toLowerCase().includes(action.match.toLowerCase()));
-            if (idx > -1) { const removed = items.splice(idx, 1)[0]; deleted++; actionLog.push(`Deleted: "${removed.item}"`); }
+            if (idx > -1) { const removed = items.splice(idx, 1)[0]; deleted++; actionLog.push(`✗ "${removed.item}"`); }
         }
-        else if (action.type === 'update_project') {
+        else if (action.type === 'update_project' && action.project) {
             const proj = projects.find(p => p.name.toLowerCase().includes(action.project.toLowerCase()));
-            if (proj) { proj[action.field] = action.value; updated++; actionLog.push(`Updated ${proj.name}: ${action.field} = ${action.value}`); }
+            if (proj && action.field) { proj[action.field] = action.value; updated++; actionLog.push(`↻ ${proj.name}: ${action.field}`); }
         }
     });
     
     save(); render(); renderProjects(); updateStats(); populateProjects();
     document.getElementById('mic-status').textContent = 'Tap to start';
     
+    // Show results with transcript for debugging
+    let html = '';
     if (actionLog.length) {
-        document.getElementById('result-content').innerHTML = `
-            <div class="result-count">${actionLog.length}</div>
-            <div class="result-label">actions taken</div>
-            <div class="result-actions">${actionLog.map(a => `<div>${a}</div>`).join('')}</div>
-        `;
+        html = `<div class="result-count">${actionLog.length}</div><div class="result-label">actions</div><div class="result-actions">${actionLog.map(a => `<div>${a}</div>`).join('')}</div>`;
     } else {
-        document.getElementById('result-content').innerHTML = '<div style="color:var(--text2)">No actions detected. Try being more specific.</div>';
+        html = `<div style="color:var(--text2)">No actions detected</div>`;
     }
+    
+    // Show what was heard (helps debug)
+    if (transcript) {
+        const shortTranscript = transcript.length > 100 ? transcript.slice(0, 100) + '...' : transcript;
+        html += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)"><b>Heard:</b> "${shortTranscript}"</div>`;
+    }
+    if (interpretation) {
+        html += `<div style="font-size:11px;color:var(--text3);margin-top:4px"><b>Understood:</b> ${interpretation}</div>`;
+    }
+    
+    document.getElementById('result-content').innerHTML = html;
 }
 
 function fallbackProcess(text) {
