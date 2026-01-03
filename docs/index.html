@@ -269,26 +269,26 @@ header h1 { font-size:18px; font-weight:600; }
 try { document.addEventListener('touchstart', function() {}, {passive: true}); } catch(e) { document.addEventListener('touchstart', function() {}); }
 
 // ========== CONFIG ==========
-const STORAGE_KEY = 'gtd_ai_v6';
-const PIN_KEY = 'gtd_pin_hash';
-const TOKEN_KEY = 'gtd_gh_token';
-const SESSION_KEY = 'gtd_session';
-const DEVICE_KEY = 'gtd_device_id';
+var STORAGE_KEY = 'gtd_ai_v6';
+var PIN_KEY = 'gtd_pin_hash';
+var TOKEN_KEY = 'gtd_gh_token';
+var SESSION_KEY = 'gtd_session';
+var DEVICE_KEY = 'gtd_device_id';
 
 // GitHub Models API endpoint
-const GITHUB_MODELS_URL = 'https://models.inference.ai.azure.com/chat/completions';
-const MODEL = 'gpt-4o-mini'; // Fast and cheap, great for this use case
+var GITHUB_MODELS_URL = 'https://models.inference.ai.azure.com/chat/completions';
+var MODEL = 'gpt-4o-mini'; // Fast and cheap, great for this use case
 
 // ========== SECURITY ==========
 function getDeviceId() {
-    let id = localStorage.getItem(DEVICE_KEY);
+    var id = localStorage.getItem(DEVICE_KEY);
     if (!id) { id = 'dev_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9); localStorage.setItem(DEVICE_KEY, id); }
     return id;
 }
 
 function hashPin(pin) {
-    let hash = 0; const salt = getDeviceId(); const str = pin + salt;
-    for (let i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash = hash & hash; }
+    var hash = 0; var salt = getDeviceId(); var str = pin + salt;
+    for (var i = 0; i < str.length; i++) { hash = ((hash << 5) - hash) + str.charCodeAt(i); hash = hash & hash; }
     return hash.toString();
 }
 
@@ -298,7 +298,7 @@ function verifyPin(pin) { return localStorage.getItem(PIN_KEY) === hashPin(pin);
 function isSessionValid() { return sessionStorage.getItem(SESSION_KEY) === 'unlocked'; }
 
 function checkAuth() {
-    const pin = document.getElementById('auth-pin').value;
+    var pin = document.getElementById('auth-pin').value;
     if (pin.length < 4) { document.getElementById('auth-error').style.display = 'block'; document.getElementById('auth-error').textContent = 'PIN must be at least 4 digits'; return; }
     if (isFirstTime()) { setupPin(pin); unlockApp(); toast('PIN set!'); }
     else if (verifyPin(pin)) { sessionStorage.setItem(SESSION_KEY, 'unlocked'); unlockApp(); }
@@ -313,7 +313,7 @@ function unlockApp() {
 }
 
 function lockApp() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
-function changePin() { const p = prompt('New PIN (4-6 digits):'); if (p && p.length >= 4 && /^\d+$/.test(p)) { setupPin(p); toast('PIN updated'); } }
+function changePin() { var p = prompt('New PIN (4-6 digits):'); if (p && p.length >= 4 && /^\d+$/.test(p)) { setupPin(p); toast('PIN updated'); } }
 
 document.getElementById('auth-pin').addEventListener('keyup', function(e) { if (e.key === 'Enter') checkAuth(); });
 
@@ -334,13 +334,13 @@ function getGitHubToken() { return localStorage.getItem(TOKEN_KEY); }
 function setGitHubToken(token) { localStorage.setItem(TOKEN_KEY, token); updateTokenStatus(); }
 
 function setupGitHubToken() {
-    const current = getGitHubToken();
-    const token = prompt('Enter your GitHub Personal Access Token:\n\nGet one at: github.com/settings/tokens\n(needs no special permissions)', current || '');
+    var current = getGitHubToken();
+    var token = prompt('Enter your GitHub Personal Access Token:\n\nGet one at: github.com/settings/tokens\n(needs no special permissions)', current || '');
     if (token !== null) { setGitHubToken(token); toast(token ? 'Token saved' : 'Token cleared'); }
 }
 
 function updateTokenStatus() {
-    const status = document.getElementById('token-status');
+    var status = document.getElementById('token-status');
     if (status) status.textContent = getGitHubToken() ? 'Connected' : 'Not set';
     if (status) status.style.color = getGitHubToken() ? 'var(--low)' : 'var(--text3)';
 }
@@ -521,69 +521,106 @@ function renderProjects() {
 }
 
 function showProjectDetail(id) {
-    const p = projects.find(x => x.id === id); if (!p) return;
-    const tasks = items.filter(i => i.project === p.name && i.status !== 'Completed');
-    document.getElementById('project-content').innerHTML = `
-        <div class="modal-header"><div class="modal-title">${p.name}</div><button class="close-btn" onclick="closeProjectModal()">x</button></div>
-        <div class="form">
-            <div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" onchange="updateProject('${id}','status',this.value)"><option ${p.status==='Planning'?'selected':''}>Planning</option><option ${p.status==='Active'?'selected':''}>Active</option><option ${p.status==='On Hold'?'selected':''}>On Hold</option><option ${p.status==='Completed'?'selected':''}>Completed</option></select></div><div class="form-group"><label class="form-label">Category</label><select class="form-select" onchange="updateProject('${id}','category',this.value)"><option ${p.category==='Professional'?'selected':''}>Professional</option><option ${p.category==='Personal'?'selected':''}>Personal</option></select></div></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">Start</label><input type="date" class="form-input" value="${p.startDate||''}" onchange="updateProject('${id}','startDate',this.value)"></div><div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-input" value="${p.deadline||''}" onchange="updateProject('${id}','deadline',this.value)"></div></div>
-            <div class="form-group"><label class="form-label">Owner</label><input class="form-input" value="${p.owner||''}" onchange="updateProject('${id}','owner',this.value)"></div>
-            <div class="form-group"><label class="form-label">Stakeholders</label><input class="form-input" value="${p.stakeholders||''}" onchange="updateProject('${id}','stakeholders',this.value)"></div>
-            <div class="form-group"><label class="form-label">Notes</label><input class="form-input" value="${p.notes||''}" onchange="updateProject('${id}','notes',this.value)"></div>
-            <div class="section-title" style="margin-top:16px">Tasks (${tasks.length})</div>
-            ${tasks.map(t=>`<div class="item" onclick="showDetail(${t.id});closeProjectModal()"><div class="item-row"><div class="item-title">${t.item}</div><div class="item-priority ${(t.priority||'').toLowerCase()}"></div></div></div>`).join('')||'<p style="color:var(--text3)">No tasks</p>'}
-            <button class="btn btn-secondary danger" style="margin-top:20px" onclick="if(confirm('Delete?')){deleteProject('${id}')}">Delete Project</button>
-        </div>`;
+    var p = null;
+    for (var i = 0; i < projects.length; i++) { if (projects[i].id === id) { p = projects[i]; break; } }
+    if (!p) return;
+    var tasks = items.filter(function(t) { return t.project === p.name && t.status !== 'Completed'; });
+    
+    var html = '<div class="modal-header"><div class="modal-title">' + p.name + '</div><button class="close-btn" onclick="closeProjectModal()">x</button></div>';
+    html += '<div class="form">';
+    html += '<div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" onchange="updateProject(\'' + id + '\',\'status\',this.value)">';
+    html += '<option ' + (p.status==='Planning'?'selected':'') + '>Planning</option>';
+    html += '<option ' + (p.status==='Active'?'selected':'') + '>Active</option>';
+    html += '<option ' + (p.status==='On Hold'?'selected':'') + '>On Hold</option>';
+    html += '<option ' + (p.status==='Completed'?'selected':'') + '>Completed</option></select></div>';
+    html += '<div class="form-group"><label class="form-label">Category</label><select class="form-select" onchange="updateProject(\'' + id + '\',\'category\',this.value)">';
+    html += '<option ' + (p.category==='Professional'?'selected':'') + '>Professional</option>';
+    html += '<option ' + (p.category==='Personal'?'selected':'') + '>Personal</option></select></div></div>';
+    html += '<div class="form-row"><div class="form-group"><label class="form-label">Start</label><input type="date" class="form-input" value="' + (p.startDate||'') + '" onchange="updateProject(\'' + id + '\',\'startDate\',this.value)"></div>';
+    html += '<div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-input" value="' + (p.deadline||'') + '" onchange="updateProject(\'' + id + '\',\'deadline\',this.value)"></div></div>';
+    html += '<div class="form-group"><label class="form-label">Owner</label><input class="form-input" value="' + (p.owner||'') + '" onchange="updateProject(\'' + id + '\',\'owner\',this.value)"></div>';
+    html += '<div class="form-group"><label class="form-label">Stakeholders</label><input class="form-input" value="' + (p.stakeholders||'') + '" onchange="updateProject(\'' + id + '\',\'stakeholders\',this.value)"></div>';
+    html += '<div class="form-group"><label class="form-label">Notes</label><input class="form-input" value="' + (p.notes||'') + '" onchange="updateProject(\'' + id + '\',\'notes\',this.value)"></div>';
+    html += '<div class="section-title" style="margin-top:16px">Tasks (' + tasks.length + ')</div>';
+    if (tasks.length) {
+        for (var j = 0; j < tasks.length; j++) {
+            var t = tasks[j];
+            html += '<div class="item" onclick="showDetail(' + t.id + ');closeProjectModal()"><div class="item-row"><div class="item-title">' + t.item + '</div><div class="item-priority ' + (t.priority||'').toLowerCase() + '"></div></div></div>';
+        }
+    } else {
+        html += '<p style="color:var(--text3)">No tasks</p>';
+    }
+    html += '<button class="btn btn-secondary danger" style="margin-top:20px" onclick="if(confirm(\'Delete?\')){deleteProject(\'' + id + '\')}">Delete Project</button>';
+    html += '</div>';
+    document.getElementById('project-content').innerHTML = html;
     document.getElementById('modal-project').classList.add('open');
 }
 
 function closeProjectModal() { document.getElementById('modal-project').classList.remove('open'); }
-function updateProject(id, field, value) { const p = projects.find(x => x.id === id); if (p) { p[field] = value; save(); renderProjects(); } }
-function deleteProject(id) { projects = projects.filter(p => p.id !== id); save(); renderProjects(); closeProjectModal(); toast('Deleted'); }
+function updateProject(id, field, value) { 
+    var p = null;
+    for (var i = 0; i < projects.length; i++) { if (projects[i].id === id) { p = projects[i]; break; } }
+    if (p) { p[field] = value; save(); renderProjects(); } 
+}
+function deleteProject(id) { projects = projects.filter(function(p) { return p.id !== id; }); save(); renderProjects(); closeProjectModal(); toast('Deleted'); }
 
 function showAddProject() {
-    document.getElementById('project-content').innerHTML = `
-        <div class="modal-header"><div class="modal-title">New Project</div><button class="close-btn" onclick="closeProjectModal()">x</button></div>
-        <div class="form">
-            <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="np-name"></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" id="np-status"><option>Planning</option><option selected>Active</option></select></div><div class="form-group"><label class="form-label">Category</label><select class="form-select" id="np-cat"><option>Professional</option><option>Personal</option></select></div></div>
-            <div class="form-row"><div class="form-group"><label class="form-label">Start</label><input type="date" class="form-input" id="np-start" value="${new Date().toISOString().split('T')[0]}"></div><div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-input" id="np-deadline"></div></div>
-            <div class="form-group"><label class="form-label">Owner</label><input class="form-input" id="np-owner" value="Shreyas"></div>
-            <button class="btn btn-primary" style="width:100%" onclick="addProject()">Create</button>
-        </div>`;
+    var today = new Date().toISOString().split('T')[0];
+    var html = '<div class="modal-header"><div class="modal-title">New Project</div><button class="close-btn" onclick="closeProjectModal()">x</button></div>';
+    html += '<div class="form">';
+    html += '<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="np-name"></div>';
+    html += '<div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" id="np-status"><option>Planning</option><option selected>Active</option></select></div>';
+    html += '<div class="form-group"><label class="form-label">Category</label><select class="form-select" id="np-cat"><option>Professional</option><option>Personal</option></select></div></div>';
+    html += '<div class="form-row"><div class="form-group"><label class="form-label">Start</label><input type="date" class="form-input" id="np-start" value="' + today + '"></div>';
+    html += '<div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-input" id="np-deadline"></div></div>';
+    html += '<div class="form-group"><label class="form-label">Owner</label><input class="form-input" id="np-owner" value="Shreyas"></div>';
+    html += '<button class="btn btn-primary" style="width:100%" onclick="addProject()">Create</button>';
+    html += '</div>';
+    document.getElementById('project-content').innerHTML = html;
     document.getElementById('modal-project').classList.add('open');
 }
 
 function addProject() {
-    const name = document.getElementById('np-name').value.trim(); if (!name) { toast('Enter name'); return; }
-    projects.push({ id: 'p' + Date.now(), name, status: document.getElementById('np-status').value, category: document.getElementById('np-cat').value, startDate: document.getElementById('np-start').value || null, deadline: document.getElementById('np-deadline').value || null, owner: document.getElementById('np-owner').value });
+    var name = document.getElementById('np-name').value.trim(); if (!name) { toast('Enter name'); return; }
+    projects.push({ id: 'p' + Date.now(), name: name, status: document.getElementById('np-status').value, category: document.getElementById('np-cat').value, startDate: document.getElementById('np-start').value || null, deadline: document.getElementById('np-deadline').value || null, owner: document.getElementById('np-owner').value });
     save(); renderProjects(); populateProjects(); closeProjectModal(); toast('Created');
 }
 
 function updateStats() {
-    const active = items.filter(i => i.status !== 'Completed');
+    var active = items.filter(function(i) { return i.status !== 'Completed'; });
     document.getElementById('s-total').textContent = active.length;
-    document.getElementById('s-critical').textContent = active.filter(i => i.priority === 'Critical').length;
-    document.getElementById('s-high').textContent = active.filter(i => i.priority === 'High').length;
+    document.getElementById('s-critical').textContent = active.filter(function(i) { return i.priority === 'Critical'; }).length;
+    document.getElementById('s-high').textContent = active.filter(function(i) { return i.priority === 'High'; }).length;
 }
 
 function showDetail(id) {
-    const item = items.find(i => i.id === id); if (!item) return;
-    document.getElementById('detail-content').innerHTML = `
-        <div class="modal-header"><div class="modal-title">Details</div><button class="close-btn" onclick="closeModal()">x</button></div>
-        <div style="margin-bottom:20px"><div style="font-size:15px;line-height:1.5;margin-bottom:12px">${item.item}</div><div style="font-size:13px;color:var(--text2)">${item.priority} / ${item.status} / ${item.category}</div></div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px">${item.project?`<div>Project: ${item.project}</div>`:''}${item.dueDate?`<div>Due: ${formatDate(item.dueDate)}</div>`:''}${item.waiting_for?`<div>Waiting: ${item.waiting_for}</div>`:''}${item.notes?`<div>Notes: ${item.notes}</div>`:''}</div>
-        <div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="complete(${item.id})">Complete</button><button class="btn btn-secondary danger" onclick="deleteItem(${item.id})">Delete</button></div>`;
+    var item = null;
+    for (var i = 0; i < items.length; i++) { if (items[i].id === id) { item = items[i]; break; } }
+    if (!item) return;
+    var html = '<div class="modal-header"><div class="modal-title">Details</div><button class="close-btn" onclick="closeModal()">x</button></div>';
+    html += '<div style="margin-bottom:20px"><div style="font-size:15px;line-height:1.5;margin-bottom:12px">' + item.item + '</div>';
+    html += '<div style="font-size:13px;color:var(--text2)">' + item.priority + ' / ' + item.status + ' / ' + item.category + '</div></div>';
+    html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px">';
+    if (item.project) html += '<div>Project: ' + item.project + '</div>';
+    if (item.dueDate) html += '<div>Due: ' + formatDate(item.dueDate) + '</div>';
+    if (item.waiting_for) html += '<div>Waiting: ' + item.waiting_for + '</div>';
+    if (item.notes) html += '<div>Notes: ' + item.notes + '</div>';
+    html += '</div>';
+    html += '<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="complete(' + item.id + ')">Complete</button><button class="btn btn-secondary danger" onclick="deleteItem(' + item.id + ')">Delete</button></div>';
+    document.getElementById('detail-content').innerHTML = html;
     document.getElementById('modal-detail').classList.add('open');
 }
 
 function closeModal() { document.getElementById('modal-detail').classList.remove('open'); }
-function complete(id) { const item = items.find(i => i.id === id); if (item) { item.status = 'Completed'; save(); render(); renderProjects(); updateStats(); closeModal(); toast('Done'); } }
-function deleteItem(id) { if (confirm('Delete?')) { items = items.filter(i => i.id !== id); save(); render(); renderProjects(); updateStats(); closeModal(); toast('Deleted'); } }
+function complete(id) { 
+    var item = null;
+    for (var i = 0; i < items.length; i++) { if (items[i].id === id) { item = items[i]; break; } }
+    if (item) { item.status = 'Completed'; save(); render(); renderProjects(); updateStats(); closeModal(); toast('Done'); } 
+}
+function deleteItem(id) { if (confirm('Delete?')) { items = items.filter(function(i) { return i.id !== id; }); save(); render(); renderProjects(); updateStats(); closeModal(); toast('Deleted'); } }
 
 function addItem() {
-    const item = { id: Date.now(), item: document.getElementById('f-item').value.trim(), priority: document.getElementById('f-priority').value, status: document.getElementById('f-status').value, category: document.getElementById('f-category').value, project: document.getElementById('f-project').value, dueDate: document.getElementById('f-due').value || null, notes: document.getElementById('f-notes').value };
+    var item = { id: Date.now(), item: document.getElementById('f-item').value.trim(), priority: document.getElementById('f-priority').value, status: document.getElementById('f-status').value, category: document.getElementById('f-category').value, project: document.getElementById('f-project').value, dueDate: document.getElementById('f-due').value || null, notes: document.getElementById('f-notes').value };
     if (!item.item) { toast('Enter task'); return; }
     items.unshift(item); save(); render(); renderProjects(); updateStats(); populateProjects();
     document.getElementById('f-item').value = ''; document.getElementById('f-notes').value = ''; document.getElementById('f-due').value = '';
@@ -591,10 +628,13 @@ function addItem() {
 }
 
 function switchView(name) {
-    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    var views = document.querySelectorAll('.view');
+    for (var i = 0; i < views.length; i++) { views[i].classList.remove('active'); }
+    var navBtns = document.querySelectorAll('.nav-btn');
+    for (var j = 0; j < navBtns.length; j++) { navBtns[j].classList.remove('active'); }
     document.getElementById('v-' + name).classList.add('active');
-    document.querySelector(`[data-v="${name}"]`).classList.add('active');
+    var targetBtn = document.querySelector('[data-v="' + name + '"]');
+    if (targetBtn) targetBtn.classList.add('active');
 }
 
 // ========== AI VOICE CAPTURE ==========
@@ -909,9 +949,31 @@ function fallbackProcess(text) {
 }
 
 // ========== EXPORT/IMPORT ==========
-function exportJSON() { const blob = new Blob([JSON.stringify({ items, projects }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-backup.json'; a.click(); toast('Downloaded'); }
-function importJSON(file) { if (!file) return; const reader = new FileReader(); reader.onload = e => { try { const data = JSON.parse(e.target.result); if (data.items) items = data.items; if (data.projects) projects = data.projects; save(); render(); renderProjects(); updateStats(); populateProjects(); toast('Imported'); } catch (e) { toast('Invalid file'); } }; reader.readAsText(file); }
-function clearCompleted() { if (confirm('Clear completed?')) { items = items.filter(i => i.status !== 'Completed'); save(); render(); updateStats(); toast('Cleared'); } }
+function exportJSON() { 
+    var blob = new Blob([JSON.stringify({ items: items, projects: projects }, null, 2)], { type: 'application/json' }); 
+    var a = document.createElement('a'); 
+    a.href = URL.createObjectURL(blob); 
+    a.download = 'gtd-backup.json'; 
+    a.click(); 
+    toast('Downloaded'); 
+}
+function importJSON(file) { 
+    if (!file) return; 
+    var reader = new FileReader(); 
+    reader.onload = function(e) { 
+        try { 
+            var data = JSON.parse(e.target.result); 
+            if (data.items) items = data.items; 
+            if (data.projects) projects = data.projects; 
+            save(); render(); renderProjects(); updateStats(); populateProjects(); 
+            toast('Imported'); 
+        } catch (err) { 
+            toast('Invalid file'); 
+        } 
+    }; 
+    reader.readAsText(file); 
+}
+function clearCompleted() { if (confirm('Clear completed?')) { items = items.filter(function(i) { return i.status !== 'Completed'; }); save(); render(); updateStats(); toast('Cleared'); } }
 function reloadSampleData() { 
     if (confirm('Reload all 101 sample items? This will replace your current data.')) { 
         if (typeof GTD_INITIAL_DATA !== 'undefined') {
@@ -930,15 +992,47 @@ function reloadSampleData() {
     } 
 }
 function resetAll() { if (confirm('Reset all?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
-function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
+function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2000); }
 
 function setupListeners() {
-    document.querySelectorAll('.tab').forEach(tab => { tab.onclick = () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); filters.status = tab.dataset.status; render(); }; });
-    document.querySelectorAll('.filter[data-p]').forEach(btn => { btn.onclick = () => { const wasActive = btn.classList.contains('active'); document.querySelectorAll('.filter[data-p]').forEach(b => b.classList.remove('active')); filters.priority = wasActive ? null : btn.dataset.p; if (!wasActive) btn.classList.add('active'); render(); }; });
-    document.getElementById('search').oninput = e => { filters.search = e.target.value; render(); };
-    document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => switchView(btn.dataset.v); });
-    document.getElementById('modal-detail').onclick = e => { if (e.target.id === 'modal-detail') closeModal(); };
-    document.getElementById('modal-project').onclick = e => { if (e.target.id === 'modal-project') closeProjectModal(); };
+    var tabs = document.querySelectorAll('.tab');
+    for (var i = 0; i < tabs.length; i++) {
+        (function(tab) {
+            tab.onclick = function() {
+                var allTabs = document.querySelectorAll('.tab');
+                for (var j = 0; j < allTabs.length; j++) { allTabs[j].classList.remove('active'); }
+                tab.classList.add('active');
+                filters.status = tab.dataset.status;
+                render();
+            };
+        })(tabs[i]);
+    }
+    
+    var filterBtns = document.querySelectorAll('.filter[data-p]');
+    for (var k = 0; k < filterBtns.length; k++) {
+        (function(btn) {
+            btn.onclick = function() {
+                var wasActive = btn.classList.contains('active');
+                var allFilters = document.querySelectorAll('.filter[data-p]');
+                for (var m = 0; m < allFilters.length; m++) { allFilters[m].classList.remove('active'); }
+                filters.priority = wasActive ? null : btn.dataset.p;
+                if (!wasActive) btn.classList.add('active');
+                render();
+            };
+        })(filterBtns[k]);
+    }
+    
+    document.getElementById('search').oninput = function(e) { filters.search = e.target.value; render(); };
+    
+    var navBtns = document.querySelectorAll('.nav-btn');
+    for (var n = 0; n < navBtns.length; n++) {
+        (function(btn) {
+            btn.onclick = function() { switchView(btn.dataset.v); };
+        })(navBtns[n]);
+    }
+    
+    document.getElementById('modal-detail').onclick = function(e) { if (e.target.id === 'modal-detail') closeModal(); };
+    document.getElementById('modal-project').onclick = function(e) { if (e.target.id === 'modal-project') closeProjectModal(); };
 }
 </script>
 </body>
