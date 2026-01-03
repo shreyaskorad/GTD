@@ -10,8 +10,8 @@
     <script src="data.js"></script>
     <style>
 :root { --bg:#fafafa; --surface:#fff; --surface2:#f5f5f5; --border:#e0e0e0; --text:#222; --text2:#666; --text3:#999; --accent:#0066cc; --critical:#d32f2f; --high:#f57c00; --medium:#fbc02d; --low:#388e3c; }
-* { box-sizing:border-box; margin:0; padding:0; }
-body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:rgba(0,0,0,0.1); }
+body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; touch-action:manipulation; }
 .app { max-width:600px; margin:0 auto; padding-bottom:56px; }
 header { padding:16px; background:var(--surface); border-bottom:1px solid var(--border); }
 header h1 { font-size:18px; font-weight:600; }
@@ -69,8 +69,9 @@ header h1 { font-size:18px; font-weight:600; }
 .nav-btn.active { color:var(--accent); }
 .settings { padding:16px; }
 .settings-group { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; overflow:hidden; }
-.settings-item { padding:14px 16px; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; }
+.settings-item { padding:14px 16px; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; -webkit-tap-highlight-color:rgba(0,0,0,0.1); user-select:none; -webkit-user-select:none; }
 .settings-item:last-child { border-bottom:none; }
+.settings-item:active { background:var(--surface2); }
 .settings-label { font-size:12px; color:var(--text2); padding:16px 16px 8px; font-weight:500; text-transform:uppercase; }
 .danger { color:var(--critical); }
 .view { display:none; }
@@ -204,24 +205,24 @@ header h1 { font-size:18px; font-weight:600; }
         <div class="settings">
             <div class="settings-label">AI Setup</div>
             <div class="settings-group">
-                <div class="settings-item" onclick="setupGitHubToken()">GitHub Token <span id="token-status" style="float:right;color:var(--text3)">Not set</span></div>
+                <div class="settings-item" role="button" ontouchstart="" onclick="setupGitHubToken()">GitHub Token <span id="token-status" style="float:right;color:var(--text3)">Not set</span></div>
             </div>
             <div class="settings-label">Security</div>
             <div class="settings-group">
-                <div class="settings-item" onclick="changePin()">Change PIN</div>
-                <div class="settings-item" onclick="lockApp()">Lock App</div>
+                <div class="settings-item" role="button" ontouchstart="" onclick="changePin()">Change PIN</div>
+                <div class="settings-item" role="button" ontouchstart="" onclick="lockApp()">Lock App</div>
             </div>
             <div class="settings-label">Data</div>
             <div class="settings-group">
-                <div class="settings-item" onclick="exportJSON()">Export JSON</div>
-                <div class="settings-item" onclick="document.getElementById('import-file').click()">Import JSON</div>
+                <div class="settings-item" role="button" ontouchstart="" onclick="exportJSON()">Export JSON</div>
+                <div class="settings-item" role="button" ontouchstart="" onclick="document.getElementById('import-file').click()">Import JSON</div>
                 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this.files[0])">
             </div>
             <div class="settings-label">Manage</div>
             <div class="settings-group">
-                <div class="settings-item" onclick="clearCompleted()">Clear completed</div>
-                <div class="settings-item" onclick="reloadSampleData()">Reload sample data (101 items)</div>
-                <div class="settings-item danger" onclick="resetAll()">Reset all data</div>
+                <div class="settings-item" role="button" ontouchstart="" onclick="clearCompleted()">Clear completed</div>
+                <div class="settings-item" role="button" ontouchstart="" onclick="reloadSampleData()">Reload sample data (101 items)</div>
+                <div class="settings-item danger" role="button" ontouchstart="" onclick="resetAll()">Reset all data</div>
             </div>
             <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.2 - AI Powered</div>
         </div>
@@ -241,6 +242,10 @@ header h1 { font-size:18px; font-weight:600; }
 <div class="toast" id="toast"></div>
 
 <script>
+// ========== SAFARI FIX ==========
+// Enable touch events for Safari iOS - required for onclick to work on non-native elements
+document.addEventListener('touchstart', function() {}, {passive: true});
+
 // ========== CONFIG ==========
 const STORAGE_KEY = 'gtd_ai_v6';
 const PIN_KEY = 'gtd_pin_hash';
