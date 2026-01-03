@@ -143,6 +143,26 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 .view { display:none; }
 .view.active { display:block; }
 .toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface2); color:var(--text); padding:12px 24px; border-radius:100px; font-size:14px; font-weight:500; transition:all 0.3s; z-index:200; opacity:0; pointer-events:none; border:1px solid var(--border); }
+
+/* Life Log */
+.log-date { font-size:18px; font-weight:600; padding:20px 20px 12px; display:flex; justify-content:space-between; align-items:center; }
+.log-date-nav { display:flex; gap:8px; }
+.log-date-btn { width:32px; height:32px; border-radius:50%; border:none; background:var(--surface2); color:var(--text2); font-size:14px; cursor:pointer; }
+.log-entries { padding:0 16px; }
+.log-entry { background:var(--surface); border-radius:var(--radius); padding:14px 16px; margin-bottom:8px; position:relative; }
+.log-time { font-size:12px; color:var(--accent); font-weight:600; margin-bottom:4px; font-variant-numeric:tabular-nums; }
+.log-text { font-size:15px; line-height:1.5; }
+.log-empty { text-align:center; padding:60px 40px; color:var(--text3); }
+.log-capture { margin:16px; padding:24px 20px; background:var(--surface); border-radius:20px; text-align:center; }
+.log-mic-btn { width:70px; height:70px; border-radius:50%; border:3px solid var(--accent); background:transparent; color:var(--accent); font-size:28px; cursor:pointer; transition:all 0.2s; }
+.log-mic-btn.recording { border-color:var(--critical); color:var(--critical); animation:pulse 1.5s infinite; }
+.log-status { margin-top:16px; font-size:14px; color:var(--text2); }
+.log-actions { display:flex; gap:8px; margin-top:16px; justify-content:center; }
+.log-action-btn { padding:10px 20px; font-size:13px; font-weight:500; border-radius:20px; border:none; cursor:pointer; }
+.log-share-btn { position:absolute; top:12px; right:12px; width:28px; height:28px; border-radius:50%; border:none; background:var(--surface2); color:var(--text3); font-size:12px; cursor:pointer; }
+.log-summary { margin:16px; padding:16px; background:var(--surface); border-radius:var(--radius); }
+.log-summary-title { font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
+.log-summary-copy { padding:12px; background:var(--surface2); border-radius:8px; font-size:13px; line-height:1.6; white-space:pre-wrap; max-height:200px; overflow-y:auto; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .loading { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
@@ -217,6 +237,33 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
         </div>
     </div>
 
+    <!-- Life Log View -->
+    <div class="view" id="v-log">
+        <div class="log-date">
+            <span id="log-date-display">Today</span>
+            <div class="log-date-nav">
+                <button class="log-date-btn" onclick="logPrevDay()">←</button>
+                <button class="log-date-btn" onclick="logNextDay()">→</button>
+            </div>
+        </div>
+        
+        <div class="log-capture">
+            <button class="log-mic-btn" id="log-mic-btn" onclick="toggleLogRecording()">🎤</button>
+            <div class="log-status" id="log-status">Tap to log what you're doing</div>
+            <div class="log-actions">
+                <button class="log-action-btn btn-secondary" onclick="showLogTextInput()">Type</button>
+                <button class="log-action-btn btn-secondary" onclick="copyDaySummary()">Copy Day</button>
+            </div>
+        </div>
+        
+        <div class="log-summary" id="log-summary" style="display:none;">
+            <div class="log-summary-title">Day Summary (tap to copy)</div>
+            <div class="log-summary-copy" id="log-summary-text" onclick="copyDaySummary()"></div>
+        </div>
+        
+        <div class="log-entries" id="log-entries"></div>
+    </div>
+
     <!-- Settings View -->
     <div class="view" id="v-settings">
         <div class="settings-section">
@@ -265,7 +312,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
                 </div>
             </div>
             
-            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.1</div>
+            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.2</div>
         </div>
     </div>
 </div>
@@ -277,6 +324,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 <nav class="nav hidden" id="main-nav">
     <button class="nav-item active" data-v="list"><span class="nav-icon">☐</span>Tasks</button>
     <button class="nav-item" data-v="projects"><span class="nav-icon">◫</span>Projects</button>
+    <button class="nav-item" data-v="log"><span class="nav-icon">📝</span>Log</button>
     <button class="nav-item" data-v="capture"><span class="nav-icon">◉</span>Capture</button>
     <button class="nav-item" data-v="settings"><span class="nav-icon">⚙</span>Settings</button>
 </nav>
@@ -335,6 +383,7 @@ var TOKEN_KEY = 'gtd_gh_token';
 var SESSION_KEY = 'gtd_session';
 var DEVICE_KEY = 'gtd_device_id';
 var LOG_KEY = 'gtd_completed_log';
+var LIFELOG_KEY = 'gtd_lifelog';
 
 // GitHub Models API endpoint
 var GITHUB_MODELS_URL = 'https://models.inference.ai.azure.com/chat/completions';
@@ -345,6 +394,10 @@ var items = [];
 var projects = [];
 var filters = { status: 'all', priority: null, search: '' };
 var completedLog = [];
+var lifeLog = [];
+var logViewDate = new Date();
+var logRecording = false;
+var logRecognition = null;
 
 // ========== SECURITY ==========
 function getDeviceId() {
@@ -555,6 +608,11 @@ function init() {
     if (!projects || !Array.isArray(projects)) {
         projects = DEFAULT_PROJECTS;
     }
+    // Load life log
+    var storedLog = localStorage.getItem(LIFELOG_KEY);
+    if (storedLog) {
+        try { lifeLog = JSON.parse(storedLog); } catch(e) { lifeLog = []; }
+    }
     // Set default filter to focus (Today view)
     filters.status = 'focus';
     populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus();
@@ -563,6 +621,8 @@ function init() {
 }
 
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: items, projects: projects, lastModified: new Date().toISOString() })); }
+
+function saveLifeLog() { localStorage.setItem(LIFELOG_KEY, JSON.stringify(lifeLog)); }
 
 function populateProjects() {
     if (!projects || !Array.isArray(projects)) return;
@@ -1034,6 +1094,12 @@ function switchView(name) {
         fab.classList.remove('hidden');
     } else {
         fab.classList.add('hidden');
+    }
+    
+    // Render log entries when switching to log view
+    if (name === 'log') {
+        logViewDate = new Date(); // Reset to today
+        renderLogEntries();
     }
 }
 
@@ -1791,6 +1857,218 @@ function setupListeners() {
 
 function showAddModal() { document.getElementById('modal-add').classList.add('open'); }
 function closeAddModal() { document.getElementById('modal-add').classList.remove('open'); }
+
+// ========== LIFE LOG FUNCTIONS ==========
+function toggleLogRecording() {
+    if (logRecording) {
+        stopLogRecording();
+    } else {
+        startLogRecording();
+    }
+}
+
+function startLogRecording() {
+    if (!('webkitSpeechRecognition' in window)) {
+        toast('Speech not supported. Use text input.');
+        showLogTextInput();
+        return;
+    }
+    
+    logRecording = true;
+    var btn = document.getElementById('log-mic-btn');
+    btn.classList.add('recording');
+    document.getElementById('log-status').textContent = 'Listening...';
+    
+    logRecognition = new webkitSpeechRecognition();
+    logRecognition.continuous = false;
+    logRecognition.interimResults = false;
+    logRecognition.lang = 'en-US';
+    
+    logRecognition.onresult = function(e) {
+        var text = e.results[0][0].transcript;
+        addLogEntry(text);
+        stopLogRecording();
+    };
+    
+    logRecognition.onerror = function(e) {
+        console.error('Log speech error:', e);
+        stopLogRecording();
+        if (e.error === 'not-allowed') {
+            toast('Mic access denied');
+        } else {
+            toast('Try again');
+        }
+    };
+    
+    logRecognition.onend = function() {
+        stopLogRecording();
+    };
+    
+    logRecognition.start();
+}
+
+function stopLogRecording() {
+    logRecording = false;
+    var btn = document.getElementById('log-mic-btn');
+    btn.classList.remove('recording');
+    document.getElementById('log-status').textContent = 'Tap to log what you\'re doing';
+    
+    if (logRecognition) {
+        try { logRecognition.stop(); } catch(e) {}
+        logRecognition = null;
+    }
+}
+
+function addLogEntry(text) {
+    if (!text || !text.trim()) return;
+    
+    var now = new Date();
+    var entry = {
+        id: 'log_' + Date.now(),
+        text: text.trim(),
+        timestamp: now.toISOString(),
+        date: now.toISOString().split('T')[0],
+        time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+    };
+    
+    lifeLog.unshift(entry);
+    saveLifeLog();
+    renderLogEntries();
+    toast('Logged');
+}
+
+function showLogTextInput() {
+    var text = prompt('What are you doing?');
+    if (text && text.trim()) {
+        addLogEntry(text.trim());
+    }
+}
+
+function renderLogEntries() {
+    var container = document.getElementById('log-entries');
+    var dateStr = logViewDate.toISOString().split('T')[0];
+    
+    // Update date display
+    var today = new Date();
+    var yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    var displayText = 'Today';
+    if (dateStr === yesterday.toISOString().split('T')[0]) {
+        displayText = 'Yesterday';
+    } else if (dateStr !== today.toISOString().split('T')[0]) {
+        displayText = logViewDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    }
+    document.getElementById('log-date-display').textContent = displayText;
+    
+    // Filter entries for the selected date
+    var dayEntries = lifeLog.filter(function(e) { return e.date === dateStr; });
+    
+    if (dayEntries.length === 0) {
+        container.innerHTML = '<div class="log-empty"><div style="font-size:48px;opacity:0.3;margin-bottom:16px;">📝</div>No entries for this day</div>';
+        document.getElementById('log-summary').style.display = 'none';
+        return;
+    }
+    
+    // Build HTML for entries (sorted by time, newest first)
+    var html = '';
+    for (var i = 0; i < dayEntries.length; i++) {
+        var entry = dayEntries[i];
+        html += '<div class="log-entry">';
+        html += '<button class="log-share-btn" onclick="shareLogEntry(\'' + entry.id + '\')" title="Copy">📋</button>';
+        html += '<div class="log-time">' + entry.time + '</div>';
+        html += '<div class="log-text">' + entry.text + '</div>';
+        html += '</div>';
+    }
+    container.innerHTML = html;
+    
+    // Build and show summary
+    buildDaySummary(dayEntries, dateStr);
+}
+
+function buildDaySummary(entries, dateStr) {
+    var summaryContainer = document.getElementById('log-summary');
+    var summaryText = document.getElementById('log-summary-text');
+    
+    // Build formatted summary
+    var today = new Date();
+    var displayDate = dateStr === today.toISOString().split('T')[0] ? 'Today' : new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    
+    var lines = displayDate + ':\n\n';
+    
+    // Group by hour blocks for cleaner summary
+    for (var i = entries.length - 1; i >= 0; i--) {
+        var e = entries[i];
+        lines += '• ' + e.time + ': ' + e.text + '\n';
+    }
+    
+    summaryText.textContent = lines.trim();
+    summaryContainer.style.display = 'block';
+}
+
+function copyDaySummary() {
+    var summaryText = document.getElementById('log-summary-text').textContent;
+    if (!summaryText) {
+        toast('No entries to copy');
+        return;
+    }
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(summaryText).then(function() {
+            toast('Copied to clipboard!');
+        });
+    } else {
+        // Fallback for Safari
+        var textarea = document.createElement('textarea');
+        textarea.value = summaryText;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        toast('Copied to clipboard!');
+    }
+}
+
+function shareLogEntry(id) {
+    var entry = null;
+    for (var i = 0; i < lifeLog.length; i++) {
+        if (lifeLog[i].id === id) { entry = lifeLog[i]; break; }
+    }
+    if (!entry) return;
+    
+    var text = entry.time + ': ' + entry.text;
+    
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            toast('Copied!');
+        });
+    } else {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        toast('Copied!');
+    }
+}
+
+function logPrevDay() {
+    logViewDate.setDate(logViewDate.getDate() - 1);
+    renderLogEntries();
+}
+
+function logNextDay() {
+    var today = new Date();
+    var nextDay = new Date(logViewDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+    
+    // Don't go beyond today
+    if (nextDay <= today) {
+        logViewDate = nextDay;
+        renderLogEntries();
+    }
+}
 </script>
 </body>
 </html>
