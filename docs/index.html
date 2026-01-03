@@ -4,308 +4,318 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#fff">
+    <meta name="theme-color" content="#000">
     <title>GTD</title>
     <link rel="manifest" href="manifest.json">
     <script src="data.js"></script>
     <style>
-:root { --bg:#fafafa; --surface:#fff; --surface2:#f5f5f5; --border:#e0e0e0; --text:#222; --text2:#666; --text3:#999; --accent:#0066cc; --critical:#d32f2f; --high:#f57c00; --medium:#fbc02d; --low:#388e3c; }
-* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:rgba(0,0,0,0.1); }
-body { font-family:-apple-system,system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:14px; touch-action:manipulation; }
-.app { max-width:600px; margin:0 auto; padding-bottom:56px; }
-header { padding:16px; background:var(--surface); border-bottom:1px solid var(--border); }
-header h1 { font-size:18px; font-weight:600; }
-.stats { display:flex; gap:20px; margin-top:8px; font-size:12px; color:var(--text2); }
-.tabs { display:flex; background:var(--surface); border-bottom:1px solid var(--border); }
-.tab { flex:1; padding:12px; text-align:center; font-size:13px; color:var(--text2); background:none; border:none; cursor:pointer; }
-.tab.active { color:var(--accent); font-weight:500; border-bottom:2px solid var(--accent); }
-.filters { padding:12px 16px; background:var(--surface); border-bottom:1px solid var(--border); display:flex; gap:8px; flex-wrap:wrap; }
-.filter { padding:6px 12px; font-size:12px; border-radius:16px; border:1px solid var(--border); background:var(--surface); color:var(--text2); cursor:pointer; }
-.filter.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-.search { flex:1; min-width:140px; padding:8px 12px; font-size:13px; border:1px solid var(--border); border-radius:6px; background:var(--surface); color:var(--text); }
-.list { padding:8px 16px; }
-.item { padding:14px; margin-bottom:8px; background:var(--surface); border:1px solid var(--border); border-radius:8px; cursor:pointer; }
-.item-row { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-.item-title { font-size:14px; flex:1; line-height:1.4; }
-.item-priority { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:5px; }
-.item-priority.critical { background:var(--critical); }
-.item-priority.high { background:var(--high); }
-.item-priority.medium { background:var(--medium); }
-.item-priority.low { background:var(--low); }
-.item-meta { font-size:12px; color:var(--text2); margin-top:8px; }
-.item-meta span { margin-right:16px; }
-.capture { padding:16px; }
-.section-title { font-size:15px; font-weight:600; margin-bottom:16px; }
-.mic-area { text-align:center; padding:32px; background:var(--surface); border:1px solid var(--border); border-radius:16px; margin-bottom:16px; transition:all 0.3s; }
-.mic-area.recording { border-color:var(--critical); background:linear-gradient(135deg, #fff5f5 0%, #fff 100%); }
-.mic-area.processing { border-color:var(--accent); background:linear-gradient(135deg, #f0f7ff 0%, #fff 100%); }
-.mic-btn { width:100px; height:100px; border-radius:50%; border:3px solid var(--border); background:var(--surface); color:var(--text); font-size:15px; font-weight:600; cursor:pointer; transition:all 0.2s; }
-.mic-btn:active { transform:scale(0.95); }
-.mic-btn.recording { border-color:var(--critical); color:var(--critical); background:#fff5f5; animation:pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,0.3)} 50%{box-shadow:0 0 0 15px rgba(211,47,47,0)} }
-.mic-status { margin-top:16px; font-size:14px; color:var(--text2); font-weight:500; }
-.mic-time { font-size:40px; font-weight:300; margin-top:8px; font-variant-numeric:tabular-nums; color:var(--text); }
-.capture-hints { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
-.hint-title { font-size:12px; font-weight:600; color:var(--text2); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
-.hint-item { font-size:13px; color:var(--text3); padding:6px 0; border-bottom:1px solid var(--border); }
-.hint-item:last-child { border-bottom:none; }
-.result-box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
-.result-count { font-size:32px; font-weight:700; color:var(--accent); }
-.result-label { font-size:14px; color:var(--text2); margin-top:4px; }
-.result-actions { margin-top:16px; font-size:13px; color:var(--text); text-align:left; }
-.result-actions div { padding:8px 12px; background:var(--surface2); border-radius:6px; margin-bottom:6px; }
-.result-actions div:last-child { margin-bottom:0; }
-.result-transcript { margin-top:16px; padding-top:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text3); }
-.token-warning { background:#fff8e1; border:1px solid #ffe082; border-radius:12px; padding:16px; text-align:center; font-size:13px; color:#f57c00; }
-.btn { padding:12px 20px; font-size:14px; border:none; border-radius:8px; cursor:pointer; font-weight:500; }
+:root { --bg:#000; --surface:#111; --surface2:#1a1a1a; --surface3:#222; --border:#333; --text:#fff; --text2:#888; --text3:#555; --accent:#3b82f6; --critical:#ef4444; --high:#f97316; --medium:#eab308; --low:#22c55e; --radius:12px; }
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+body { font-family:-apple-system,SF Pro Display,system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; font-size:15px; line-height:1.5; -webkit-font-smoothing:antialiased; }
+.app { max-width:430px; margin:0 auto; padding-bottom:90px; min-height:100vh; }
+
+/* Header - Minimal */
+header { padding:20px 20px 16px; display:flex; justify-content:space-between; align-items:center; }
+.logo { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+.header-stats { font-size:13px; color:var(--text2); }
+.header-btn { width:36px; height:36px; border-radius:50%; border:none; background:var(--surface2); color:var(--text2); font-size:16px; cursor:pointer; }
+
+/* Quick Filters - Pill style */
+.quick-filters { padding:0 20px 16px; display:flex; gap:8px; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.quick-filters::-webkit-scrollbar { display:none; }
+.qf { padding:8px 16px; font-size:13px; font-weight:500; border-radius:20px; border:none; background:var(--surface2); color:var(--text2); cursor:pointer; white-space:nowrap; transition:all 0.2s; }
+.qf.active { background:var(--accent); color:#fff; }
+.qf.critical.active { background:var(--critical); }
+
+/* Task List */
+.task-list { padding:0 16px; }
+.task { display:flex; align-items:flex-start; gap:14px; padding:16px; margin-bottom:2px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:background 0.15s; }
+.task:active { background:var(--surface2); }
+.task-check { width:24px; height:24px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
+.task-check:hover { border-color:var(--accent); }
+.task-check.checking { background:var(--accent); border-color:var(--accent); }
+.task-body { flex:1; min-width:0; }
+.task-title { font-size:15px; font-weight:500; line-height:1.4; word-wrap:break-word; }
+.task-subtitle { font-size:13px; color:var(--text2); margin-top:4px; display:flex; gap:12px; flex-wrap:wrap; }
+.task-priority { width:8px; height:8px; border-radius:50%; flex-shrink:0; margin-top:8px; }
+.task-priority.critical { background:var(--critical); box-shadow:0 0 8px var(--critical); }
+.task-priority.high { background:var(--high); }
+.task-priority.medium { background:var(--medium); }
+.task-priority.low { background:var(--low); }
+.empty-state { text-align:center; padding:60px 40px; color:var(--text3); }
+.empty-state-icon { font-size:48px; margin-bottom:16px; opacity:0.5; }
+.empty-state-text { font-size:15px; }
+
+/* Focus View */
+.focus-section { margin:0 16px 16px; }
+.focus-label { font-size:12px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:1px; padding:16px 4px 12px; display:flex; justify-content:space-between; }
+.focus-count { color:var(--text2); font-weight:400; }
+.focus-card { background:var(--surface); border-radius:var(--radius); overflow:hidden; }
+.focus-task { display:flex; align-items:flex-start; gap:14px; padding:14px 16px; border-bottom:1px solid var(--border); }
+.focus-task:last-child { border-bottom:none; }
+
+/* Floating Action Button */
+.fab { position:fixed; bottom:100px; right:20px; width:56px; height:56px; border-radius:50%; background:var(--accent); color:#fff; border:none; font-size:28px; font-weight:300; cursor:pointer; box-shadow:0 4px 20px rgba(59,130,246,0.4); z-index:50; transition:transform 0.2s, box-shadow 0.2s; }
+.fab:active { transform:scale(0.95); }
+
+/* Bottom Nav - Ultra minimal */
+.nav { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:12px 0; padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:var(--text3); font-size:10px; font-weight:500; cursor:pointer; padding:4px 16px; }
+.nav-item.active { color:var(--accent); }
+.nav-icon { font-size:22px; }
+
+/* Modal - Sheet style */
+.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:flex-end; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
+.modal.open { display:flex; }
+.sheet { background:var(--surface); width:100%; max-width:430px; margin:0 auto; max-height:90vh; overflow-y:auto; border-radius:20px 20px 0 0; padding:8px 20px 40px; animation:slideUp 0.3s ease; }
+@keyframes slideUp { from { transform:translateY(100%); } to { transform:translateY(0); } }
+.sheet-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+.sheet-title { font-size:18px; font-weight:600; margin-bottom:20px; }
+
+/* Form elements */
+.input { width:100%; padding:14px 16px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface2); color:var(--text); font-family:inherit; }
+.input:focus { outline:none; border-color:var(--accent); }
+.input-group { margin-bottom:16px; }
+.input-label { display:block; font-size:13px; color:var(--text2); margin-bottom:8px; font-weight:500; }
+.select { appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+.btn { width:100%; padding:16px; font-size:15px; font-weight:600; border:none; border-radius:var(--radius); cursor:pointer; transition:opacity 0.2s; }
+.btn:active { opacity:0.8; }
 .btn-primary { background:var(--accent); color:#fff; }
 .btn-secondary { background:var(--surface2); color:var(--text); }
-.btn-row { display:flex; gap:10px; }
-.form { padding:16px; }
-.form-group { margin-bottom:16px; }
-.form-label { display:block; font-size:12px; color:var(--text2); margin-bottom:6px; font-weight:500; }
-.form-input, .form-select, .form-textarea { width:100%; padding:12px; font-size:14px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text); }
-.form-textarea { min-height:80px; resize:vertical; font-family:inherit; }
-.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-.modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:100; align-items:flex-end; }
-.modal.open { display:flex; }
-.modal-content { background:var(--surface); width:100%; max-width:500px; margin:0 auto; max-height:80vh; overflow-y:auto; border-radius:16px 16px 0 0; padding:20px; }
-.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-.modal-title { font-size:16px; font-weight:600; }
-.close-btn { width:32px; height:32px; border-radius:50%; border:1px solid var(--border); background:var(--surface); color:var(--text2); font-size:18px; cursor:pointer; }
-.nav { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; align-items:flex-end; padding:8px 4px; padding-bottom:calc(8px + env(safe-area-inset-bottom)); box-shadow:0 -2px 10px rgba(0,0,0,0.1); }
-.nav-btn { flex:1; padding:10px 4px; text-align:center; font-size:11px; color:var(--text3); background:none; border:none; cursor:pointer; font-weight:500; }
-.nav-btn.active { color:var(--accent); }
-.nav-btn.capture-btn { flex:1.5; background:var(--accent); color:#fff; border-radius:24px; margin:0 8px; padding:14px 8px; font-size:13px; font-weight:600; box-shadow:0 2px 8px rgba(0,102,204,0.3); }
-.nav-btn.capture-btn.active { background:var(--accent); color:#fff; }
-.settings { padding:16px; }
-.settings-group { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; overflow:hidden; }
-.settings-item { display:block; width:100%; text-align:left; padding:14px 16px; border:none; border-bottom:1px solid var(--border); font-size:14px; cursor:pointer; background:var(--surface); color:var(--text); font-family:inherit; }
+.btn-danger { background:var(--critical); color:#fff; }
+.btn-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Capture View */
+.capture-area { margin:16px; padding:40px 20px; background:var(--surface); border-radius:20px; text-align:center; }
+.capture-btn { width:80px; height:80px; border-radius:50%; border:3px solid var(--border); background:var(--surface2); color:var(--text); font-size:14px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.capture-btn.recording { border-color:var(--critical); background:rgba(239,68,68,0.1); color:var(--critical); animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0.3)} 50%{box-shadow:0 0 0 20px rgba(239,68,68,0)} }
+.capture-status { margin-top:20px; font-size:14px; color:var(--text2); }
+.capture-time { font-size:48px; font-weight:200; margin-top:8px; font-variant-numeric:tabular-nums; }
+
+/* Text Input Area */
+.text-area { margin:16px; }
+.textarea { width:100%; min-height:140px; padding:16px; font-size:15px; border:1px solid var(--border); border-radius:var(--radius); background:var(--surface); color:var(--text); font-family:inherit; resize:none; }
+.textarea:focus { outline:none; border-color:var(--accent); }
+.text-hint { font-size:13px; color:var(--text3); margin-bottom:12px; }
+
+/* Result cards */
+.result-card { margin:16px; padding:20px; background:var(--surface); border-radius:var(--radius); }
+.result-number { font-size:40px; font-weight:700; color:var(--accent); }
+.result-label { font-size:14px; color:var(--text2); margin-top:4px; }
+.result-list { margin-top:16px; }
+.result-item { padding:10px 12px; background:var(--surface2); border-radius:8px; margin-bottom:8px; font-size:14px; }
+
+/* Settings */
+.settings-section { margin:16px; }
+.settings-label { font-size:12px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:1px; padding:16px 4px 8px; }
+.settings-group { background:var(--surface); border-radius:var(--radius); overflow:hidden; }
+.settings-item { display:flex; justify-content:space-between; align-items:center; padding:16px; border-bottom:1px solid var(--border); cursor:pointer; transition:background 0.15s; }
 .settings-item:last-child { border-bottom:none; }
 .settings-item:active { background:var(--surface2); }
-.settings-label { font-size:12px; color:var(--text2); padding:16px 16px 8px; font-weight:500; text-transform:uppercase; }
-.danger { color:var(--critical); }
+.settings-item-label { font-size:15px; }
+.settings-item-value { font-size:14px; color:var(--text2); }
+.settings-item.danger .settings-item-label { color:var(--critical); }
+
+/* Projects */
+.project-card { background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
+.project-name { font-size:16px; font-weight:600; margin-bottom:8px; }
+.project-meta { display:flex; gap:16px; font-size:13px; color:var(--text2); }
+.project-progress { height:4px; background:var(--surface3); border-radius:2px; margin-top:12px; overflow:hidden; }
+.project-bar { height:100%; background:var(--accent); border-radius:2px; }
+
+/* Auth */
+.auth-overlay { position:fixed; inset:0; background:var(--bg); z-index:1000; display:flex; align-items:center; justify-content:center; }
+.auth-box { padding:40px 32px; width:90%; max-width:320px; text-align:center; }
+.auth-title { font-size:28px; font-weight:700; margin-bottom:8px; }
+.auth-desc { font-size:14px; color:var(--text2); margin-bottom:32px; }
+.auth-input { text-align:center; letter-spacing:12px; font-size:24px; padding:20px; }
+.auth-error { color:var(--critical); font-size:13px; margin-bottom:16px; display:none; }
+
+/* Utilities */
+.hidden { display:none !important; }
 .view { display:none; }
 .view.active { display:block; }
-.toast { position:fixed; bottom:70px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--text); color:var(--surface); padding:12px 24px; border-radius:8px; font-size:13px; transition:transform 0.3s, opacity 0.3s; z-index:200; opacity:0; pointer-events:none; }
+.toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface2); color:var(--text); padding:12px 24px; border-radius:100px; font-size:14px; font-weight:500; transition:all 0.3s; z-index:200; opacity:0; pointer-events:none; border:1px solid var(--border); }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
-.proj-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden; }
-.proj-header { padding:14px 16px; border-bottom:1px solid var(--border); }
-.proj-name { font-size:15px; font-weight:600; margin-bottom:4px; }
-.proj-status { display:inline-block; font-size:11px; padding:2px 8px; border-radius:10px; background:var(--surface2); color:var(--text2); }
-.proj-status.active { background:#e3f2fd; color:#1976d2; }
-.proj-status.on-hold { background:#fff3e0; color:#f57c00; }
-.proj-status.completed { background:#e8f5e9; color:#388e3c; }
-.proj-body { padding:14px 16px; }
-.proj-meta { display:grid; grid-template-columns:1fr 1fr; gap:8px 16px; font-size:12px; margin-bottom:12px; }
-.proj-meta-label { color:var(--text3); }
-.proj-meta-value { color:var(--text); font-weight:500; }
-.proj-progress { height:4px; background:var(--surface2); border-radius:2px; margin-top:8px; }
-.proj-progress-bar { height:100%; background:var(--accent); border-radius:2px; }
-.proj-tasks { font-size:12px; color:var(--text2); margin-top:8px; }
-.auth-overlay { position:fixed; inset:0; background:var(--bg); z-index:1000; display:flex; align-items:center; justify-content:center; }
-.auth-box { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:32px; width:90%; max-width:320px; text-align:center; }
-.auth-title { font-size:18px; font-weight:600; margin-bottom:8px; }
-.auth-desc { font-size:13px; color:var(--text2); margin-bottom:24px; }
-.auth-input { width:100%; padding:14px; font-size:16px; border:1px solid var(--border); border-radius:8px; text-align:center; letter-spacing:8px; margin-bottom:16px; }
-.auth-error { color:var(--critical); font-size:12px; margin-bottom:12px; display:none; }
-.hidden { display:none !important; }
-.ai-badge { display:inline-block; font-size:10px; padding:2px 6px; border-radius:4px; background:#e8f5e9; color:#388e3c; margin-left:8px; }
-.loading { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite; }
+.loading { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
-.focus-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; overflow:hidden; }
-.focus-header { padding:12px 16px; background:var(--surface2); font-weight:600; font-size:13px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
-.focus-badge { background:var(--accent); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; }
-.focus-item { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:10px; }
-.focus-item:last-child { border-bottom:none; }
-.focus-check { width:20px; height:20px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
-.focus-check:hover { border-color:var(--accent); background:var(--surface2); }
-.focus-text { flex:1; font-size:13px; line-height:1.4; }
-.focus-meta { font-size:11px; color:var(--text3); margin-top:4px; }
-.focus-empty { padding:20px; text-align:center; color:var(--text3); font-size:13px; }
-.text-capture { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
-.text-capture-area { width:100%; min-height:120px; padding:12px; font-size:14px; border:1px solid var(--border); border-radius:8px; resize:vertical; font-family:inherit; margin-bottom:12px; }
-.text-capture-hint { font-size:12px; color:var(--text3); margin-bottom:12px; }
     </style>
 </head>
 <body>
 <div class="auth-overlay" id="auth-screen">
     <div class="auth-box">
-        <div class="auth-title" id="auth-title">GTD Access</div>
-        <div class="auth-desc" id="auth-desc">Enter your PIN to continue</div>
+        <div class="auth-title" id="auth-title">GTD</div>
+        <div class="auth-desc" id="auth-desc">Enter your PIN</div>
         <div class="auth-error" id="auth-error">Incorrect PIN</div>
-        <input type="password" class="auth-input" id="auth-pin" maxlength="6" placeholder="------" inputmode="numeric" autocomplete="off">
-        <button class="btn btn-primary" style="width:100%" onclick="checkAuth()">Unlock</button>
+        <input type="password" class="input auth-input" id="auth-pin" maxlength="6" placeholder="------" inputmode="numeric" autocomplete="off">
+        <button class="btn btn-primary" onclick="checkAuth()">Unlock</button>
     </div>
 </div>
 
 <div class="app hidden" id="main-app">
     <header>
-        <h1>GTD <span class="ai-badge">AI</span></h1>
-        <div class="stats">
-            <span><span id="s-critical">0</span> critical</span>
-            <span><span id="s-high">0</span> high</span>
-            <span><span id="s-total">0</span> total</span>
-        </div>
+        <div class="logo">GTD</div>
+        <div class="header-stats"><span id="s-critical">0</span> urgent</div>
     </header>
 
+    <!-- Tasks View -->
     <div class="view active" id="v-list">
-        <div class="tabs">
-            <button class="tab active" data-status="all">All</button>
-            <button class="tab" data-status="Next Action">Actions</button>
-            <button class="tab" data-status="Waiting For">Waiting</button>
-            <button class="tab" data-status="focus">Today</button>
+        <div class="quick-filters">
+            <button class="qf active" data-status="focus">Today</button>
+            <button class="qf" data-status="all">All</button>
+            <button class="qf critical" data-p="Critical">Urgent</button>
+            <button class="qf" data-status="Next Action">Actions</button>
+            <button class="qf" data-status="Waiting For">Waiting</button>
         </div>
-        <div class="filters" id="filters-bar">
-            <input type="text" class="search" id="search" placeholder="Search...">
-            <button class="filter" data-p="Critical">Critical</button>
-            <button class="filter" data-p="High">High</button>
-        </div>
-        <div id="focus-view" style="display:none;padding:16px;">
+        
+        <div id="focus-view">
             <div class="focus-section">
-                <div class="focus-header">Professional <span class="focus-badge" id="focus-pro-count">5</span></div>
-                <div id="focus-pro-list"></div>
+                <div class="focus-label">Work <span class="focus-count" id="focus-pro-count">0</span></div>
+                <div class="focus-card" id="focus-pro-list"></div>
             </div>
             <div class="focus-section">
-                <div class="focus-header">Personal <span class="focus-badge" id="focus-per-count">5</span></div>
-                <div id="focus-per-list"></div>
+                <div class="focus-label">Personal <span class="focus-count" id="focus-per-count">0</span></div>
+                <div class="focus-card" id="focus-per-list"></div>
             </div>
-            <div style="text-align:center;padding:12px;color:var(--text3);font-size:12px;">Top 5 tasks each by priority and due date</div>
         </div>
-        <div class="list" id="items-list"></div>
+        
+        <div class="task-list" id="items-list" style="display:none;"></div>
     </div>
 
+    <!-- Projects View -->
     <div class="view" id="v-projects">
-        <div class="capture">
-            <div class="section-title">Projects</div>
-            <div id="projects-list"></div>
-            <button class="btn btn-primary" style="width:100%;margin-top:16px" onclick="showAddProject()">New Project</button>
+        <div style="padding:20px 16px 8px;">
+            <div style="font-size:13px;color:var(--text2);">Active Projects</div>
         </div>
+        <div style="padding:0 16px;" id="projects-list"></div>
     </div>
 
+    <!-- Capture View -->
     <div class="view" id="v-capture">
-        <div class="capture">
-            <div class="section-title">Voice Capture</div>
-            
-            <div class="mic-area" id="mic-area">
-                <button class="mic-btn" id="mic-btn">Start</button>
-                <div class="mic-status" id="mic-status">Tap to start recording</div>
-                <div class="mic-time" id="mic-time">0:00</div>
-            </div>
-            
-            <div class="capture-hints">
-                <div class="hint-title">What you can say:</div>
-                <div class="hint-item">Add: "I need to call John about the project"</div>
-                <div class="hint-item">Complete: "I finished the World Bank task"</div>
-                <div class="hint-item">Delete: "Remove the grocery task"</div>
-                <div class="hint-item">Multiple: "Call John, email Sarah, and book flights"</div>
-            </div>
-            
-            <div class="result-box" id="result-box" style="display:none;">
-                <div id="result-content"></div>
-            </div>
-            
-            <div class="text-capture">
-                <div class="section-title" style="margin-bottom:8px;">Text to Tasks</div>
-                <div class="text-capture-hint">Paste text from Claude or any source. AI will extract and organize tasks.</div>
-                <textarea class="text-capture-area" id="text-input" placeholder="Paste your dictation text, meeting notes, or any text with tasks here..."></textarea>
-                <button class="btn btn-primary" style="width:100%" onclick="processTextToTasks()">Extract Tasks</button>
-                <div id="text-result" style="margin-top:12px;"></div>
-            </div>
-            
-            <div class="token-warning" id="token-warning" style="display:none;">
-                <div style="font-weight:600;margin-bottom:4px;">AI not configured</div>
-                <div>Go to Settings → GitHub Token to enable smart capture</div>
-            </div>
+        <div class="capture-area" id="capture-area">
+            <button class="capture-btn" id="mic-btn">Tap</button>
+            <div class="capture-status" id="mic-status">Tap to speak</div>
+            <div class="capture-time" id="mic-time">0:00</div>
+        </div>
+        
+        <div class="result-card" id="result-box" style="display:none;">
+            <div id="result-content"></div>
+        </div>
+        
+        <div class="text-area">
+            <div class="text-hint">Or paste text to extract tasks</div>
+            <textarea class="textarea" id="text-input" placeholder="Paste meeting notes, dictation from Claude, or any text..."></textarea>
+            <button class="btn btn-primary" style="margin-top:12px" onclick="processTextToTasks()">Extract Tasks</button>
+            <div id="text-result" style="margin-top:12px;"></div>
         </div>
     </div>
 
-    <div class="view" id="v-add">
-        <div class="form">
-            <div class="section-title">Quick Add</div>
-            <div class="form-group">
-                <label class="form-label">Task</label>
-                <input class="form-input" id="f-item" placeholder="What needs to be done?">
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Priority</label>
-                    <select class="form-select" id="f-priority"><option value="Critical">Critical</option><option value="High">High</option><option value="Medium" selected>Medium</option><option value="Low">Low</option></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Status</label>
-                    <select class="form-select" id="f-status"><option value="Next Action">Next Action</option><option value="Waiting For">Waiting For</option><option value="Someday/Maybe">Someday/Maybe</option></select>
-                </div>
-            </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Category</label>
-                    <select class="form-select" id="f-category"><option value="Personal">Personal</option><option value="Professional">Professional</option></select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Project</label>
-                    <select class="form-select" id="f-project"></select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Due Date</label>
-                <input type="date" class="form-input" id="f-due">
-            </div>
-            <div class="form-group">
-                <label class="form-label">Notes</label>
-                <input class="form-input" id="f-notes" placeholder="Additional details">
-            </div>
-            <button class="btn btn-primary" style="width:100%" onclick="addItem()">Add</button>
-        </div>
-    </div>
-
+    <!-- Settings View -->
     <div class="view" id="v-settings">
-        <div class="settings">
+        <div class="settings-section">
             <div class="settings-label">AI Setup</div>
             <div class="settings-group">
-                <button class="settings-item" type="button" onclick="setupGitHubToken()">GitHub Token <span id="token-status" style="float:right;color:var(--text3)">Not set</span></button>
+                <div class="settings-item" onclick="setupGitHubToken()">
+                    <span class="settings-item-label">GitHub Token</span>
+                    <span class="settings-item-value" id="token-status">Not set</span>
+                </div>
             </div>
+            
             <div class="settings-label">Analytics</div>
             <div class="settings-group">
-                <button class="settings-item" type="button" onclick="showCompletionLog()">View Completion Log</button>
-                <button class="settings-item" type="button" onclick="showProductivityStats()">Productivity Stats</button>
+                <div class="settings-item" onclick="showCompletionLog()">
+                    <span class="settings-item-label">Completion Log</span>
+                </div>
+                <div class="settings-item" onclick="exportCompletionLog()">
+                    <span class="settings-item-label">Export Log (CSV)</span>
+                </div>
             </div>
+            
             <div class="settings-label">Security</div>
             <div class="settings-group">
-                <button class="settings-item" type="button" onclick="changePin()">Change PIN</button>
-                <button class="settings-item" type="button" onclick="lockApp()">Lock App</button>
+                <div class="settings-item" onclick="changePin()">
+                    <span class="settings-item-label">Change PIN</span>
+                </div>
+                <div class="settings-item" onclick="lockApp()">
+                    <span class="settings-item-label">Lock App</span>
+                </div>
             </div>
+            
             <div class="settings-label">Data</div>
             <div class="settings-group">
-                <button class="settings-item" type="button" onclick="exportJSON()">Export JSON</button>
-                <button class="settings-item" type="button" onclick="document.getElementById('import-file').click()">Import JSON</button>
+                <div class="settings-item" onclick="exportJSON()">
+                    <span class="settings-item-label">Export Data</span>
+                </div>
+                <div class="settings-item" onclick="document.getElementById('import-file').click()">
+                    <span class="settings-item-label">Import Data</span>
+                </div>
                 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this.files[0])">
-                <button class="settings-item" type="button" onclick="exportCompletionLog()">Export Completion Log (CSV)</button>
+                <div class="settings-item" onclick="reloadSampleData()">
+                    <span class="settings-item-label">Reload Sample Data</span>
+                </div>
+                <div class="settings-item danger" onclick="resetAll()">
+                    <span class="settings-item-label">Reset All Data</span>
+                </div>
             </div>
-            <div class="settings-label">Manage</div>
-            <div class="settings-group">
-                <button class="settings-item" type="button" onclick="clearCompleted()">Clear completed</button>
-                <button class="settings-item" type="button" onclick="reloadSampleData()">Reload sample data (101 items)</button>
-                <button class="settings-item danger" type="button" onclick="resetAll()">Reset all data</button>
-            </div>
-            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.8 - AI Powered</div>
+            
+            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.0</div>
         </div>
     </div>
-
-    <!-- Completion Log Modal -->
-    <div class="modal" id="modal-log"><div class="modal-content" id="log-content" style="max-height:80vh;overflow-y:auto;"></div></div>
 </div>
 
+<!-- Floating Add Button -->
+<button class="fab hidden" id="fab" onclick="showAddModal()">+</button>
+
+<!-- Bottom Navigation -->
 <nav class="nav hidden" id="main-nav">
-    <button class="nav-btn active" data-v="list">Tasks</button>
-    <button class="nav-btn" data-v="projects">Projects</button>
-    <button class="nav-btn capture-btn" data-v="capture">Capture</button>
-    <button class="nav-btn" data-v="add">Add</button>
-    <button class="nav-btn" data-v="settings">Settings</button>
+    <button class="nav-item active" data-v="list"><span class="nav-icon">☐</span>Tasks</button>
+    <button class="nav-item" data-v="projects"><span class="nav-icon">◫</span>Projects</button>
+    <button class="nav-item" data-v="capture"><span class="nav-icon">◉</span>Capture</button>
+    <button class="nav-item" data-v="settings"><span class="nav-icon">⚙</span>Settings</button>
 </nav>
 
-<div class="modal" id="modal-detail"><div class="modal-content" id="detail-content"></div></div>
-<div class="modal" id="modal-project"><div class="modal-content" id="project-content"></div></div>
+<!-- Task Detail Modal -->
+<div class="modal" id="modal-detail">
+    <div class="sheet" id="detail-content"></div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal" id="modal-add">
+    <div class="sheet">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">New Task</div>
+        <div class="input-group">
+            <input class="input" id="f-item" placeholder="What needs to be done?">
+        </div>
+        <div class="btn-row" style="margin-bottom:16px;">
+            <div class="input-group" style="margin:0;flex:1;">
+                <label class="input-label">Priority</label>
+                <select class="input select" id="f-priority"><option value="Critical">Urgent</option><option value="High">High</option><option value="Medium" selected>Medium</option><option value="Low">Low</option></select>
+            </div>
+            <div class="input-group" style="margin:0;flex:1;">
+                <label class="input-label">Category</label>
+                <select class="input select" id="f-category"><option value="Personal">Personal</option><option value="Professional">Work</option></select>
+            </div>
+        </div>
+        <div class="input-group">
+            <label class="input-label">Project</label>
+            <select class="input select" id="f-project"></select>
+        </div>
+        <div class="input-group">
+            <label class="input-label">Due Date</label>
+            <input type="date" class="input" id="f-due">
+        </div>
+        <button class="btn btn-primary" onclick="addItem()">Add Task</button>
+    </div>
+</div>
+
+<!-- Project Detail Modal -->
+<div class="modal" id="modal-project"><div class="sheet" id="project-content"></div></div>
+
+<!-- Completion Log Modal -->
+<div class="modal" id="modal-log"><div class="sheet" id="log-content"></div></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -526,7 +536,11 @@ function init() {
     if (!projects || !Array.isArray(projects)) {
         projects = DEFAULT_PROJECTS;
     }
-    populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus(); checkTokenWarning();
+    // Set default filter to focus (Today view)
+    filters.status = 'focus';
+    populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus();
+    // Show FAB on tasks view
+    document.getElementById('fab').classList.remove('hidden');
 }
 
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: items, projects: projects, lastModified: new Date().toISOString() })); }
@@ -540,29 +554,22 @@ function populateProjects() {
 function render() {
     var list = document.getElementById('items-list');
     var focusView = document.getElementById('focus-view');
-    var filtersBar = document.getElementById('filters-bar');
     
-    // Handle focus/today view
+    // Handle focus/today view (default)
     if (filters.status === 'focus') {
         list.style.display = 'none';
-        filtersBar.style.display = 'none';
         focusView.style.display = 'block';
         renderFocusView();
         return;
     } else {
         list.style.display = 'block';
-        filtersBar.style.display = 'flex';
         focusView.style.display = 'none';
     }
     
     var filtered = items.filter(function(item) {
         if (item.status === 'Completed') return false;
-        if (filters.status !== 'all' && item.status !== filters.status) return false;
+        if (filters.status !== 'all' && filters.status !== 'focus' && item.status !== filters.status) return false;
         if (filters.priority && item.priority !== filters.priority) return false;
-        if (filters.search) {
-            var searchText = (item.item + ' ' + item.project + ' ' + item.notes).toLowerCase();
-            if (searchText.indexOf(filters.search.toLowerCase()) === -1) return false;
-        }
         return true;
     });
     var order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
@@ -572,23 +579,24 @@ function render() {
         var html = '';
         for (var i = 0; i < filtered.length; i++) {
             var item = filtered[i];
-            html += '<div class="item" onclick="showDetail(' + item.id + ')">';
-            html += '<div class="item-row"><div class="item-title">' + item.item + '</div><div class="item-priority ' + (item.priority || '').toLowerCase() + '"></div></div>';
-            html += '<div class="item-meta">';
+            html += '<div class="task" onclick="showDetail(' + item.id + ')">';
+            html += '<div class="task-check" onclick="event.stopPropagation();complete(' + item.id + ')"></div>';
+            html += '<div class="task-body"><div class="task-title">' + item.item + '</div>';
+            html += '<div class="task-subtitle">';
             if (item.project) html += '<span>' + item.project + '</span>';
-            if (item.dueDate) html += '<span>Due: ' + formatDate(item.dueDate) + '</span>';
-            if (item.waiting_for) html += '<span>Waiting: ' + item.waiting_for + '</span>';
+            if (item.dueDate) html += '<span>Due ' + formatDate(item.dueDate) + '</span>';
             html += '</div></div>';
+            html += '<div class="task-priority ' + (item.priority || '').toLowerCase() + '"></div>';
+            html += '</div>';
         }
         list.innerHTML = html;
     } else {
-        list.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px;">No items</p>';
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div><div class="empty-state-text">All clear!</div></div>';
     }
 }
 
 function renderFocusView() {
     var order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-    var today = new Date();
     
     // Get active tasks, sorted by priority then due date
     var activeTasks = items.filter(function(item) {
@@ -596,10 +604,8 @@ function renderFocusView() {
     });
     
     activeTasks.sort(function(a, b) {
-        // First by priority
         var pDiff = (order[a.priority] || 4) - (order[b.priority] || 4);
         if (pDiff !== 0) return pDiff;
-        // Then by due date (earlier first, no date last)
         var aDate = a.dueDate ? new Date(a.dueDate) : new Date('2099-12-31');
         var bDate = b.dueDate ? new Date(b.dueDate) : new Date('2099-12-31');
         return aDate - bDate;
@@ -612,17 +618,19 @@ function renderFocusView() {
     // Render professional
     var proHtml = '';
     if (professional.length === 0) {
-        proHtml = '<div class="focus-empty">No professional tasks</div>';
+        proHtml = '<div style="padding:20px;text-align:center;color:var(--text3);">No work tasks</div>';
     } else {
         for (var i = 0; i < professional.length; i++) {
             var t = professional[i];
-            proHtml += '<div class="focus-item">';
-            proHtml += '<div class="focus-check" onclick="event.stopPropagation();completeFocusTask(' + t.id + ')"></div>';
-            proHtml += '<div class="focus-text" onclick="showDetail(' + t.id + ')">' + t.item;
-            proHtml += '<div class="focus-meta">';
-            if (t.project) proHtml += t.project;
-            if (t.dueDate) proHtml += (t.project ? ' | ' : '') + 'Due: ' + formatDate(t.dueDate);
-            proHtml += '</div></div></div>';
+            proHtml += '<div class="focus-task">';
+            proHtml += '<div class="task-check" onclick="event.stopPropagation();completeFocusTask(' + t.id + ')"></div>';
+            proHtml += '<div class="task-body" onclick="showDetail(' + t.id + ')"><div class="task-title">' + t.item + '</div>';
+            proHtml += '<div class="task-subtitle">';
+            if (t.project) proHtml += '<span>' + t.project + '</span>';
+            if (t.dueDate) proHtml += '<span>' + formatDate(t.dueDate) + '</span>';
+            proHtml += '</div></div>';
+            proHtml += '<div class="task-priority ' + (t.priority || '').toLowerCase() + '"></div>';
+            proHtml += '</div>';
         }
     }
     document.getElementById('focus-pro-list').innerHTML = proHtml;
@@ -631,17 +639,19 @@ function renderFocusView() {
     // Render personal
     var perHtml = '';
     if (personal.length === 0) {
-        perHtml = '<div class="focus-empty">No personal tasks</div>';
+        perHtml = '<div style="padding:20px;text-align:center;color:var(--text3);">No personal tasks</div>';
     } else {
         for (var j = 0; j < personal.length; j++) {
             var t2 = personal[j];
-            perHtml += '<div class="focus-item">';
-            perHtml += '<div class="focus-check" onclick="event.stopPropagation();completeFocusTask(' + t2.id + ')"></div>';
-            perHtml += '<div class="focus-text" onclick="showDetail(' + t2.id + ')">' + t2.item;
-            perHtml += '<div class="focus-meta">';
-            if (t2.project) perHtml += t2.project;
-            if (t2.dueDate) perHtml += (t2.project ? ' | ' : '') + 'Due: ' + formatDate(t2.dueDate);
-            perHtml += '</div></div></div>';
+            perHtml += '<div class="focus-task">';
+            perHtml += '<div class="task-check" onclick="event.stopPropagation();completeFocusTask(' + t2.id + ')"></div>';
+            perHtml += '<div class="task-body" onclick="showDetail(' + t2.id + ')"><div class="task-title">' + t2.item + '</div>';
+            perHtml += '<div class="task-subtitle">';
+            if (t2.project) perHtml += '<span>' + t2.project + '</span>';
+            if (t2.dueDate) perHtml += '<span>' + formatDate(t2.dueDate) + '</span>';
+            perHtml += '</div></div>';
+            perHtml += '<div class="task-priority ' + (t2.priority || '').toLowerCase() + '"></div>';
+            perHtml += '</div>';
         }
     }
     document.getElementById('focus-per-list').innerHTML = perHtml;
@@ -660,7 +670,7 @@ function renderProjects() {
     var activeProjects = projects.filter(function(p) { return p.status !== 'Completed'; });
     
     if (activeProjects.length === 0) {
-        list.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px;">No projects</p>';
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-text">No active projects</div></div>';
         return;
     }
     
@@ -671,19 +681,16 @@ function renderProjects() {
         var total = items.filter(function(t) { return t.project === p.name; }).length;
         var done = items.filter(function(t) { return t.project === p.name && t.status === 'Completed'; }).length;
         var progress = total > 0 ? Math.round((done / total) * 100) : 0;
-        var daysLeft = p.deadline ? Math.ceil((new Date(p.deadline) - new Date()) / 86400000) : null;
         
-        html += '<div class="proj-card" onclick="showProjectDetail(\'' + p.id + '\')">';
-        html += '<div class="proj-header"><div class="proj-name">' + p.name + '</div><span class="proj-status ' + p.status.toLowerCase().replace(' ','-') + '">' + p.status + '</span></div>';
-        html += '<div class="proj-body"><div class="proj-meta">';
-        if (p.deadline) {
-            html += '<div><span class="proj-meta-label">Deadline</span><br><span class="proj-meta-value' + (daysLeft < 14 ? ' danger' : '') + '">' + formatDate(p.deadline) + ' (' + daysLeft + 'd)</span></div>';
-        }
-        html += '<div><span class="proj-meta-label">Tasks</span><br><span class="proj-meta-value">' + tasks.length + ' active</span></div></div>';
+        html += '<div class="project-card" onclick="showProjectDetail(\'' + p.id + '\')">';
+        html += '<div class="project-name">' + p.name + '</div>';
+        html += '<div class="project-meta"><span>' + tasks.length + ' tasks</span>';
+        if (p.deadline) html += '<span>Due ' + formatDate(p.deadline) + '</span>';
+        html += '</div>';
         if (total > 0) {
-            html += '<div class="proj-progress"><div class="proj-progress-bar" style="width:' + progress + '%"></div></div><div class="proj-tasks">' + progress + '% (' + done + '/' + total + ')</div>';
+            html += '<div class="project-progress"><div class="project-bar" style="width:' + progress + '%"></div></div>';
         }
-        html += '</div></div>';
+        html += '</div>';
     }
     list.innerHTML = html;
 }
@@ -694,32 +701,28 @@ function showProjectDetail(id) {
     if (!p) return;
     var tasks = items.filter(function(t) { return t.project === p.name && t.status !== 'Completed'; });
     
-    var html = '<div class="modal-header"><div class="modal-title">' + p.name + '</div><button class="close-btn" onclick="closeProjectModal()">x</button></div>';
-    html += '<div class="form">';
-    html += '<div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" onchange="updateProject(\'' + id + '\',\'status\',this.value)">';
+    var html = '<div class="sheet-handle"></div>';
+    html += '<div class="sheet-title">' + p.name + '</div>';
+    html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Status</label><select class="input select" onchange="updateProject(\'' + id + '\',\'status\',this.value)">';
     html += '<option ' + (p.status==='Planning'?'selected':'') + '>Planning</option>';
     html += '<option ' + (p.status==='Active'?'selected':'') + '>Active</option>';
     html += '<option ' + (p.status==='On Hold'?'selected':'') + '>On Hold</option>';
     html += '<option ' + (p.status==='Completed'?'selected':'') + '>Completed</option></select></div>';
-    html += '<div class="form-group"><label class="form-label">Category</label><select class="form-select" onchange="updateProject(\'' + id + '\',\'category\',this.value)">';
-    html += '<option ' + (p.category==='Professional'?'selected':'') + '>Professional</option>';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Category</label><select class="input select" onchange="updateProject(\'' + id + '\',\'category\',this.value)">';
+    html += '<option ' + (p.category==='Professional'?'selected':'') + '>Work</option>';
     html += '<option ' + (p.category==='Personal'?'selected':'') + '>Personal</option></select></div></div>';
-    html += '<div class="form-row"><div class="form-group"><label class="form-label">Start</label><input type="date" class="form-input" value="' + (p.startDate||'') + '" onchange="updateProject(\'' + id + '\',\'startDate\',this.value)"></div>';
-    html += '<div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-input" value="' + (p.deadline||'') + '" onchange="updateProject(\'' + id + '\',\'deadline\',this.value)"></div></div>';
-    html += '<div class="form-group"><label class="form-label">Owner</label><input class="form-input" value="' + (p.owner||'') + '" onchange="updateProject(\'' + id + '\',\'owner\',this.value)"></div>';
-    html += '<div class="form-group"><label class="form-label">Stakeholders</label><input class="form-input" value="' + (p.stakeholders||'') + '" onchange="updateProject(\'' + id + '\',\'stakeholders\',this.value)"></div>';
-    html += '<div class="form-group"><label class="form-label">Notes</label><input class="form-input" value="' + (p.notes||'') + '" onchange="updateProject(\'' + id + '\',\'notes\',this.value)"></div>';
-    html += '<div class="section-title" style="margin-top:16px">Tasks (' + tasks.length + ')</div>';
+    html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Start</label><input type="date" class="input" value="' + (p.startDate||'') + '" onchange="updateProject(\'' + id + '\',\'startDate\',this.value)"></div>';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Deadline</label><input type="date" class="input" value="' + (p.deadline||'') + '" onchange="updateProject(\'' + id + '\',\'deadline\',this.value)"></div></div>';
+    html += '<div style="font-size:12px;color:var(--text3);margin:20px 0 12px;text-transform:uppercase;letter-spacing:1px;">' + tasks.length + ' Tasks</div>';
     if (tasks.length) {
         for (var j = 0; j < tasks.length; j++) {
             var t = tasks[j];
-            html += '<div class="item" onclick="showDetail(' + t.id + ');closeProjectModal()"><div class="item-row"><div class="item-title">' + t.item + '</div><div class="item-priority ' + (t.priority||'').toLowerCase() + '"></div></div></div>';
+            html += '<div class="task" style="margin-bottom:8px" onclick="showDetail(' + t.id + ');closeProjectModal()"><div class="task-body"><div class="task-title">' + t.item + '</div></div><div class="task-priority ' + (t.priority||'').toLowerCase() + '"></div></div>';
         }
     } else {
-        html += '<p style="color:var(--text3)">No tasks</p>';
+        html += '<div style="color:var(--text3);text-align:center;padding:20px">No tasks</div>';
     }
-    html += '<button class="btn btn-secondary danger" style="margin-top:20px" onclick="if(confirm(\'Delete?\')){deleteProject(\'' + id + '\')}">Delete Project</button>';
-    html += '</div>';
+    html += '<button class="btn btn-danger" style="margin-top:20px" onclick="if(confirm(\'Delete project?\')){deleteProject(\'' + id + '\')}">Delete Project</button>';
     document.getElementById('project-content').innerHTML = html;
     document.getElementById('modal-project').classList.add('open');
 }
@@ -735,47 +738,43 @@ function deleteProject(id) { projects = projects.filter(function(p) { return p.i
 
 function showAddProject() {
     var today = new Date().toISOString().split('T')[0];
-    var html = '<div class="modal-header"><div class="modal-title">New Project</div><button class="close-btn" onclick="closeProjectModal()">x</button></div>';
-    html += '<div class="form">';
-    html += '<div class="form-group"><label class="form-label">Name</label><input class="form-input" id="np-name"></div>';
-    html += '<div class="form-row"><div class="form-group"><label class="form-label">Status</label><select class="form-select" id="np-status"><option>Planning</option><option selected>Active</option></select></div>';
-    html += '<div class="form-group"><label class="form-label">Category</label><select class="form-select" id="np-cat"><option>Professional</option><option>Personal</option></select></div></div>';
-    html += '<div class="form-row"><div class="form-group"><label class="form-label">Start</label><input type="date" class="form-input" id="np-start" value="' + today + '"></div>';
-    html += '<div class="form-group"><label class="form-label">Deadline</label><input type="date" class="form-input" id="np-deadline"></div></div>';
-    html += '<div class="form-group"><label class="form-label">Owner</label><input class="form-input" id="np-owner" value="Shreyas"></div>';
-    html += '<button class="btn btn-primary" style="width:100%" onclick="addProject()">Create</button>';
-    html += '</div>';
+    var html = '<div class="sheet-handle"></div>';
+    html += '<div class="sheet-title">New Project</div>';
+    html += '<div class="input-group"><input class="input" id="np-name" placeholder="Project name"></div>';
+    html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Status</label><select class="input select" id="np-status"><option>Planning</option><option selected>Active</option></select></div>';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Category</label><select class="input select" id="np-cat"><option value="Professional">Work</option><option>Personal</option></select></div></div>';
+    html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Start</label><input type="date" class="input" id="np-start" value="' + today + '"></div>';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Deadline</label><input type="date" class="input" id="np-deadline"></div></div>';
+    html += '<button class="btn btn-primary" onclick="addProject()">Create Project</button>';
     document.getElementById('project-content').innerHTML = html;
     document.getElementById('modal-project').classList.add('open');
 }
 
 function addProject() {
     var name = document.getElementById('np-name').value.trim(); if (!name) { toast('Enter name'); return; }
-    projects.push({ id: 'p' + Date.now(), name: name, status: document.getElementById('np-status').value, category: document.getElementById('np-cat').value, startDate: document.getElementById('np-start').value || null, deadline: document.getElementById('np-deadline').value || null, owner: document.getElementById('np-owner').value });
+    projects.push({ id: 'p' + Date.now(), name: name, status: document.getElementById('np-status').value, category: document.getElementById('np-cat').value, startDate: document.getElementById('np-start').value || null, deadline: document.getElementById('np-deadline').value || null, owner: 'Shreyas' });
     save(); renderProjects(); populateProjects(); closeProjectModal(); toast('Created');
 }
 
 function updateStats() {
     var active = items.filter(function(i) { return i.status !== 'Completed'; });
-    document.getElementById('s-total').textContent = active.length;
     document.getElementById('s-critical').textContent = active.filter(function(i) { return i.priority === 'Critical'; }).length;
-    document.getElementById('s-high').textContent = active.filter(function(i) { return i.priority === 'High'; }).length;
 }
 
 function showDetail(id) {
     var item = null;
     for (var i = 0; i < items.length; i++) { if (items[i].id === id) { item = items[i]; break; } }
     if (!item) return;
-    var html = '<div class="modal-header"><div class="modal-title">Details</div><button class="close-btn" onclick="closeModal()">x</button></div>';
-    html += '<div style="margin-bottom:20px"><div style="font-size:15px;line-height:1.5;margin-bottom:12px">' + item.item + '</div>';
-    html += '<div style="font-size:13px;color:var(--text2)">' + item.priority + ' / ' + item.status + ' / ' + item.category + '</div></div>';
-    html += '<div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px">';
-    if (item.project) html += '<div>Project: ' + item.project + '</div>';
-    if (item.dueDate) html += '<div>Due: ' + formatDate(item.dueDate) + '</div>';
-    if (item.waiting_for) html += '<div>Waiting: ' + item.waiting_for + '</div>';
-    if (item.notes) html += '<div>Notes: ' + item.notes + '</div>';
+    var html = '<div class="sheet-handle"></div>';
+    html += '<div style="font-size:17px;font-weight:600;line-height:1.5;margin-bottom:16px">' + item.item + '</div>';
+    html += '<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;font-size:13px;">';
+    html += '<span style="padding:4px 12px;background:var(--surface2);border-radius:100px;">' + item.priority + '</span>';
+    html += '<span style="padding:4px 12px;background:var(--surface2);border-radius:100px;">' + item.category + '</span>';
+    if (item.project) html += '<span style="padding:4px 12px;background:var(--surface2);border-radius:100px;">' + item.project + '</span>';
     html += '</div>';
-    html += '<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="complete(' + item.id + ')">Complete</button><button class="btn btn-secondary danger" onclick="deleteItem(' + item.id + ')">Delete</button></div>';
+    if (item.dueDate) html += '<div style="font-size:14px;color:var(--text2);margin-bottom:20px;">Due ' + formatDate(item.dueDate) + '</div>';
+    if (item.notes) html += '<div style="font-size:14px;color:var(--text2);margin-bottom:20px;">' + item.notes + '</div>';
+    html += '<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="complete(' + item.id + ')">Complete</button><button class="btn btn-secondary" style="flex:1" onclick="deleteItem(' + item.id + ')">Delete</button></div>';
     document.getElementById('detail-content').innerHTML = html;
     document.getElementById('modal-detail').classList.add('open');
 }
@@ -833,16 +832,25 @@ function addItem() {
     items.unshift(item); save(); render(); renderProjects(); updateStats(); populateProjects();
     document.getElementById('f-item').value = ''; document.getElementById('f-notes').value = ''; document.getElementById('f-due').value = '';
     toast('Added');
+    closeAddModal();
 }
 
 function switchView(name) {
     var views = document.querySelectorAll('.view');
     for (var i = 0; i < views.length; i++) { views[i].classList.remove('active'); }
-    var navBtns = document.querySelectorAll('.nav-btn');
-    for (var j = 0; j < navBtns.length; j++) { navBtns[j].classList.remove('active'); }
+    var navItems = document.querySelectorAll('.nav-item');
+    for (var j = 0; j < navItems.length; j++) { navItems[j].classList.remove('active'); }
     document.getElementById('v-' + name).classList.add('active');
-    var targetBtn = document.querySelector('[data-v="' + name + '"]');
+    var targetBtn = document.querySelector('.nav-item[data-v="' + name + '"]');
     if (targetBtn) targetBtn.classList.add('active');
+    
+    // Show/hide FAB
+    var fab = document.getElementById('fab');
+    if (name === 'list') {
+        fab.classList.remove('hidden');
+    } else {
+        fab.classList.add('hidden');
+    }
 }
 
 // ========== AI VOICE CAPTURE ==========
@@ -898,7 +906,7 @@ document.getElementById('mic-btn').onclick = function() {
 
 function startRecording() {
     isRecording = true; recordingTime = 0; transcript = '';
-    var micArea = document.getElementById('mic-area');
+    var micArea = document.getElementById('capture-area');
     var micBtn = document.getElementById('mic-btn');
     
     micArea.classList.add('recording');
@@ -926,7 +934,7 @@ function stopRecording() {
     try { recognition.stop(); } catch(e) { console.log('Stop error:', e); }
     try { recognition.abort(); } catch(e) { }
     
-    var micArea = document.getElementById('mic-area');
+    var micArea = document.getElementById('capture-area');
     var micBtn = document.getElementById('mic-btn');
     
     micArea.classList.remove('recording');
@@ -951,7 +959,7 @@ function stopRecording() {
 
 function processWithAI(text) {
     var token = getGitHubToken();
-    var micArea = document.getElementById('mic-area');
+    var micArea = document.getElementById('capture-area');
     
     if (!token) {
         micArea.classList.remove('processing');
@@ -1116,7 +1124,7 @@ function executeActions(actions, transcript, interpretation) {
     save(); render(); renderProjects(); updateStats(); populateProjects();
     
     // Reset mic area
-    var micArea = document.getElementById('mic-area');
+    var micArea = document.getElementById('capture-area');
     micArea.classList.remove('processing');
     document.getElementById('mic-status').textContent = 'Tap to start recording';
     
@@ -1560,46 +1568,45 @@ function exportCompletionLog() {
 }
 
 function setupListeners() {
-    var tabs = document.querySelectorAll('.tab');
-    for (var i = 0; i < tabs.length; i++) {
-        (function(tab) {
-            tab.onclick = function() {
-                var allTabs = document.querySelectorAll('.tab');
-                for (var j = 0; j < allTabs.length; j++) { allTabs[j].classList.remove('active'); }
-                tab.classList.add('active');
-                filters.status = tab.dataset.status;
-                render();
-            };
-        })(tabs[i]);
-    }
-    
-    var filterBtns = document.querySelectorAll('.filter[data-p]');
-    for (var k = 0; k < filterBtns.length; k++) {
+    // Quick filters (new design)
+    var qfBtns = document.querySelectorAll('.qf');
+    for (var i = 0; i < qfBtns.length; i++) {
         (function(btn) {
             btn.onclick = function() {
-                var wasActive = btn.classList.contains('active');
-                var allFilters = document.querySelectorAll('.filter[data-p]');
-                for (var m = 0; m < allFilters.length; m++) { allFilters[m].classList.remove('active'); }
-                filters.priority = wasActive ? null : btn.dataset.p;
-                if (!wasActive) btn.classList.add('active');
+                var allQf = document.querySelectorAll('.qf');
+                for (var j = 0; j < allQf.length; j++) { allQf[j].classList.remove('active'); }
+                btn.classList.add('active');
+                
+                // Handle priority filter
+                if (btn.dataset.p) {
+                    filters.status = 'all';
+                    filters.priority = btn.dataset.p;
+                } else {
+                    filters.status = btn.dataset.status;
+                    filters.priority = null;
+                }
                 render();
             };
-        })(filterBtns[k]);
+        })(qfBtns[i]);
     }
     
-    document.getElementById('search').oninput = function(e) { filters.search = e.target.value; render(); };
-    
-    var navBtns = document.querySelectorAll('.nav-btn');
-    for (var n = 0; n < navBtns.length; n++) {
+    // Navigation
+    var navItems = document.querySelectorAll('.nav-item');
+    for (var n = 0; n < navItems.length; n++) {
         (function(btn) {
             btn.onclick = function() { switchView(btn.dataset.v); };
-        })(navBtns[n]);
+        })(navItems[n]);
     }
     
+    // Modals close on background click
     document.getElementById('modal-detail').onclick = function(e) { if (e.target.id === 'modal-detail') closeModal(); };
     document.getElementById('modal-project').onclick = function(e) { if (e.target.id === 'modal-project') closeProjectModal(); };
     document.getElementById('modal-log').onclick = function(e) { if (e.target.id === 'modal-log') closeLogModal(); };
+    document.getElementById('modal-add').onclick = function(e) { if (e.target.id === 'modal-add') closeAddModal(); };
 }
+
+function showAddModal() { document.getElementById('modal-add').classList.add('open'); }
+function closeAddModal() { document.getElementById('modal-add').classList.remove('open'); }
 </script>
 </body>
 </html>
