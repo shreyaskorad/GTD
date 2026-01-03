@@ -220,9 +220,10 @@ header h1 { font-size:18px; font-weight:600; }
             <div class="settings-label">Manage</div>
             <div class="settings-group">
                 <div class="settings-item" onclick="clearCompleted()">Clear completed</div>
+                <div class="settings-item" onclick="reloadSampleData()">Reload sample data (101 items)</div>
                 <div class="settings-item danger" onclick="resetAll()">Reset all data</div>
             </div>
-            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.0 - AI Powered</div>
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.2 - AI Powered</div>
         </div>
     </div>
 </div>
@@ -679,6 +680,18 @@ function fallbackProcess(text) {
 function exportJSON() { const blob = new Blob([JSON.stringify({ items, projects }, null, 2)], { type: 'application/json' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-backup.json'; a.click(); toast('Downloaded'); }
 function importJSON(file) { if (!file) return; const reader = new FileReader(); reader.onload = e => { try { const data = JSON.parse(e.target.result); if (data.items) items = data.items; if (data.projects) projects = data.projects; save(); render(); renderProjects(); updateStats(); populateProjects(); toast('Imported'); } catch (e) { toast('Invalid file'); } }; reader.readAsText(file); }
 function clearCompleted() { if (confirm('Clear completed?')) { items = items.filter(i => i.status !== 'Completed'); save(); render(); updateStats(); toast('Cleared'); } }
+function reloadSampleData() { 
+    if (confirm('Reload all 101 sample items? This will replace your current data.')) { 
+        if (typeof GTD_INITIAL_DATA !== 'undefined') {
+            items = GTD_INITIAL_DATA.map((item, i) => { const { context, ...rest } = item; return { ...rest, id: item.id || i + 1 }; });
+            projects = DEFAULT_PROJECTS;
+            save(); render(); renderProjects(); updateStats(); populateProjects();
+            toast('Loaded 101 items');
+        } else {
+            toast('Sample data not available');
+        }
+    } 
+}
 function resetAll() { if (confirm('Reset all?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
