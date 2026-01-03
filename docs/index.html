@@ -702,29 +702,48 @@ function showProjectDetail(id) {
     var tasks = items.filter(function(t) { return t.project === p.name && t.status !== 'Completed'; });
     
     var html = '<div class="sheet-handle"></div>';
-    html += '<div class="sheet-title">' + p.name + '</div>';
+    html += '<div class="input-group"><input class="input" id="edit-proj-name" value="' + p.name + '" style="font-size:17px;font-weight:600;" onchange="updateProjectName(\'' + id + '\',this.value)"></div>';
     html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Status</label><select class="input select" onchange="updateProject(\'' + id + '\',\'status\',this.value)">';
     html += '<option ' + (p.status==='Planning'?'selected':'') + '>Planning</option>';
     html += '<option ' + (p.status==='Active'?'selected':'') + '>Active</option>';
     html += '<option ' + (p.status==='On Hold'?'selected':'') + '>On Hold</option>';
     html += '<option ' + (p.status==='Completed'?'selected':'') + '>Completed</option></select></div>';
     html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Category</label><select class="input select" onchange="updateProject(\'' + id + '\',\'category\',this.value)">';
-    html += '<option ' + (p.category==='Professional'?'selected':'') + '>Work</option>';
-    html += '<option ' + (p.category==='Personal'?'selected':'') + '>Personal</option></select></div></div>';
+    html += '<option value="Professional"' + (p.category==='Professional'?' selected':'') + '>Work</option>';
+    html += '<option value="Personal"' + (p.category==='Personal'?' selected':'') + '>Personal</option></select></div></div>';
     html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Start</label><input type="date" class="input" value="' + (p.startDate||'') + '" onchange="updateProject(\'' + id + '\',\'startDate\',this.value)"></div>';
     html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Deadline</label><input type="date" class="input" value="' + (p.deadline||'') + '" onchange="updateProject(\'' + id + '\',\'deadline\',this.value)"></div></div>';
-    html += '<div style="font-size:12px;color:var(--text3);margin:20px 0 12px;text-transform:uppercase;letter-spacing:1px;">' + tasks.length + ' Tasks</div>';
+    html += '<div class="input-group"><label class="input-label">Notes</label><input class="input" value="' + (p.notes||'') + '" placeholder="Project notes..." onchange="updateProject(\'' + id + '\',\'notes\',this.value)"></div>';
+    html += '<div style="font-size:12px;color:var(--text3);margin:20px 0 12px;text-transform:uppercase;letter-spacing:1px;">' + tasks.length + ' Active Tasks</div>';
     if (tasks.length) {
         for (var j = 0; j < tasks.length; j++) {
             var t = tasks[j];
             html += '<div class="task" style="margin-bottom:8px" onclick="showDetail(' + t.id + ');closeProjectModal()"><div class="task-body"><div class="task-title">' + t.item + '</div></div><div class="task-priority ' + (t.priority||'').toLowerCase() + '"></div></div>';
         }
     } else {
-        html += '<div style="color:var(--text3);text-align:center;padding:20px">No tasks</div>';
+        html += '<div style="color:var(--text3);text-align:center;padding:20px">No active tasks</div>';
     }
     html += '<button class="btn btn-danger" style="margin-top:20px" onclick="if(confirm(\'Delete project?\')){deleteProject(\'' + id + '\')}">Delete Project</button>';
     document.getElementById('project-content').innerHTML = html;
     document.getElementById('modal-project').classList.add('open');
+}
+
+function updateProjectName(id, newName) {
+    newName = newName.trim();
+    if (!newName) { toast('Name cannot be empty'); return; }
+    var p = null;
+    for (var i = 0; i < projects.length; i++) { if (projects[i].id === id) { p = projects[i]; break; } }
+    if (!p) return;
+    var oldName = p.name;
+    p.name = newName;
+    // Update all tasks that had this project
+    for (var j = 0; j < items.length; j++) {
+        if (items[j].project === oldName) items[j].project = newName;
+    }
+    save();
+    renderProjects();
+    populateProjects();
+    toast('Saved');
 }
 
 function closeProjectModal() { document.getElementById('modal-project').classList.remove('open'); }
@@ -765,18 +784,60 @@ function showDetail(id) {
     var item = null;
     for (var i = 0; i < items.length; i++) { if (items[i].id === id) { item = items[i]; break; } }
     if (!item) return;
+    
+    var projectOptions = '<option value="">None</option>';
+    for (var p = 0; p < projects.length; p++) {
+        var sel = projects[p].name === item.project ? ' selected' : '';
+        projectOptions += '<option value="' + projects[p].name + '"' + sel + '>' + projects[p].name + '</option>';
+    }
+    
     var html = '<div class="sheet-handle"></div>';
-    html += '<div style="font-size:17px;font-weight:600;line-height:1.5;margin-bottom:16px">' + item.item + '</div>';
-    html += '<div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;font-size:13px;">';
-    html += '<span style="padding:4px 12px;background:var(--surface2);border-radius:100px;">' + item.priority + '</span>';
-    html += '<span style="padding:4px 12px;background:var(--surface2);border-radius:100px;">' + item.category + '</span>';
-    if (item.project) html += '<span style="padding:4px 12px;background:var(--surface2);border-radius:100px;">' + item.project + '</span>';
+    html += '<div class="input-group"><textarea class="input" id="edit-item" style="min-height:60px;resize:none;">' + item.item + '</textarea></div>';
+    html += '<div class="btn-row" style="margin-bottom:16px;">';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Priority</label><select class="input select" id="edit-priority">';
+    html += '<option value="Critical"' + (item.priority==='Critical'?' selected':'') + '>Urgent</option>';
+    html += '<option value="High"' + (item.priority==='High'?' selected':'') + '>High</option>';
+    html += '<option value="Medium"' + (item.priority==='Medium'?' selected':'') + '>Medium</option>';
+    html += '<option value="Low"' + (item.priority==='Low'?' selected':'') + '>Low</option></select></div>';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Category</label><select class="input select" id="edit-category">';
+    html += '<option value="Personal"' + (item.category==='Personal'?' selected':'') + '>Personal</option>';
+    html += '<option value="Professional"' + (item.category==='Professional'?' selected':'') + '>Work</option></select></div>';
     html += '</div>';
-    if (item.dueDate) html += '<div style="font-size:14px;color:var(--text2);margin-bottom:20px;">Due ' + formatDate(item.dueDate) + '</div>';
-    if (item.notes) html += '<div style="font-size:14px;color:var(--text2);margin-bottom:20px;">' + item.notes + '</div>';
-    html += '<div class="btn-row"><button class="btn btn-primary" style="flex:1" onclick="complete(' + item.id + ')">Complete</button><button class="btn btn-secondary" style="flex:1" onclick="deleteItem(' + item.id + ')">Delete</button></div>';
+    html += '<div class="btn-row" style="margin-bottom:16px;">';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Project</label><select class="input select" id="edit-project">' + projectOptions + '</select></div>';
+    html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Due Date</label><input type="date" class="input" id="edit-due" value="' + (item.dueDate || '') + '"></div>';
+    html += '</div>';
+    html += '<div class="input-group"><label class="input-label">Status</label><select class="input select" id="edit-status">';
+    html += '<option value="Next Action"' + (item.status==='Next Action'?' selected':'') + '>Next Action</option>';
+    html += '<option value="Waiting For"' + (item.status==='Waiting For'?' selected':'') + '>Waiting For</option>';
+    html += '<option value="Someday/Maybe"' + (item.status==='Someday/Maybe'?' selected':'') + '>Someday/Maybe</option></select></div>';
+    html += '<button class="btn btn-primary" style="margin-bottom:12px" onclick="saveTask(' + item.id + ')">Save Changes</button>';
+    html += '<div class="btn-row"><button class="btn btn-secondary" style="flex:1" onclick="complete(' + item.id + ')">Complete</button><button class="btn btn-danger" style="flex:1" onclick="deleteItem(' + item.id + ')">Delete</button></div>';
     document.getElementById('detail-content').innerHTML = html;
     document.getElementById('modal-detail').classList.add('open');
+}
+
+function saveTask(id) {
+    var item = null;
+    for (var i = 0; i < items.length; i++) { if (items[i].id === id) { item = items[i]; break; } }
+    if (!item) return;
+    
+    var newText = document.getElementById('edit-item').value.trim();
+    if (!newText) { toast('Task cannot be empty'); return; }
+    
+    item.item = newText;
+    item.priority = document.getElementById('edit-priority').value;
+    item.category = document.getElementById('edit-category').value;
+    item.project = document.getElementById('edit-project').value;
+    item.dueDate = document.getElementById('edit-due').value || null;
+    item.status = document.getElementById('edit-status').value;
+    
+    save();
+    render();
+    renderProjects();
+    updateStats();
+    closeModal();
+    toast('Saved');
 }
 
 function closeModal() { document.getElementById('modal-detail').classList.remove('open'); }
