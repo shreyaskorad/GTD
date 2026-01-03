@@ -5,324 +5,260 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#0f0f1a">
-    <title>GTD - Shreyas</title>
+    <meta name="theme-color" content="#111">
+    <title>GTD</title>
     <link rel="manifest" href="manifest.json">
     <script src="data.js"></script>
     <style>
 :root {
-  --bg: #0f0f1a; --card: #1a1a2e; --card2: #252540;
-  --text: #fff; --text2: #a0a0b0; --text3: #666;
-  --accent: #4ecdc4; --accent2: #45b7aa;
-  --critical: #ff6b6b; --high: #ffa94d; --medium: #ffd93d; --low: #6bcb77;
-  --pro: #4a90a4; --personal: #9b59b6;
+    --bg: #111; --surface: #1a1a1a; --surface2: #222;
+    --text: #eee; --text2: #888; --text3: #555;
+    --accent: #4ecdc4;
+    --critical: #e55; --high: #f90; --medium: #fc0; --low: #5a5;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; line-height: 1.4; }
-.app { max-width: 900px; margin: 0 auto; padding-bottom: 70px; }
+body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+.app { max-width: 600px; margin: 0 auto; padding-bottom: 60px; }
 
-/* Header */
-.header { background: linear-gradient(135deg, var(--card) 0%, var(--card2) 100%); padding: 16px; position: sticky; top: 0; z-index: 100; }
-.header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.logo { font-size: 1.4rem; font-weight: 700; }
-.logo span { color: var(--accent); }
-.header-actions { display: flex; gap: 8px; }
-.icon-btn { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--card2); color: var(--text); font-size: 1.1rem; cursor: pointer; }
+header { padding: 16px; border-bottom: 1px solid var(--surface2); }
+header h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.5px; }
+.stats { display: flex; gap: 16px; margin-top: 10px; font-size: 12px; color: var(--text2); }
+.stats span { display: flex; align-items: center; gap: 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; }
+.dot.critical { background: var(--critical); }
+.dot.high { background: var(--high); }
 
-/* Stats Row */
-.stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.stat { background: var(--card2); border-radius: 8px; padding: 10px 6px; text-align: center; }
-.stat-val { font-size: 1.3rem; font-weight: 700; }
-.stat-val.critical { color: var(--critical); }
-.stat-val.high { color: var(--high); }
-.stat-val.accent { color: var(--accent); }
-.stat-lbl { font-size: 0.65rem; color: var(--text2); text-transform: uppercase; letter-spacing: 0.5px; }
+.tabs { display: flex; border-bottom: 1px solid var(--surface2); }
+.tab { flex: 1; padding: 12px; text-align: center; font-size: 13px; color: var(--text2); background: none; border: none; cursor: pointer; }
+.tab.active { color: var(--text); border-bottom: 2px solid var(--accent); margin-bottom: -1px; }
 
-/* Filters */
-.filters { padding: 12px 16px; background: var(--card); border-bottom: 1px solid var(--card2); }
-.filter-row { display: flex; gap: 8px; margin-bottom: 10px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
-.filter-row::-webkit-scrollbar { display: none; }
-.chip { padding: 6px 12px; border-radius: 16px; border: 1px solid var(--card2); background: transparent; color: var(--text2); font-size: 0.8rem; white-space: nowrap; cursor: pointer; transition: all 0.2s; }
-.chip:hover, .chip.active { background: var(--accent); color: #000; border-color: var(--accent); }
-.chip.critical { border-color: var(--critical); }
-.chip.critical.active { background: var(--critical); }
-.chip.high { border-color: var(--high); }
-.chip.high.active { background: var(--high); }
+.filters { padding: 12px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+.filter { padding: 6px 12px; font-size: 12px; border-radius: 4px; border: 1px solid var(--surface2); background: transparent; color: var(--text2); cursor: pointer; }
+.filter.active { background: var(--accent); color: #000; border-color: var(--accent); }
+.search { flex: 1; min-width: 150px; padding: 8px 12px; font-size: 13px; border: 1px solid var(--surface2); border-radius: 4px; background: var(--surface); color: var(--text); }
 
-/* Search & Sort */
-.search-sort { display: flex; gap: 8px; }
-.search-box { flex: 1; position: relative; }
-.search-box input { width: 100%; padding: 10px 10px 10px 36px; border: 1px solid var(--card2); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 0.95rem; }
-.search-box::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; }
-.sort-btn { padding: 10px 12px; border: 1px solid var(--card2); border-radius: 8px; background: var(--bg); color: var(--text2); font-size: 0.85rem; cursor: pointer; }
+.list { padding: 8px 16px; }
+.item { padding: 12px; margin-bottom: 6px; background: var(--surface); border-radius: 6px; cursor: pointer; }
+.item:hover { background: var(--surface2); }
+.item-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.item-title { font-size: 14px; flex: 1; }
+.item-priority { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+.item-priority.critical { background: var(--critical); }
+.item-priority.high { background: var(--high); }
+.item-priority.medium { background: var(--medium); }
+.item-priority.low { background: var(--low); }
+.item-meta { font-size: 11px; color: var(--text2); margin-top: 6px; }
+.item-meta span { margin-right: 12px; }
+.item.done .item-title { text-decoration: line-through; opacity: 0.5; }
 
-/* Item Cards */
-.items { padding: 8px; }
-.item-group { margin-bottom: 16px; }
-.group-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; color: var(--text2); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.group-header::after { content: ''; flex: 1; height: 1px; background: var(--card2); }
-.group-count { background: var(--card2); padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; }
+.group-label { font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 0 6px; }
 
-.item { background: var(--card); border-radius: 12px; padding: 14px; margin-bottom: 8px; display: flex; gap: 12px; transition: all 0.2s; }
-.item:active { transform: scale(0.98); }
-.item.completed { opacity: 0.5; }
-.item.completed .item-title { text-decoration: line-through; }
-
-.priority-bar { width: 4px; border-radius: 2px; flex-shrink: 0; }
-.priority-bar.critical { background: var(--critical); }
-.priority-bar.high { background: var(--high); }
-.priority-bar.medium { background: var(--medium); }
-.priority-bar.low { background: var(--low); }
-
-.item-main { flex: 1; min-width: 0; }
-.item-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
-.item-title { font-weight: 500; font-size: 0.95rem; }
-.item-badges { display: flex; gap: 4px; flex-shrink: 0; }
-.badge { padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; }
-.badge.pro { background: var(--pro); }
-.badge.personal { background: var(--personal); }
-.badge.status { background: var(--card2); color: var(--text2); }
-
-.item-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
-.meta-tag { display: flex; align-items: center; gap: 3px; font-size: 0.75rem; color: var(--text2); background: var(--bg); padding: 3px 8px; border-radius: 4px; }
-.meta-tag.project { color: var(--accent); }
-
-.item-details { font-size: 0.8rem; color: var(--text3); }
-.item-details span { margin-right: 12px; }
-
-.item-actions { display: flex; flex-direction: column; gap: 6px; }
-.act-btn { width: 32px; height: 32px; border-radius: 8px; border: none; font-size: 0.9rem; cursor: pointer; }
-.act-btn.done { background: var(--low); }
-.act-btn.del { background: var(--critical); }
-
-/* FAB */
-.fab { position: fixed; bottom: 80px; right: 20px; width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: #000; font-size: 1.8rem; cursor: pointer; box-shadow: 0 4px 20px rgba(78,205,196,0.4); z-index: 100; }
-
-/* Bottom Nav */
-.nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--card2); display: flex; justify-content: space-around; padding: 8px 0; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
-.nav-btn { background: none; border: none; color: var(--text3); font-size: 0.7rem; text-align: center; padding: 4px 16px; cursor: pointer; }
-.nav-btn.active { color: var(--accent); }
-.nav-btn span { display: block; font-size: 1.2rem; margin-bottom: 2px; }
-
-/* Modal */
-.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 200; align-items: flex-end; justify-content: center; }
-.modal.open { display: flex; }
-.modal-content { background: var(--card); border-radius: 20px 20px 0 0; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; padding: 20px; animation: slideUp 0.3s ease; }
-@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.modal-title { font-size: 1.1rem; font-weight: 600; }
-.close-btn { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--card2); color: var(--text); font-size: 1.2rem; cursor: pointer; }
+/* Capture View */
+.capture { padding: 16px; }
+.capture-header { font-size: 16px; font-weight: 600; margin-bottom: 16px; }
+.mic-area { text-align: center; padding: 24px; background: var(--surface); border-radius: 8px; margin-bottom: 16px; }
+.mic-btn { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--text2); background: transparent; color: var(--text); font-size: 24px; cursor: pointer; transition: all 0.2s; }
+.mic-btn:hover { border-color: var(--accent); }
+.mic-btn.recording { border-color: var(--critical); background: rgba(238,85,85,0.1); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.7; } }
+.mic-status { margin-top: 12px; font-size: 13px; color: var(--text2); }
+.mic-time { font-size: 24px; font-weight: 300; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.transcript-box { background: var(--surface); border-radius: 8px; padding: 16px; margin-bottom: 16px; min-height: 120px; max-height: 300px; overflow-y: auto; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
+.parsed-items { background: var(--surface); border-radius: 8px; padding: 12px; margin-bottom: 16px; }
+.parsed-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-bottom: 1px solid var(--surface2); }
+.parsed-item:last-child { border-bottom: none; }
+.parsed-item input[type="checkbox"] { width: 16px; height: 16px; }
+.parsed-item-text { flex: 1; font-size: 13px; }
+.parsed-count { font-size: 12px; color: var(--text2); margin-bottom: 8px; }
+.btn { padding: 12px 20px; font-size: 14px; border: none; border-radius: 6px; cursor: pointer; }
+.btn-primary { background: var(--accent); color: #000; font-weight: 500; }
+.btn-secondary { background: var(--surface2); color: var(--text); }
+.btn-row { display: flex; gap: 8px; }
 
 /* Form */
+.form { padding: 16px; }
 .form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 0.8rem; color: var(--text2); margin-bottom: 6px; }
-.form-input, .form-select { width: 100%; padding: 12px; border: 1px solid var(--card2); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 1rem; }
-.form-select { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a0a0b0'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; }
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.submit-btn { width: 100%; padding: 14px; background: var(--accent); border: none; border-radius: 10px; color: #000; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 8px; }
+.form-label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.form-input, .form-select { width: 100%; padding: 10px 12px; font-size: 14px; border: 1px solid var(--surface2); border-radius: 6px; background: var(--surface); color: var(--text); }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-/* Voice */
-.voice-section { text-align: center; padding: 20px 0; }
-.mic-btn { width: 80px; height: 80px; border-radius: 50%; border: none; background: linear-gradient(145deg, var(--critical), #e55555); color: white; font-size: 2rem; cursor: pointer; box-shadow: 0 8px 25px rgba(255,107,107,0.3); transition: all 0.3s; }
-.mic-btn.listening { background: linear-gradient(145deg, var(--accent), var(--accent2)); animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(78,205,196,0.5); } 50% { box-shadow: 0 0 0 15px rgba(78,205,196,0); } }
-.transcript { margin-top: 16px; padding: 14px; background: var(--bg); border-radius: 10px; min-height: 50px; font-size: 1rem; }
+/* Modal */
+.modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100; align-items: flex-end; }
+.modal.open { display: flex; }
+.modal-content { background: var(--surface); width: 100%; max-width: 500px; margin: 0 auto; max-height: 85vh; overflow-y: auto; border-radius: 12px 12px 0 0; padding: 20px; }
+.modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.close-btn { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--surface2); background: transparent; color: var(--text2); font-size: 16px; cursor: pointer; }
 
-/* Views */
+/* Bottom Nav */
+.nav { position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--surface2); display: flex; padding-bottom: env(safe-area-inset-bottom); }
+.nav-btn { flex: 1; padding: 12px; text-align: center; font-size: 11px; color: var(--text2); background: none; border: none; cursor: pointer; }
+.nav-btn.active { color: var(--accent); }
+
+/* Settings */
+.settings { padding: 16px; }
+.settings-group { background: var(--surface); border-radius: 8px; margin-bottom: 16px; }
+.settings-item { padding: 14px 16px; border-bottom: 1px solid var(--surface2); font-size: 14px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.settings-item:last-child { border-bottom: none; }
+.settings-item:hover { background: var(--surface2); }
+.settings-label { font-size: 12px; color: var(--text2); padding: 16px 16px 8px; }
+.danger { color: var(--critical); }
+
 .view { display: none; }
 .view.active { display: block; }
 
-/* Settings */
-.settings-section { background: var(--card); border-radius: 12px; padding: 16px; margin: 8px 16px 16px; }
-.settings-title { font-size: 0.9rem; font-weight: 600; margin-bottom: 12px; color: var(--text2); }
-.settings-btn { width: 100%; padding: 14px; margin-bottom: 8px; background: var(--card2); border: none; border-radius: 10px; color: var(--text); font-size: 0.95rem; cursor: pointer; text-align: left; display: flex; align-items: center; gap: 12px; }
-.settings-btn span { font-size: 1.3rem; }
-.settings-btn.danger { background: rgba(255,107,107,0.15); color: var(--critical); border: 1px solid var(--critical); }
-
-/* Toast */
-.toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--accent); color: #000; padding: 12px 24px; border-radius: 10px; font-weight: 500; transition: transform 0.3s; z-index: 300; }
+.toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(50px); background: var(--surface2); color: var(--text); padding: 10px 20px; border-radius: 6px; font-size: 13px; transition: transform 0.2s; z-index: 200; }
 .toast.show { transform: translateX(-50%) translateY(0); }
-
-/* Detail Modal */
-.detail-section { margin-bottom: 16px; }
-.detail-label { font-size: 0.75rem; color: var(--text3); text-transform: uppercase; margin-bottom: 4px; }
-.detail-value { font-size: 0.95rem; color: var(--text); }
-.detail-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-.detail-tag { padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; }
-.detail-tag.priority { font-weight: 600; }
-.detail-actions { display: flex; gap: 10px; margin-top: 20px; }
-.detail-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 0.95rem; cursor: pointer; }
-.detail-btn.complete { background: var(--low); color: #000; }
-.detail-btn.delete { background: var(--critical); color: #fff; }
     </style>
 </head>
 <body>
 <div class="app">
-    <!-- Header -->
-    <header class="header">
-        <div class="header-top">
-            <div class="logo">🎯 <span>GTD</span></div>
-            <div class="header-actions">
-                <button class="icon-btn" onclick="showModal('add')">➕</button>
-            </div>
-        </div>
+    <header>
+        <h1>GTD</h1>
         <div class="stats">
-            <div class="stat"><div class="stat-val" id="s-total">-</div><div class="stat-lbl">Total</div></div>
-            <div class="stat"><div class="stat-val critical" id="s-critical">-</div><div class="stat-lbl">Critical</div></div>
-            <div class="stat"><div class="stat-val high" id="s-high">-</div><div class="stat-lbl">High</div></div>
-            <div class="stat"><div class="stat-val accent" id="s-actions">-</div><div class="stat-lbl">Actions</div></div>
-            <div class="stat"><div class="stat-val" id="s-waiting">-</div><div class="stat-lbl">Waiting</div></div>
+            <span><span class="dot critical"></span> <span id="s-critical">0</span> critical</span>
+            <span><span class="dot high"></span> <span id="s-high">0</span> high</span>
+            <span><span id="s-total">0</span> total</span>
         </div>
     </header>
 
     <!-- List View -->
     <div class="view active" id="v-list">
-        <div class="filters">
-            <div class="filter-row" id="status-filters">
-                <button class="chip active" data-f="all">All</button>
-                <button class="chip" data-f="Next Action">Next Actions</button>
-                <button class="chip" data-f="Project">Projects</button>
-                <button class="chip" data-f="Waiting For">Waiting For</button>
-                <button class="chip" data-f="Recurring">Recurring</button>
-                <button class="chip" data-f="Someday/Maybe">Someday</button>
-            </div>
-            <div class="filter-row" id="priority-filters">
-                <button class="chip critical" data-p="Critical">🔴 Critical</button>
-                <button class="chip high" data-p="High">🟠 High</button>
-                <button class="chip" data-p="Medium">🟡 Medium</button>
-                <button class="chip" data-p="Low">🟢 Low</button>
-            </div>
-            <div class="filter-row" id="category-filters">
-                <button class="chip" data-c="Professional">💼 Work</button>
-                <button class="chip" data-c="Personal">🏠 Personal</button>
-            </div>
-            <div class="search-sort">
-                <div class="search-box"><input type="text" id="search" placeholder="Search items, projects..."></div>
-                <button class="sort-btn" id="sort-btn">↕️ Priority</button>
-            </div>
+        <div class="tabs">
+            <button class="tab active" data-status="all">All</button>
+            <button class="tab" data-status="Next Action">Actions</button>
+            <button class="tab" data-status="Waiting For">Waiting</button>
+            <button class="tab" data-status="Project">Projects</button>
         </div>
-        <div class="items" id="items-list"></div>
+        <div class="filters">
+            <input type="text" class="search" id="search" placeholder="Search...">
+            <button class="filter" data-p="Critical">Critical</button>
+            <button class="filter" data-p="High">High</button>
+            <button class="filter" data-c="Professional">Work</button>
+            <button class="filter" data-c="Personal">Personal</button>
+        </div>
+        <div class="list" id="items-list"></div>
     </div>
 
     <!-- Capture View -->
     <div class="view" id="v-capture">
-        <div style="padding:16px;">
-            <div class="voice-section">
-                <button class="mic-btn" id="mic-btn">🎤</button>
-                <div class="transcript" id="transcript">Tap microphone and speak...</div>
+        <div class="capture">
+            <div class="capture-header">Voice Capture</div>
+            <div class="mic-area">
+                <button class="mic-btn" id="mic-btn">Mic</button>
+                <div class="mic-status" id="mic-status">Tap to start recording</div>
+                <div class="mic-time" id="mic-time">0:00</div>
             </div>
-            <div id="parsed-form" style="display:none;">
-                <div style="background:var(--card);border-radius:12px;padding:16px;margin-top:16px;">
-                    <div class="form-group"><label class="form-label">Item</label><input class="form-input" id="pf-item"></div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Priority</label>
-                            <select class="form-select" id="pf-priority"><option value="Critical">🔴 Critical</option><option value="High">🟠 High</option><option value="Medium" selected>🟡 Medium</option><option value="Low">🟢 Low</option></select>
-                        </div>
-                        <div class="form-group"><label class="form-label">Status</label>
-                            <select class="form-select" id="pf-status"><option value="Next Action">Next Action</option><option value="Project">Project</option><option value="Waiting For">Waiting For</option><option value="Someday/Maybe">Someday/Maybe</option></select>
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group"><label class="form-label">Category</label>
-                            <select class="form-select" id="pf-category"><option value="Personal">Personal</option><option value="Professional">Professional</option></select>
-                        </div>
-                        <div class="form-group"><label class="form-label">Context</label>
-                            <select class="form-select" id="pf-context"><option value="@Anywhere">@Anywhere</option><option value="@Computer">@Computer</option><option value="@Phone">@Phone</option><option value="@Office">@Office</option><option value="@Home">@Home</option><option value="@Errands">@Errands</option><option value="@Thinking">@Thinking</option></select>
-                        </div>
-                    </div>
-                    <div class="form-group"><label class="form-label">Project</label><input class="form-input" id="pf-project" placeholder="e.g., World Bank Group"></div>
-                    <button class="submit-btn" onclick="saveFromVoice()">✓ Add Item</button>
-                </div>
+            <div class="transcript-box" id="transcript">Your transcription will appear here. Speak naturally - separate tasks with phrases like "next item", "also", "and then", or just pause between items.</div>
+            <div class="parsed-items" id="parsed-items" style="display:none;">
+                <div class="parsed-count" id="parsed-count">0 items detected</div>
+                <div id="parsed-list"></div>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="clearCapture()">Clear</button>
+                <button class="btn btn-primary" style="flex:1" onclick="showAddModal()">Add Selected</button>
             </div>
         </div>
     </div>
 
-    <!-- Projects View -->
-    <div class="view" id="v-projects">
-        <div style="padding:16px;">
-            <h2 style="margin-bottom:16px;">📊 Projects Overview</h2>
-            <div id="projects-list"></div>
+    <!-- Add View (Quick Form) -->
+    <div class="view" id="v-add">
+        <div class="form">
+            <div class="form-group">
+                <label class="form-label">Item</label>
+                <input class="form-input" id="f-item" placeholder="What needs to be done?">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select class="form-select" id="f-priority">
+                        <option value="Critical">Critical</option>
+                        <option value="High">High</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Low">Low</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Status</label>
+                    <select class="form-select" id="f-status">
+                        <option value="Next Action">Next Action</option>
+                        <option value="Waiting For">Waiting For</option>
+                        <option value="Project">Project</option>
+                        <option value="Someday/Maybe">Someday/Maybe</option>
+                        <option value="Recurring - Daily">Recurring Daily</option>
+                        <option value="Recurring - Weekly">Recurring Weekly</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" id="f-category">
+                        <option value="Personal">Personal</option>
+                        <option value="Professional">Professional</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Project</label>
+                    <select class="form-select" id="f-project">
+                        <option value="">None</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Context</label>
+                    <select class="form-select" id="f-context">
+                        <option value="@Anywhere">@Anywhere</option>
+                        <option value="@Computer">@Computer</option>
+                        <option value="@Phone">@Phone</option>
+                        <option value="@Office">@Office</option>
+                        <option value="@Home">@Home</option>
+                        <option value="@Errands">@Errands</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Time</label>
+                    <input class="form-input" id="f-time" placeholder="e.g., 30 min">
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Notes</label>
+                <input class="form-input" id="f-notes" placeholder="Additional details">
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="addItem()">Add Item</button>
         </div>
     </div>
 
     <!-- Settings View -->
     <div class="view" id="v-settings">
-        <div class="settings-section">
-            <div class="settings-title">📤 Export & Backup</div>
-            <button class="settings-btn" onclick="exportJSON()"><span>💾</span> Download JSON Backup</button>
-            <button class="settings-btn" onclick="exportCSV()"><span>📊</span> Download CSV (Excel)</button>
-            <button class="settings-btn" onclick="document.getElementById('import-file').click()"><span>📥</span> Import JSON</button>
-            <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this.files[0])">
-        </div>
-        <div class="settings-section">
-            <div class="settings-title">📱 Quick Access</div>
-            <button class="settings-btn" onclick="copyLink()"><span>🔗</span> Copy App Link</button>
-            <p style="font-size:0.8rem;color:var(--text3);margin-top:8px;">Add to Home Screen for app-like experience</p>
-        </div>
-        <div class="settings-section">
-            <div class="settings-title">⚠️ Danger Zone</div>
-            <button class="settings-btn danger" onclick="clearCompleted()">Clear Completed Items</button>
-            <button class="settings-btn danger" onclick="resetAll()">Reset All Data</button>
-        </div>
-        <div style="text-align:center;padding:20px;color:var(--text3);font-size:0.8rem;">
-            <p>GTD Voice Capture v2.0</p>
-            <p>Shreyas • Strategic Innovation Lead</p>
-            <p style="margin-top:8px;">101 items captured from GTD trigger list</p>
+        <div class="settings">
+            <div class="settings-label">Data</div>
+            <div class="settings-group">
+                <div class="settings-item" onclick="exportJSON()">Export JSON</div>
+                <div class="settings-item" onclick="exportCSV()">Export CSV</div>
+                <div class="settings-item" onclick="document.getElementById('import-file').click()">Import JSON</div>
+                <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this.files[0])">
+            </div>
+            <div class="settings-label">Manage</div>
+            <div class="settings-group">
+                <div class="settings-item" onclick="clearCompleted()">Clear completed items</div>
+                <div class="settings-item danger" onclick="resetAll()">Reset all data</div>
+            </div>
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">
+                GTD v3.0<br>Minimal Edition
+            </div>
         </div>
     </div>
 </div>
 
-<!-- FAB -->
-<button class="fab" onclick="showModal('add')">+</button>
-
-<!-- Bottom Nav -->
 <nav class="nav">
-    <button class="nav-btn active" data-v="list"><span>📋</span>Items</button>
-    <button class="nav-btn" data-v="capture"><span>🎤</span>Capture</button>
-    <button class="nav-btn" data-v="projects"><span>📊</span>Projects</button>
-    <button class="nav-btn" data-v="settings"><span>⚙️</span>Settings</button>
+    <button class="nav-btn active" data-v="list">List</button>
+    <button class="nav-btn" data-v="capture">Capture</button>
+    <button class="nav-btn" data-v="add">Add</button>
+    <button class="nav-btn" data-v="settings">Settings</button>
 </nav>
 
-<!-- Add Modal -->
-<div class="modal" id="modal-add">
-    <div class="modal-content">
-        <div class="modal-header">
-            <div class="modal-title">Add New Item</div>
-            <button class="close-btn" onclick="closeModal('add')">×</button>
-        </div>
-        <div class="form-group"><label class="form-label">What needs to be done?</label><input class="form-input" id="f-item" placeholder="Enter item..."></div>
-        <div class="form-row">
-            <div class="form-group"><label class="form-label">Priority</label>
-                <select class="form-select" id="f-priority"><option value="Critical">🔴 Critical</option><option value="High">🟠 High</option><option value="Medium" selected>🟡 Medium</option><option value="Low">🟢 Low</option></select>
-            </div>
-            <div class="form-group"><label class="form-label">Status</label>
-                <select class="form-select" id="f-status"><option value="Next Action">Next Action</option><option value="Project">Project</option><option value="Waiting For">Waiting For</option><option value="Someday/Maybe">Someday/Maybe</option><option value="Recurring - Daily">Recurring Daily</option><option value="Recurring - Weekly">Recurring Weekly</option></select>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label class="form-label">Category</label>
-                <select class="form-select" id="f-category"><option value="Personal">🏠 Personal</option><option value="Professional">💼 Professional</option></select>
-            </div>
-            <div class="form-group"><label class="form-label">Context</label>
-                <select class="form-select" id="f-context"><option value="@Anywhere">@Anywhere</option><option value="@Computer">@Computer</option><option value="@Phone">@Phone</option><option value="@Office">@Office</option><option value="@Home">@Home</option><option value="@Errands">@Errands</option><option value="@Thinking">@Thinking</option><option value="@Reading">@Reading</option></select>
-            </div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label class="form-label">Project / Area</label><input class="form-input" id="f-project" placeholder="e.g., Riyadh Air"></div>
-            <div class="form-group"><label class="form-label">Time Required</label><input class="form-input" id="f-time" placeholder="e.g., 30 min"></div>
-        </div>
-        <div class="form-row">
-            <div class="form-group"><label class="form-label">Energy Level</label>
-                <select class="form-select" id="f-energy"><option value="Low">Low</option><option value="Medium" selected>Medium</option><option value="High">High</option></select>
-            </div>
-            <div class="form-group"><label class="form-label">Waiting For</label><input class="form-input" id="f-waiting" placeholder="Person/thing"></div>
-        </div>
-        <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="f-notes" placeholder="Additional details..."></div>
-        <button class="submit-btn" onclick="addItem()">✓ Add Item</button>
-    </div>
-</div>
-
-<!-- Detail Modal -->
 <div class="modal" id="modal-detail">
     <div class="modal-content" id="detail-content"></div>
 </div>
@@ -330,105 +266,69 @@ body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg);
 <div class="toast" id="toast"></div>
 
 <script>
-// State
 let items = [];
 let filters = { status: 'all', priority: null, category: null, search: '' };
-let sortBy = 'priority';
 
-// Init
+const PROJECTS = [
+    'World Bank Group', 'HPE ClearBook', 'CAA Axiom', 'Riyadh Air', 'AstraZeneca', 'BAT',
+    'Business Planning', 'AI Skills', 'Health & Fitness', 'Family', 'Finance', 'Learning',
+    'Strategic Accounts', 'Upside Learning', 'Content Development'
+];
+
 function init() {
-    const stored = localStorage.getItem('gtd_items_v2');
+    const stored = localStorage.getItem('gtd_items_v3');
     if (stored) {
         items = JSON.parse(stored);
     } else if (typeof GTD_INITIAL_DATA !== 'undefined') {
         items = GTD_INITIAL_DATA.map((item, i) => ({...item, id: item.id || i + 1}));
         save();
     }
+    populateProjectDropdown();
     render();
     updateStats();
-    renderProjects();
     setupListeners();
 }
 
-function save() { localStorage.setItem('gtd_items_v2', JSON.stringify(items)); }
+function save() { localStorage.setItem('gtd_items_v3', JSON.stringify(items)); }
 
-// Render Items
+function populateProjectDropdown() {
+    const select = document.getElementById('f-project');
+    const existing = [...new Set(items.map(i => i.project).filter(p => p))];
+    const all = [...new Set([...PROJECTS, ...existing])].sort();
+    select.innerHTML = '<option value="">None</option>' + all.map(p => `<option value="${p}">${p}</option>`).join('');
+}
+
 function render() {
     const container = document.getElementById('items-list');
     let filtered = items.filter(item => {
-        if (item.status === 'Completed' && filters.status !== 'Completed') return false;
-        if (filters.status !== 'all') {
-            if (filters.status === 'Recurring') {
-                if (!item.status.includes('Recurring')) return false;
-            } else if (item.status !== filters.status) return false;
-        }
+        if (item.status === 'Completed') return false;
+        if (filters.status !== 'all' && item.status !== filters.status) return false;
         if (filters.priority && item.priority !== filters.priority) return false;
         if (filters.category && item.category !== filters.category) return false;
         if (filters.search) {
             const q = filters.search.toLowerCase();
             if (!(item.item||'').toLowerCase().includes(q) && 
-                !(item.project||'').toLowerCase().includes(q) &&
-                !(item.notes||'').toLowerCase().includes(q)) return false;
+                !(item.project||'').toLowerCase().includes(q)) return false;
         }
         return true;
     });
 
     const pOrder = {Critical:0, High:1, Medium:2, Low:3};
-    if (sortBy === 'priority') {
-        filtered.sort((a,b) => (pOrder[a.priority]||4) - (pOrder[b.priority]||4));
-    } else if (sortBy === 'project') {
-        filtered.sort((a,b) => (a.project||'').localeCompare(b.project||''));
-    } else if (sortBy === 'status') {
-        filtered.sort((a,b) => (a.status||'').localeCompare(b.status||''));
-    }
+    filtered.sort((a,b) => (pOrder[a.priority]||4) - (pOrder[b.priority]||4));
 
-    if (sortBy === 'project') {
-        const groups = {};
-        filtered.forEach(item => {
-            const key = item.project || 'No Project';
-            if (!groups[key]) groups[key] = [];
-            groups[key].push(item);
-        });
-        container.innerHTML = Object.entries(groups).map(([name, items]) => `
-            <div class="item-group">
-                <div class="group-header">${name} <span class="group-count">${items.length}</span></div>
-                ${items.map(renderItem).join('')}
-            </div>
-        `).join('');
-    } else {
-        container.innerHTML = filtered.length ? filtered.map(renderItem).join('') : 
-            '<p style="text-align:center;color:var(--text3);padding:40px;">No items match filters</p>';
-    }
-}
-
-function renderItem(item) {
-    const statusShort = {
-        'Next Action': 'Action', 'Waiting For': 'Waiting', 'Someday/Maybe': 'Someday',
-        'Recurring - Daily': '🔄 Daily', 'Recurring - Weekly': '🔄 Weekly', 
-        'Recurring - Monthly': '🔄 Monthly', 'Recurring - Quarterly': '🔄 Quarterly'
-    };
-    return `
-    <div class="item ${item.status === 'Completed' ? 'completed' : ''}" onclick="showDetail(${item.id})">
-        <div class="priority-bar ${(item.priority||'medium').toLowerCase()}"></div>
-        <div class="item-main">
-            <div class="item-top">
+    container.innerHTML = filtered.length ? filtered.map(item => `
+        <div class="item ${item.status === 'Completed' ? 'done' : ''}" onclick="showDetail(${item.id})">
+            <div class="item-row">
                 <div class="item-title">${item.item || 'Untitled'}</div>
-                <div class="item-badges">
-                    <span class="badge ${item.category === 'Professional' ? 'pro' : 'personal'}">${item.category === 'Professional' ? '💼' : '🏠'}</span>
-                </div>
+                <div class="item-priority ${(item.priority||'medium').toLowerCase()}"></div>
             </div>
             <div class="item-meta">
-                ${item.project ? `<span class="meta-tag project">📁 ${item.project}</span>` : ''}
-                <span class="meta-tag">${item.context || '@Anywhere'}</span>
-                <span class="meta-tag">${statusShort[item.status] || item.status}</span>
-                ${item.time ? `<span class="meta-tag">⏱ ${item.time}</span>` : ''}
+                ${item.project ? `<span>${item.project}</span>` : ''}
+                <span>${item.context || '@Anywhere'}</span>
+                <span>${item.category}</span>
             </div>
-            ${item.notes ? `<div class="item-details">${item.notes}</div>` : ''}
         </div>
-        <div class="item-actions">
-            <button class="act-btn done" onclick="event.stopPropagation();complete(${item.id})">✓</button>
-        </div>
-    </div>`;
+    `).join('') : '<p style="text-align:center;color:var(--text3);padding:40px;">No items</p>';
 }
 
 function updateStats() {
@@ -436,51 +336,17 @@ function updateStats() {
     document.getElementById('s-total').textContent = active.length;
     document.getElementById('s-critical').textContent = active.filter(i => i.priority === 'Critical').length;
     document.getElementById('s-high').textContent = active.filter(i => i.priority === 'High').length;
-    document.getElementById('s-actions').textContent = active.filter(i => i.status === 'Next Action').length;
-    document.getElementById('s-waiting').textContent = active.filter(i => i.status === 'Waiting For').length;
-}
-
-function renderProjects() {
-    const projects = {};
-    items.filter(i => i.status !== 'Completed').forEach(item => {
-        const p = item.project || 'No Project';
-        if (!projects[p]) projects[p] = { total: 0, critical: 0, high: 0 };
-        projects[p].total++;
-        if (item.priority === 'Critical') projects[p].critical++;
-        if (item.priority === 'High') projects[p].high++;
-    });
-    
-    const sorted = Object.entries(projects).sort((a,b) => b[1].total - a[1].total);
-    document.getElementById('projects-list').innerHTML = sorted.map(([name, data]) => `
-        <div style="background:var(--card);border-radius:12px;padding:14px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="filterByProject('${name}')">
-            <div>
-                <div style="font-weight:500;">${name}</div>
-                <div style="font-size:0.8rem;color:var(--text2);">${data.total} items</div>
-            </div>
-            <div style="display:flex;gap:8px;">
-                ${data.critical ? `<span style="background:var(--critical);padding:4px 10px;border-radius:12px;font-size:0.75rem;">${data.critical}</span>` : ''}
-                ${data.high ? `<span style="background:var(--high);color:#000;padding:4px 10px;border-radius:12px;font-size:0.75rem;">${data.high}</span>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-function filterByProject(name) {
-    filters.search = name === 'No Project' ? '' : name;
-    document.getElementById('search').value = filters.search;
-    switchView('list');
-    render();
 }
 
 function complete(id) {
     const item = items.find(i => i.id === id);
-    if (item) { item.status = 'Completed'; save(); render(); updateStats(); toast('✓ Completed!'); }
+    if (item) { item.status = 'Completed'; save(); render(); updateStats(); toast('Done'); closeModal(); }
 }
 
 function deleteItem(id) {
-    if (confirm('Delete this item?')) {
+    if (confirm('Delete?')) {
         items = items.filter(i => i.id !== id);
-        save(); render(); updateStats(); renderProjects(); closeModal('detail'); toast('Deleted');
+        save(); render(); updateStats(); closeModal(); toast('Deleted');
     }
 }
 
@@ -491,56 +357,48 @@ function addItem() {
         priority: document.getElementById('f-priority').value,
         status: document.getElementById('f-status').value,
         category: document.getElementById('f-category').value,
-        context: document.getElementById('f-context').value,
         project: document.getElementById('f-project').value,
+        context: document.getElementById('f-context').value,
         time: document.getElementById('f-time').value,
-        energy: document.getElementById('f-energy').value,
-        waiting_for: document.getElementById('f-waiting').value,
         notes: document.getElementById('f-notes').value
     };
-    if (!item.item.trim()) { toast('Enter item text'); return; }
+    if (!item.item.trim()) { toast('Enter item'); return; }
     items.unshift(item);
-    save(); render(); updateStats(); renderProjects(); closeModal('add');
+    save(); render(); updateStats(); populateProjectDropdown();
     document.getElementById('f-item').value = '';
-    toast('✓ Added!');
+    document.getElementById('f-notes').value = '';
+    toast('Added');
 }
 
 function showDetail(id) {
     const item = items.find(i => i.id === id);
     if (!item) return;
-    const pColors = {Critical:'var(--critical)',High:'var(--high)',Medium:'var(--medium)',Low:'var(--low)'};
     document.getElementById('detail-content').innerHTML = `
         <div class="modal-header">
-            <div class="modal-title">Item Details</div>
-            <button class="close-btn" onclick="closeModal('detail')">×</button>
+            <div class="modal-title">Details</div>
+            <button class="close-btn" onclick="closeModal()">x</button>
         </div>
-        <div class="detail-section">
-            <div class="detail-label">Item</div>
-            <div class="detail-value" style="font-size:1.1rem;font-weight:500;">${item.item}</div>
+        <div style="margin-bottom:20px;">
+            <div style="font-size:16px;margin-bottom:12px;">${item.item}</div>
+            <div style="font-size:12px;color:var(--text2);">
+                ${item.priority} · ${item.status} · ${item.category}
+            </div>
         </div>
-        <div class="detail-tags">
-            <span class="detail-tag priority" style="background:${pColors[item.priority]};color:${item.priority==='Medium'||item.priority==='Low'?'#000':'#fff'}">${item.priority}</span>
-            <span class="detail-tag" style="background:var(--card2)">${item.status}</span>
-            <span class="detail-tag" style="background:${item.category==='Professional'?'var(--pro)':'var(--personal)'}">${item.category}</span>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:20px;">
+            ${item.project ? `<div style="margin-bottom:6px;">Project: ${item.project}</div>` : ''}
+            <div style="margin-bottom:6px;">Context: ${item.context || '@Anywhere'}</div>
+            ${item.time ? `<div style="margin-bottom:6px;">Time: ${item.time}</div>` : ''}
+            ${item.notes ? `<div style="margin-bottom:6px;">Notes: ${item.notes}</div>` : ''}
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;">
-            <div class="detail-section"><div class="detail-label">Project</div><div class="detail-value">${item.project || '-'}</div></div>
-            <div class="detail-section"><div class="detail-label">Context</div><div class="detail-value">${item.context || '@Anywhere'}</div></div>
-            <div class="detail-section"><div class="detail-label">Time</div><div class="detail-value">${item.time || '-'}</div></div>
-            <div class="detail-section"><div class="detail-label">Energy</div><div class="detail-value">${item.energy || '-'}</div></div>
-            ${item.waiting_for ? `<div class="detail-section" style="grid-column:span 2;"><div class="detail-label">Waiting For</div><div class="detail-value">${item.waiting_for}</div></div>` : ''}
-        </div>
-        ${item.notes ? `<div class="detail-section" style="margin-top:16px;"><div class="detail-label">Notes</div><div class="detail-value">${item.notes}</div></div>` : ''}
-        <div class="detail-actions">
-            <button class="detail-btn complete" onclick="complete(${item.id});closeModal('detail')">✓ Complete</button>
-            <button class="detail-btn delete" onclick="deleteItem(${item.id})">🗑 Delete</button>
+        <div class="btn-row">
+            <button class="btn btn-primary" style="flex:1" onclick="complete(${item.id})">Complete</button>
+            <button class="btn btn-secondary danger" onclick="deleteItem(${item.id})">Delete</button>
         </div>
     `;
-    showModal('detail');
+    document.getElementById('modal-detail').classList.add('open');
 }
 
-function showModal(name) { document.getElementById('modal-' + name).classList.add('open'); }
-function closeModal(name) { document.getElementById('modal-' + name).classList.remove('open'); }
+function closeModal() { document.getElementById('modal-detail').classList.remove('open'); }
 
 function switchView(name) {
     document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
@@ -549,21 +407,205 @@ function switchView(name) {
     document.querySelector(`[data-v="${name}"]`).classList.add('active');
 }
 
+// Voice Capture - Extended duration with multi-task parsing
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognition = null;
+let isRecording = false;
+let recordingTime = 0;
+let recordingTimer = null;
+let fullTranscript = '';
+let parsedTasks = [];
+
+if (SR) {
+    recognition = new SR();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    
+    recognition.onresult = (e) => {
+        let interim = '';
+        let final = '';
+        for (let i = e.resultIndex; i < e.results.length; i++) {
+            const t = e.results[i][0].transcript;
+            if (e.results[i].isFinal) final += t + ' ';
+            else interim = t;
+        }
+        if (final) fullTranscript += final;
+        document.getElementById('transcript').textContent = fullTranscript + interim;
+        if (final) parseMultipleTasks(fullTranscript);
+    };
+    
+    recognition.onerror = (e) => {
+        if (e.error === 'no-speech') return;
+        console.log('Speech error:', e.error);
+    };
+    
+    recognition.onend = () => {
+        if (isRecording) recognition.start(); // Auto-restart for continuous recording
+    };
+}
+
+document.getElementById('mic-btn').onclick = () => {
+    if (!recognition) { toast('Speech not supported'); return; }
+    if (isRecording) stopRecording();
+    else startRecording();
+};
+
+function startRecording() {
+    isRecording = true;
+    recordingTime = 0;
+    fullTranscript = '';
+    document.getElementById('transcript').textContent = 'Listening...';
+    document.getElementById('mic-btn').classList.add('recording');
+    document.getElementById('mic-btn').textContent = 'Stop';
+    document.getElementById('mic-status').textContent = 'Recording... speak naturally';
+    recognition.start();
+    
+    recordingTimer = setInterval(() => {
+        recordingTime++;
+        const m = Math.floor(recordingTime / 60);
+        const s = recordingTime % 60;
+        document.getElementById('mic-time').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    }, 1000);
+}
+
+function stopRecording() {
+    isRecording = false;
+    recognition.stop();
+    clearInterval(recordingTimer);
+    document.getElementById('mic-btn').classList.remove('recording');
+    document.getElementById('mic-btn').textContent = 'Mic';
+    document.getElementById('mic-status').textContent = 'Tap to start recording';
+    parseMultipleTasks(fullTranscript);
+}
+
+function parseMultipleTasks(text) {
+    if (!text.trim()) return;
+    
+    // Split by common separators
+    const separators = /(?:next item|next task|also|and then|another one|number \d+|\d+\.|then|plus|additionally|furthermore|secondly|thirdly|finally|lastly|one more|another thing|moving on|next up|item \d+)[,:]?\s*/gi;
+    
+    // Also split by long pauses (multiple spaces/periods) and newlines
+    let chunks = text.replace(separators, '|||').split('|||');
+    
+    // Further split by sentence endings if chunks are too long
+    chunks = chunks.flatMap(chunk => {
+        if (chunk.length > 150) {
+            return chunk.split(/[.!?]+/).filter(s => s.trim().length > 10);
+        }
+        return chunk;
+    });
+    
+    parsedTasks = chunks
+        .map(s => s.trim())
+        .filter(s => s.length > 5)
+        .map((task, i) => ({
+            id: i,
+            text: task,
+            selected: true,
+            priority: detectPriority(task),
+            category: detectCategory(task),
+            project: detectProject(task)
+        }));
+    
+    if (parsedTasks.length > 0) {
+        document.getElementById('parsed-items').style.display = 'block';
+        document.getElementById('parsed-count').textContent = `${parsedTasks.length} items detected`;
+        document.getElementById('parsed-list').innerHTML = parsedTasks.map(t => `
+            <div class="parsed-item">
+                <input type="checkbox" ${t.selected ? 'checked' : ''} onchange="toggleTask(${t.id})">
+                <div class="parsed-item-text">${t.text}</div>
+            </div>
+        `).join('');
+    }
+}
+
+function detectPriority(text) {
+    const t = text.toLowerCase();
+    if (/urgent|critical|asap|immediately|right now/.test(t)) return 'Critical';
+    if (/important|high priority|must|need to/.test(t)) return 'High';
+    if (/maybe|someday|eventually|when.+time/.test(t)) return 'Low';
+    return 'Medium';
+}
+
+function detectCategory(text) {
+    const t = text.toLowerCase();
+    if (/work|office|client|meeting|project|upside|professional/.test(t)) return 'Professional';
+    return 'Personal';
+}
+
+function detectProject(text) {
+    const t = text.toLowerCase();
+    const projectMap = {
+        'World Bank Group': /world bank/,
+        'HPE ClearBook': /hpe|clearbook/,
+        'CAA Axiom': /caa|axiom/,
+        'Riyadh Air': /riyadh/,
+        'AstraZeneca': /astra/,
+        'BAT': /\bbat\b/,
+        'Business Planning': /business plan/,
+        'Health & Fitness': /health|gym|exercise|doctor/,
+        'AI Skills': /\bai\b|artificial|machine learning/,
+        'Family': /family|wife|parents|kids/
+    };
+    for (const [proj, rx] of Object.entries(projectMap)) {
+        if (rx.test(t)) return proj;
+    }
+    return '';
+}
+
+function toggleTask(id) {
+    const task = parsedTasks.find(t => t.id === id);
+    if (task) task.selected = !task.selected;
+}
+
+function showAddModal() {
+    const selected = parsedTasks.filter(t => t.selected);
+    if (selected.length === 0) { toast('Select items first'); return; }
+    
+    selected.forEach(task => {
+        items.unshift({
+            id: Date.now() + Math.random(),
+            item: task.text,
+            priority: task.priority,
+            status: 'Next Action',
+            category: task.category,
+            project: task.project,
+            context: '@Anywhere',
+            notes: 'Added via voice capture'
+        });
+    });
+    
+    save();
+    render();
+    updateStats();
+    populateProjectDropdown();
+    clearCapture();
+    toast(`Added ${selected.length} items`);
+    switchView('list');
+}
+
+function clearCapture() {
+    fullTranscript = '';
+    parsedTasks = [];
+    document.getElementById('transcript').textContent = 'Your transcription will appear here. Speak naturally - separate tasks with phrases like "next item", "also", "and then", or just pause between items.';
+    document.getElementById('parsed-items').style.display = 'none';
+    document.getElementById('mic-time').textContent = '0:00';
+}
+
+// Export/Import
 function exportJSON() {
-    download(JSON.stringify(items, null, 2), 'gtd-backup-' + new Date().toISOString().split('T')[0] + '.json', 'application/json');
+    download(JSON.stringify(items, null, 2), 'gtd-backup.json', 'application/json');
 }
 function exportCSV() {
-    const headers = ['Item','Category','Project','Context','Priority','Status','Energy','Time','Waiting For','Notes'];
-    const rows = items.map(i => headers.map(h => `"${(i[h.toLowerCase().replace(/ /g,'_')]||'').toString().replace(/"/g,'""')}"`).join(','));
+    const headers = ['Item','Category','Project','Context','Priority','Status','Notes'];
+    const rows = items.map(i => headers.map(h => `"${(i[h.toLowerCase()]||'').toString().replace(/"/g,'""')}"`).join(','));
     download([headers.join(','), ...rows].join('\n'), 'gtd-export.csv', 'text/csv');
 }
 function download(content, filename, type) {
     const blob = new Blob([content], {type});
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename;
-    a.click();
-    toast('Downloaded!');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+    toast('Downloaded');
 }
 function importJSON(file) {
     if (!file) return;
@@ -571,138 +613,58 @@ function importJSON(file) {
     reader.onload = e => {
         try {
             const imported = JSON.parse(e.target.result);
-            if (Array.isArray(imported)) {
-                items = imported;
-                save(); render(); updateStats(); renderProjects();
-                toast(`Imported ${imported.length} items!`);
-            }
+            if (Array.isArray(imported)) { items = imported; save(); render(); updateStats(); populateProjectDropdown(); toast(`Imported ${imported.length} items`); }
         } catch(e) { toast('Invalid file'); }
     };
     reader.readAsText(file);
 }
 function clearCompleted() {
-    if (confirm('Remove all completed items?')) {
-        items = items.filter(i => i.status !== 'Completed');
-        save(); render(); updateStats(); toast('Cleared');
-    }
+    if (confirm('Clear completed?')) { items = items.filter(i => i.status !== 'Completed'); save(); render(); updateStats(); toast('Cleared'); }
 }
 function resetAll() {
-    if (confirm('DELETE ALL DATA? This cannot be undone!')) {
-        localStorage.removeItem('gtd_items_v2');
-        items = typeof GTD_INITIAL_DATA !== 'undefined' ? [...GTD_INITIAL_DATA] : [];
-        save(); render(); updateStats(); renderProjects(); toast('Reset to initial data');
-    }
-}
-function copyLink() {
-    navigator.clipboard.writeText(window.location.href);
-    toast('Link copied!');
-}
-
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition = SR ? new SR() : null;
-if (recognition) {
-    recognition.continuous = false;
-    recognition.interimResults = true;
-    recognition.onresult = e => {
-        const text = Array.from(e.results).map(r => r[0].transcript).join('');
-        document.getElementById('transcript').textContent = text;
-        if (e.results[0].isFinal) parseVoice(text);
-    };
-    recognition.onend = () => {
-        document.getElementById('mic-btn').classList.remove('listening');
-    };
-}
-document.getElementById('mic-btn').onclick = () => {
-    if (!recognition) { toast('Speech not supported'); return; }
-    const btn = document.getElementById('mic-btn');
-    if (btn.classList.contains('listening')) { recognition.stop(); }
-    else { btn.classList.add('listening'); document.getElementById('transcript').textContent = 'Listening...'; recognition.start(); }
-};
-function parseVoice(text) {
-    const t = text.toLowerCase();
-    const parsed = {item: text, priority: 'Medium', status: 'Next Action', category: 'Personal', context: '@Anywhere', project: ''};
-    if (/work|professional|office|client|upside/.test(t)) parsed.category = 'Professional';
-    if (/critical|urgent|asap/.test(t)) parsed.priority = 'Critical';
-    else if (/high|important/.test(t)) parsed.priority = 'High';
-    else if (/low|someday/.test(t)) parsed.priority = 'Low';
-    if (/waiting|wait for/.test(t)) parsed.status = 'Waiting For';
-    else if (/someday|maybe/.test(t)) parsed.status = 'Someday/Maybe';
-    const projects = {'world bank':/world bank/,'hpe':/hpe|clearbook/,'caa':/caa|axiom/,'riyadh air':/riyadh/,'astrazeneca':/astra/,'bat':/bat\b/,'business planning':/business plan/,'health':/health|doctor|gym/,'ai':/\bai\b|artificial/};
-    for (const [p, rx] of Object.entries(projects)) { if (rx.test(t)) { parsed.project = p.charAt(0).toUpperCase() + p.slice(1); break; } }
-    document.getElementById('pf-item').value = parsed.item;
-    document.getElementById('pf-priority').value = parsed.priority;
-    document.getElementById('pf-status').value = parsed.status;
-    document.getElementById('pf-category').value = parsed.category;
-    document.getElementById('pf-context').value = parsed.context;
-    document.getElementById('pf-project').value = parsed.project;
-    document.getElementById('parsed-form').style.display = 'block';
-}
-function saveFromVoice() {
-    const item = {
-        id: Date.now(),
-        item: document.getElementById('pf-item').value,
-        priority: document.getElementById('pf-priority').value,
-        status: document.getElementById('pf-status').value,
-        category: document.getElementById('pf-category').value,
-        context: document.getElementById('pf-context').value,
-        project: document.getElementById('pf-project').value,
-        notes: 'Added via voice ' + new Date().toLocaleDateString()
-    };
-    if (!item.item.trim()) { toast('Enter item'); return; }
-    items.unshift(item);
-    save(); render(); updateStats(); renderProjects();
-    document.getElementById('parsed-form').style.display = 'none';
-    document.getElementById('transcript').textContent = 'Tap microphone and speak...';
-    toast('✓ Added!');
+    if (confirm('Reset all data?')) { localStorage.removeItem('gtd_items_v3'); items = typeof GTD_INITIAL_DATA !== 'undefined' ? [...GTD_INITIAL_DATA] : []; save(); render(); updateStats(); populateProjectDropdown(); toast('Reset'); }
 }
 
 function toast(msg) {
-    const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 2500);
+    const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2000);
 }
 
 function setupListeners() {
-    document.querySelectorAll('#status-filters .chip').forEach(chip => {
-        chip.onclick = () => {
-            document.querySelectorAll('#status-filters .chip').forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            filters.status = chip.dataset.f;
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.onclick = () => {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            filters.status = tab.dataset.status;
             render();
         };
     });
-    document.querySelectorAll('#priority-filters .chip').forEach(chip => {
-        chip.onclick = () => {
-            const wasActive = chip.classList.contains('active');
-            document.querySelectorAll('#priority-filters .chip').forEach(c => c.classList.remove('active'));
-            if (!wasActive) { chip.classList.add('active'); filters.priority = chip.dataset.p; }
-            else { filters.priority = null; }
+    
+    document.querySelectorAll('.filter[data-p]').forEach(btn => {
+        btn.onclick = () => {
+            const wasActive = btn.classList.contains('active');
+            document.querySelectorAll('.filter[data-p]').forEach(b => b.classList.remove('active'));
+            if (!wasActive) { btn.classList.add('active'); filters.priority = btn.dataset.p; }
+            else filters.priority = null;
             render();
         };
     });
-    document.querySelectorAll('#category-filters .chip').forEach(chip => {
-        chip.onclick = () => {
-            const wasActive = chip.classList.contains('active');
-            document.querySelectorAll('#category-filters .chip').forEach(c => c.classList.remove('active'));
-            if (!wasActive) { chip.classList.add('active'); filters.category = chip.dataset.c; }
-            else { filters.category = null; }
+    
+    document.querySelectorAll('.filter[data-c]').forEach(btn => {
+        btn.onclick = () => {
+            const wasActive = btn.classList.contains('active');
+            document.querySelectorAll('.filter[data-c]').forEach(b => b.classList.remove('active'));
+            if (!wasActive) { btn.classList.add('active'); filters.category = btn.dataset.c; }
+            else filters.category = null;
             render();
         };
     });
+    
     document.getElementById('search').oninput = e => { filters.search = e.target.value; render(); };
-    const sortOptions = ['priority', 'project', 'status'];
-    let sortIdx = 0;
-    document.getElementById('sort-btn').onclick = () => {
-        sortIdx = (sortIdx + 1) % sortOptions.length;
-        sortBy = sortOptions[sortIdx];
-        document.getElementById('sort-btn').textContent = '↕️ ' + sortBy.charAt(0).toUpperCase() + sortBy.slice(1);
-        render();
-    };
+    
     document.querySelectorAll('.nav-btn').forEach(btn => { btn.onclick = () => switchView(btn.dataset.v); });
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.onclick = e => { if (e.target === modal) closeModal(modal.id.replace('modal-', '')); };
-    });
+    
+    document.getElementById('modal-detail').onclick = e => { if (e.target.id === 'modal-detail') closeModal(); };
 }
 
 init();
