@@ -85,8 +85,8 @@ header h1 { font-size:18px; font-weight:600; }
 .danger { color:var(--critical); }
 .view { display:none; }
 .view.active { display:block; }
-.toast { position:fixed; bottom:70px; left:50%; transform:translateX(-50%) translateY(50px); background:var(--text); color:var(--surface); padding:12px 24px; border-radius:8px; font-size:13px; transition:transform 0.2s; z-index:200; }
-.toast.show { transform:translateX(-50%) translateY(0); }
+.toast { position:fixed; bottom:70px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--text); color:var(--surface); padding:12px 24px; border-radius:8px; font-size:13px; transition:transform 0.3s, opacity 0.3s; z-index:200; opacity:0; pointer-events:none; }
+.toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .proj-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden; }
 .proj-header { padding:14px 16px; border-bottom:1px solid var(--border); }
 .proj-name { font-size:15px; font-weight:600; margin-bottom:4px; }
