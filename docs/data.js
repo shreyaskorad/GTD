@@ -1,5 +1,5 @@
 // GTD Items Data - Pre-loaded from your capture session
-const GTD_INITIAL_DATA = [
+var GTD_INITIAL_DATA = [
   // WORLD BANK GROUP
   {id:1, item:"Skills Framework - review details from Anurag", category:"Professional", project:"World Bank Group", context:"@Computer", priority:"High", status:"Next Action", energy:"Medium", time:"30 min", notes:"Deriving skills from courses", waiting_for:"Anurag"},
   {id:2, item:"QII project - needs attention", category:"Professional", project:"World Bank Group", context:"@Computer", priority:"Medium", status:"Next Action", energy:"High", time:"2 hours", notes:"Started but not paid attention to"},
