@@ -45,31 +45,16 @@ header h1 { font-size: 18px; font-weight: 600; }
 
 .capture { padding: 16px; }
 .section-title { font-size: 15px; font-weight: 600; margin-bottom: 16px; }
-.mic-area { text-align: center; padding: 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
-.mic-btn { width: 72px; height: 72px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; }
+.mic-area { text-align: center; padding: 40px 32px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 16px; }
+.mic-btn { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); color: var(--text); font-size: 14px; font-weight: 500; cursor: pointer; }
 .mic-btn.recording { border-color: var(--critical); color: var(--critical); }
-.mic-status { margin-top: 12px; font-size: 13px; color: var(--text2); }
-.mic-time { font-size: 28px; font-weight: 300; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.mic-status { margin-top: 16px; font-size: 13px; color: var(--text2); }
+.mic-time { font-size: 32px; font-weight: 300; margin-top: 8px; font-variant-numeric: tabular-nums; }
+.mic-hint { margin-top: 16px; font-size: 12px; color: var(--text3); line-height: 1.5; }
 
-.transcript-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; min-height: 80px; max-height: 200px; overflow-y: auto; font-size: 14px; line-height: 1.6; color: var(--text2); white-space: pre-wrap; }
-
-.analysis-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 16px; overflow: hidden; }
-.analysis-header { padding: 12px 16px; background: var(--surface2); font-size: 13px; font-weight: 500; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
-.analysis-status { font-size: 12px; color: var(--text2); font-weight: normal; }
-.analysis-status.processing { color: var(--accent); }
-
-.task-card { padding: 14px 16px; border-bottom: 1px solid var(--border); }
-.task-card:last-child { border-bottom: none; }
-.task-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
-.task-checkbox { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; }
-.task-text { flex: 1; font-size: 14px; line-height: 1.4; }
-.task-attrs { display: flex; flex-wrap: wrap; gap: 6px; margin-left: 30px; }
-.task-attr { font-size: 11px; padding: 3px 8px; border-radius: 4px; background: var(--surface2); color: var(--text2); }
-.task-attr.priority-critical { background: #ffebee; color: var(--critical); }
-.task-attr.priority-high { background: #fff3e0; color: var(--high); }
-.task-attr.project { background: #e3f2fd; color: var(--accent); }
-.task-attr.context { background: #f3e5f5; color: #7b1fa2; }
-.task-attr.waiting { background: #fff8e1; color: #f9a825; }
+.result-box { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; text-align: center; }
+.result-count { font-size: 24px; font-weight: 600; color: var(--accent); }
+.result-label { font-size: 13px; color: var(--text2); margin-top: 4px; }
 
 .btn { padding: 12px 20px; font-size: 14px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; }
 .btn-primary { background: var(--accent); color: #fff; }
@@ -103,7 +88,6 @@ header h1 { font-size: 18px; font-weight: 600; }
 .view.active { display: block; }
 .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%) translateY(50px); background: var(--text); color: var(--surface); padding: 12px 24px; border-radius: 8px; font-size: 13px; transition: transform 0.2s; z-index: 200; }
 .toast.show { transform: translateX(-50%) translateY(0); }
-.hint { font-size: 12px; color: var(--text3); margin-top: 8px; line-height: 1.5; }
     </style>
 </head>
 <body>
@@ -136,34 +120,28 @@ header h1 { font-size: 18px; font-weight: 600; }
 
     <div class="view" id="v-capture">
         <div class="capture">
-            <div class="section-title">Smart Voice Capture</div>
+            <div class="section-title">Voice Capture</div>
             <div class="mic-area">
                 <button class="mic-btn" id="mic-btn">Start</button>
-                <div class="mic-status" id="mic-status">Tap to start recording</div>
+                <div class="mic-status" id="mic-status">Tap to start</div>
                 <div class="mic-time" id="mic-time">0:00</div>
+                <div class="mic-hint">Speak naturally. Say project names, priorities, who you're waiting for. I'll analyze and add everything automatically.</div>
             </div>
-            <div class="transcript-box" id="transcript">Speak naturally for as long as you want. I will analyze your entire dictation and extract all tasks with their priorities, projects, contexts, and dependencies.</div>
-            <div class="analysis-box" id="analysis-box" style="display:none;">
-                <div class="analysis-header">
-                    <span>Analyzed Tasks</span>
-                    <span class="analysis-status" id="analysis-status">Ready</span>
-                </div>
-                <div id="tasks-list"></div>
+            <div class="result-box" id="result-box" style="display:none;">
+                <div class="result-count" id="result-count">0</div>
+                <div class="result-label">tasks added</div>
             </div>
             <div class="btn-row">
-                <button class="btn btn-secondary" onclick="clearCapture()">Clear</button>
-                <button class="btn btn-secondary" onclick="reanalyze()">Re-analyze</button>
-                <button class="btn btn-primary" style="flex:1" onclick="addSelectedTasks()">Add Selected</button>
+                <button class="btn btn-secondary" style="flex:1" onclick="switchView('list')">View List</button>
             </div>
-            <div class="hint">Tip: Speak naturally. Mention projects like "World Bank", "Riyadh Air". Say "waiting for" to mark dependencies. Use "urgent", "critical", "high priority" for prioritization.</div>
         </div>
     </div>
 
     <div class="view" id="v-add">
         <div class="form">
-            <div class="section-title">Add Item</div>
+            <div class="section-title">Quick Add</div>
             <div class="form-group">
-                <label class="form-label">Item</label>
+                <label class="form-label">Task</label>
                 <input class="form-input" id="f-item" placeholder="What needs to be done?">
             </div>
             <div class="form-row">
@@ -199,27 +177,11 @@ header h1 { font-size: 18px; font-weight: 600; }
                     <select class="form-select" id="f-project"></select>
                 </div>
             </div>
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Context</label>
-                    <select class="form-select" id="f-context">
-                        <option value="@Anywhere">@Anywhere</option>
-                        <option value="@Computer">@Computer</option>
-                        <option value="@Phone">@Phone</option>
-                        <option value="@Office">@Office</option>
-                        <option value="@Home">@Home</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Time</label>
-                    <input class="form-input" id="f-time" placeholder="e.g. 30 min">
-                </div>
-            </div>
             <div class="form-group">
                 <label class="form-label">Notes</label>
                 <input class="form-input" id="f-notes" placeholder="Additional details">
             </div>
-            <button class="btn btn-primary" style="width:100%" onclick="addItem()">Add Item</button>
+            <button class="btn btn-primary" style="width:100%" onclick="addItem()">Add</button>
         </div>
     </div>
 
@@ -237,7 +199,7 @@ header h1 { font-size: 18px; font-weight: 600; }
                 <div class="settings-item" onclick="clearCompleted()">Clear completed</div>
                 <div class="settings-item danger" onclick="resetAll()">Reset all data</div>
             </div>
-            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v3.2 - Smart Capture</div>
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v4.0</div>
         </div>
     </div>
 </div>
@@ -255,7 +217,6 @@ header h1 { font-size: 18px; font-weight: 600; }
 <script>
 let items = [];
 let filters = { status: 'all', priority: null, category: null, search: '' };
-let analyzedTasks = [];
 
 // Project patterns for smart detection
 const PROJECT_PATTERNS = {
@@ -267,27 +228,16 @@ const PROJECT_PATTERNS = {
     'BAT': /\bbat\b|british american|webinar tours/i,
     'Business Planning': /business plan|revenue|margin|pipeline|forecast/i,
     'AI Skills': /\bai\b|artificial intelligence|machine learning|prompt|gpt|copilot/i,
-    'AI Integration': /ai workflow|ai clinic|ai enhancement/i,
     'Health': /health|gym|exercise|workout|doctor|medical|sleep|diet/i,
     'Family - Divya': /divya|wife/i,
     'Family - Ananya': /ananya|daughter|baby/i,
     'Family - Parents': /parents|mom|dad|mother|father/i,
     'Finance': /finance|investment|insurance|loan|tax|sip|mutual fund/i,
     'Upside Learning': /upside|upside learning/i,
-    'Home Renovations': /renovation|contractor|kitchen|bathroom|garden|house/i
+    'Home': /renovation|contractor|kitchen|bathroom|garden|house|home/i
 };
 
-// Context patterns
-const CONTEXT_PATTERNS = {
-    '@Computer': /computer|laptop|email|online|website|document|spreadsheet|presentation/i,
-    '@Phone': /call|phone|whatsapp|message|text/i,
-    '@Office': /office|meeting|team|colleague/i,
-    '@Home': /home|house|evening|weekend/i,
-    '@Errands': /errand|shop|buy|store|pick up|drop off/i,
-    '@Thinking': /think about|consider|decide|plan|strategy|brainstorm/i
-};
-
-// Person patterns for waiting-for detection
+// Person patterns for waiting-for
 const PERSON_PATTERNS = [
     /waiting (?:for|on) (\w+)/i,
     /(\w+) (?:will|to) (?:send|share|provide|get back|confirm)/i,
@@ -300,16 +250,23 @@ const PERSON_PATTERNS = [
 const PROJECTS = ['', 'World Bank Group', 'HPE ClearBook', 'CAA Axiom', 'Riyadh Air', 'AstraZeneca', 'BAT', 'Business Planning', 'AI Skills', 'Health', 'Family - Divya', 'Family - Ananya', 'Finance', 'Upside Learning'];
 
 function init() {
-    const stored = localStorage.getItem('gtd_items_v3');
+    const stored = localStorage.getItem('gtd_items_v4');
     if (stored) items = JSON.parse(stored);
-    else if (typeof GTD_INITIAL_DATA !== 'undefined') { items = GTD_INITIAL_DATA.map((item, i) => ({...item, id: item.id || i + 1})); save(); }
+    else if (typeof GTD_INITIAL_DATA !== 'undefined') { 
+        // Remove context from initial data
+        items = GTD_INITIAL_DATA.map((item, i) => {
+            const {context, ...rest} = item;
+            return {...rest, id: item.id || i + 1};
+        }); 
+        save(); 
+    }
     populateProjects();
     render();
     updateStats();
     setupListeners();
 }
 
-function save() { localStorage.setItem('gtd_items_v3', JSON.stringify(items)); }
+function save() { localStorage.setItem('gtd_items_v4', JSON.stringify(items)); }
 
 function populateProjects() {
     const existing = [...new Set(items.map(i => i.project).filter(Boolean))];
@@ -340,11 +297,11 @@ function render() {
             </div>
             <div class="item-meta">
                 ${item.project ? `<span>${item.project}</span>` : ''}
-                <span>${item.context || '@Anywhere'}</span>
                 <span>${item.category}</span>
+                ${item.waiting_for ? `<span>Waiting: ${item.waiting_for}</span>` : ''}
             </div>
         </div>
-    `).join('') : '<p style="text-align:center;color:var(--text3);padding:40px;">No items found</p>';
+    `).join('') : '<p style="text-align:center;color:var(--text3);padding:40px;">No items</p>';
 }
 
 function updateStats() {
@@ -368,9 +325,7 @@ function showDetail(id) {
         </div>
         <div style="font-size:13px;color:var(--text2);line-height:1.8;margin-bottom:24px;">
             ${item.project ? `<div>Project: ${item.project}</div>` : ''}
-            <div>Context: ${item.context || '@Anywhere'}</div>
             ${item.waiting_for ? `<div>Waiting for: ${item.waiting_for}</div>` : ''}
-            ${item.time ? `<div>Time: ${item.time}</div>` : ''}
             ${item.notes ? `<div>Notes: ${item.notes}</div>` : ''}
         </div>
         <div class="btn-row">
@@ -393,11 +348,9 @@ function addItem() {
         status: document.getElementById('f-status').value,
         category: document.getElementById('f-category').value,
         project: document.getElementById('f-project').value,
-        context: document.getElementById('f-context').value,
-        time: document.getElementById('f-time').value,
         notes: document.getElementById('f-notes').value
     };
-    if (!item.item) { toast('Enter item text'); return; }
+    if (!item.item) { toast('Enter task'); return; }
     items.unshift(item);
     save(); render(); updateStats(); populateProjects();
     document.getElementById('f-item').value = '';
@@ -412,7 +365,7 @@ function switchView(name) {
     document.querySelector(`[data-v="${name}"]`).classList.add('active');
 }
 
-// Smart Voice Capture
+// Voice Capture - No review, direct add
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 let recognition = null;
 let isRecording = false;
@@ -425,13 +378,9 @@ if (SR) {
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.onresult = (e) => {
-        let interim = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
-            const t = e.results[i][0].transcript;
-            if (e.results[i].isFinal) transcript += t + ' ';
-            else interim = t;
+            if (e.results[i].isFinal) transcript += e.results[i][0].transcript + ' ';
         }
-        document.getElementById('transcript').textContent = transcript + interim;
     };
     recognition.onend = () => { if (isRecording) recognition.start(); };
 }
@@ -445,11 +394,10 @@ function startRecording() {
     isRecording = true;
     recordingTime = 0;
     transcript = '';
-    document.getElementById('transcript').textContent = 'Listening...';
     document.getElementById('mic-btn').classList.add('recording');
     document.getElementById('mic-btn').textContent = 'Stop';
-    document.getElementById('mic-status').textContent = 'Recording... speak naturally';
-    document.getElementById('analysis-box').style.display = 'none';
+    document.getElementById('mic-status').textContent = 'Recording...';
+    document.getElementById('result-box').style.display = 'none';
     recognition.start();
     recordingTimer = setInterval(() => {
         recordingTime++;
@@ -466,64 +414,68 @@ function stopRecording() {
     document.getElementById('mic-btn').classList.remove('recording');
     document.getElementById('mic-btn').textContent = 'Start';
     document.getElementById('mic-status').textContent = 'Processing...';
+    
     setTimeout(() => {
-        analyzeTranscript(transcript);
-        document.getElementById('mic-status').textContent = 'Tap to start recording';
+        const count = analyzeAndAdd(transcript);
+        document.getElementById('mic-status').textContent = 'Tap to start';
+        document.getElementById('result-box').style.display = 'block';
+        document.getElementById('result-count').textContent = count;
+        transcript = '';
     }, 300);
 }
 
-function analyzeTranscript(text) {
-    if (!text.trim()) return;
+function analyzeAndAdd(text) {
+    if (!text.trim()) return 0;
     
-    document.getElementById('analysis-status').textContent = 'Analyzing...';
-    document.getElementById('analysis-status').classList.add('processing');
+    // Split into tasks
+    const taskIndicators = /(?:i need to|i have to|i should|i must|i want to|need to|have to|should|must|going to|will|remind me to|don't forget|make sure|todo|next|also|another thing|plus|and then|additionally|one more thing|oh and|by the way)/gi;
     
-    // Smart sentence/task splitting
-    const taskIndicators = /(?:i need to|i have to|i should|i must|i want to|need to|have to|should|must|want to|going to|will|let me|remind me to|don't forget to|make sure to|remember to|todo|task|item|action|next|also|another thing|plus|and then|additionally|furthermore|one more thing|oh and|by the way)/gi;
-    
-    // First, split by clear task indicators
     let rawChunks = text.replace(taskIndicators, '|||$&').split('|||').filter(s => s.trim());
-    
-    // Then split long chunks by sentence boundaries
     let chunks = [];
     rawChunks.forEach(chunk => {
         if (chunk.length > 150) {
-            const sentences = chunk.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10);
-            chunks.push(...sentences);
+            chunks.push(...chunk.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 10));
         } else if (chunk.trim().length > 10) {
             chunks.push(chunk.trim());
         }
     });
     
-    // Analyze each chunk
-    analyzedTasks = chunks.map((chunk, i) => analyzeTask(chunk, i));
+    // Analyze and add each task directly
+    let added = 0;
+    chunks.forEach(chunk => {
+        const task = analyzeTask(chunk);
+        if (task.item.length > 5) {
+            items.unshift(task);
+            added++;
+        }
+    });
     
-    // Render results
-    renderAnalyzedTasks();
+    if (added > 0) {
+        save();
+        render();
+        updateStats();
+        populateProjects();
+    }
     
-    document.getElementById('analysis-status').textContent = `${analyzedTasks.length} tasks found`;
-    document.getElementById('analysis-status').classList.remove('processing');
+    return added;
 }
 
-function analyzeTask(text, id) {
+function analyzeTask(text) {
     const task = {
-        id: id,
-        text: cleanTaskText(text),
-        selected: true,
+        id: Date.now() + Math.random(),
+        item: cleanTaskText(text),
         priority: 'Medium',
         status: 'Next Action',
         category: 'Personal',
         project: '',
-        context: '@Anywhere',
         waiting_for: '',
-        time: '',
         notes: ''
     };
     
     const lower = text.toLowerCase();
     
-    // Priority detection
-    if (/urgent|critical|asap|immediately|right now|top priority|very important|crucial|emergency/.test(lower)) {
+    // Priority
+    if (/urgent|critical|asap|immediately|right now|top priority|crucial|emergency/.test(lower)) {
         task.priority = 'Critical';
     } else if (/important|high priority|priority|must|need to.*soon|this week|pressing/.test(lower)) {
         task.priority = 'High';
@@ -531,31 +483,23 @@ function analyzeTask(text, id) {
         task.priority = 'Low';
     }
     
-    // Category detection
+    // Category
     if (/work|office|client|meeting|project|upside|professional|account|deal|proposal|team|colleague|business|revenue|sales/.test(lower)) {
         task.category = 'Professional';
     }
     
-    // Project detection
+    // Project
     for (const [project, pattern] of Object.entries(PROJECT_PATTERNS)) {
         if (pattern.test(lower)) {
             task.project = project;
-            if (['World Bank Group', 'HPE ClearBook', 'CAA Axiom', 'Riyadh Air', 'AstraZeneca', 'BAT', 'Upside Learning', 'AI Integration'].includes(project)) {
+            if (['World Bank Group', 'HPE ClearBook', 'CAA Axiom', 'Riyadh Air', 'AstraZeneca', 'BAT', 'Upside Learning'].includes(project)) {
                 task.category = 'Professional';
             }
             break;
         }
     }
     
-    // Context detection
-    for (const [context, pattern] of Object.entries(CONTEXT_PATTERNS)) {
-        if (pattern.test(lower)) {
-            task.context = context;
-            break;
-        }
-    }
-    
-    // Waiting-for detection
+    // Waiting-for
     for (const pattern of PERSON_PATTERNS) {
         const match = lower.match(pattern);
         if (match) {
@@ -565,98 +509,28 @@ function analyzeTask(text, id) {
         }
     }
     
-    // Someday/Maybe detection
+    // Someday/Maybe
     if (/someday|maybe|one day|would be nice|dream|wish|future|eventually/.test(lower)) {
         task.status = 'Someday/Maybe';
     }
-    
-    // Time estimation
-    if (/quick|5 minutes?|10 minutes?|few minutes/.test(lower)) task.time = '5-10 min';
-    else if (/half hour|30 minutes?|half an hour/.test(lower)) task.time = '30 min';
-    else if (/hour|60 minutes?/.test(lower)) task.time = '1 hour';
-    else if (/couple hours|few hours|2 hours?|3 hours?/.test(lower)) task.time = '2-3 hours';
     
     return task;
 }
 
 function cleanTaskText(text) {
-    // Remove filler words and clean up
     return text
-        .replace(/^(i need to|i have to|i should|i must|i want to|need to|have to|should|must|want to|going to|will|let me|remind me to|don't forget to|make sure to|remember to|todo|task|item|action|next|also|another thing|plus|and then|additionally|furthermore|one more thing|oh and|by the way)\s*/i, '')
+        .replace(/^(i need to|i have to|i should|i must|i want to|need to|have to|should|must|going to|will|remind me to|don't forget|make sure|todo|next|also|another thing|plus|and then|additionally|one more thing|oh and|by the way)\s*/i, '')
         .replace(/\s+/g, ' ')
         .trim()
         .replace(/^./, c => c.toUpperCase());
 }
 
-function renderAnalyzedTasks() {
-    document.getElementById('analysis-box').style.display = 'block';
-    document.getElementById('tasks-list').innerHTML = analyzedTasks.map(task => `
-        <div class="task-card">
-            <div class="task-header">
-                <input type="checkbox" class="task-checkbox" ${task.selected ? 'checked' : ''} onchange="toggleTask(${task.id})">
-                <div class="task-text">${task.text}</div>
-            </div>
-            <div class="task-attrs">
-                <span class="task-attr priority-${task.priority.toLowerCase()}">${task.priority}</span>
-                ${task.project ? `<span class="task-attr project">${task.project}</span>` : ''}
-                <span class="task-attr context">${task.context}</span>
-                <span class="task-attr">${task.category}</span>
-                ${task.status !== 'Next Action' ? `<span class="task-attr">${task.status}</span>` : ''}
-                ${task.waiting_for ? `<span class="task-attr waiting">Waiting: ${task.waiting_for}</span>` : ''}
-                ${task.time ? `<span class="task-attr">${task.time}</span>` : ''}
-            </div>
-        </div>
-    `).join('');
-}
-
-function toggleTask(id) {
-    const task = analyzedTasks.find(t => t.id === id);
-    if (task) task.selected = !task.selected;
-}
-
-function reanalyze() {
-    if (transcript.trim()) analyzeTranscript(transcript);
-    else toast('No transcript to analyze');
-}
-
-function addSelectedTasks() {
-    const selected = analyzedTasks.filter(t => t.selected);
-    if (selected.length === 0) { toast('Select tasks first'); return; }
-    
-    selected.forEach(task => {
-        items.unshift({
-            id: Date.now() + Math.random(),
-            item: task.text,
-            priority: task.priority,
-            status: task.status,
-            category: task.category,
-            project: task.project,
-            context: task.context,
-            waiting_for: task.waiting_for,
-            time: task.time,
-            notes: ''
-        });
-    });
-    
-    save(); render(); updateStats(); populateProjects(); clearCapture();
-    toast(`Added ${selected.length} tasks`);
-    switchView('list');
-}
-
-function clearCapture() {
-    transcript = '';
-    analyzedTasks = [];
-    document.getElementById('transcript').textContent = 'Speak naturally for as long as you want. I will analyze your entire dictation and extract all tasks with their priorities, projects, contexts, and dependencies.';
-    document.getElementById('analysis-box').style.display = 'none';
-    document.getElementById('mic-time').textContent = '0:00';
-}
-
 // Export/Import
 function exportJSON() { const blob = new Blob([JSON.stringify(items, null, 2)], {type: 'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-backup.json'; a.click(); toast('Downloaded'); }
-function exportCSV() { const headers = ['Item','Category','Project','Context','Priority','Status','Notes']; const rows = items.map(i => headers.map(h => `"${(i[h.toLowerCase()]||'').toString().replace(/"/g,'""')}"`).join(',')); const blob = new Blob([[headers.join(','), ...rows].join('\n')], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-export.csv'; a.click(); toast('Downloaded'); }
+function exportCSV() { const headers = ['Item','Category','Project','Priority','Status','Waiting For','Notes']; const rows = items.map(i => headers.map(h => `"${(i[h.toLowerCase().replace(/ /g,'_')]||'').toString().replace(/"/g,'""')}"`).join(',')); const blob = new Blob([[headers.join(','), ...rows].join('\n')], {type: 'text/csv'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'gtd-export.csv'; a.click(); toast('Downloaded'); }
 function importJSON(file) { if (!file) return; const reader = new FileReader(); reader.onload = e => { try { const data = JSON.parse(e.target.result); if (Array.isArray(data)) { items = data; save(); render(); updateStats(); populateProjects(); toast(`Imported ${data.length} items`); } } catch(e) { toast('Invalid file'); } }; reader.readAsText(file); }
 function clearCompleted() { if (confirm('Clear completed?')) { items = items.filter(i => i.status !== 'Completed'); save(); render(); updateStats(); toast('Cleared'); } }
-function resetAll() { if (confirm('Reset all data?')) { localStorage.removeItem('gtd_items_v3'); items = typeof GTD_INITIAL_DATA !== 'undefined' ? [...GTD_INITIAL_DATA] : []; save(); render(); updateStats(); populateProjects(); toast('Reset'); } }
+function resetAll() { if (confirm('Reset all data?')) { localStorage.removeItem('gtd_items_v4'); items = typeof GTD_INITIAL_DATA !== 'undefined' ? GTD_INITIAL_DATA.map((item, i) => { const {context, ...rest} = item; return {...rest, id: item.id || i + 1}; }) : []; save(); render(); updateStats(); populateProjects(); toast('Reset'); } }
 function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000); }
 
 function setupListeners() {
