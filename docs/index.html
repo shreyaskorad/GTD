@@ -326,6 +326,12 @@ if (window.location.search.indexOf('reset=1') > -1) {
     window.location.href = window.location.pathname;
 }
 
+// Allow ?reload=1 to reload sample data (keeps PIN and token)
+if (window.location.search.indexOf('reload=1') > -1) {
+    localStorage.removeItem(STORAGE_KEY);
+    window.location.href = window.location.pathname;
+}
+
 if (isSessionValid()) unlockApp();
 else if (isFirstTime()) { document.getElementById('auth-title').textContent = 'Set Your PIN'; document.getElementById('auth-desc').textContent = 'Create a 4-6 digit PIN to secure your GTD'; }
 
