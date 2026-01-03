@@ -113,6 +113,19 @@ header h1 { font-size:18px; font-weight:600; }
 .ai-badge { display:inline-block; font-size:10px; padding:2px 6px; border-radius:4px; background:#e8f5e9; color:#388e3c; margin-left:8px; }
 .loading { display:inline-block; width:16px; height:16px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 1s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
+.focus-section { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; overflow:hidden; }
+.focus-header { padding:12px 16px; background:var(--surface2); font-weight:600; font-size:13px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+.focus-badge { background:var(--accent); color:#fff; font-size:11px; padding:2px 8px; border-radius:10px; }
+.focus-item { padding:12px 16px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:10px; }
+.focus-item:last-child { border-bottom:none; }
+.focus-check { width:20px; height:20px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.focus-check:hover { border-color:var(--accent); background:var(--surface2); }
+.focus-text { flex:1; font-size:13px; line-height:1.4; }
+.focus-meta { font-size:11px; color:var(--text3); margin-top:4px; }
+.focus-empty { padding:20px; text-align:center; color:var(--text3); font-size:13px; }
+.text-capture { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-top:16px; }
+.text-capture-area { width:100%; min-height:120px; padding:12px; font-size:14px; border:1px solid var(--border); border-radius:8px; resize:vertical; font-family:inherit; margin-bottom:12px; }
+.text-capture-hint { font-size:12px; color:var(--text3); margin-bottom:12px; }
     </style>
 </head>
 <body>
@@ -141,11 +154,23 @@ header h1 { font-size:18px; font-weight:600; }
             <button class="tab active" data-status="all">All</button>
             <button class="tab" data-status="Next Action">Actions</button>
             <button class="tab" data-status="Waiting For">Waiting</button>
+            <button class="tab" data-status="focus">Today</button>
         </div>
-        <div class="filters">
+        <div class="filters" id="filters-bar">
             <input type="text" class="search" id="search" placeholder="Search...">
             <button class="filter" data-p="Critical">Critical</button>
             <button class="filter" data-p="High">High</button>
+        </div>
+        <div id="focus-view" style="display:none;padding:16px;">
+            <div class="focus-section">
+                <div class="focus-header">Professional <span class="focus-badge" id="focus-pro-count">5</span></div>
+                <div id="focus-pro-list"></div>
+            </div>
+            <div class="focus-section">
+                <div class="focus-header">Personal <span class="focus-badge" id="focus-per-count">5</span></div>
+                <div id="focus-per-list"></div>
+            </div>
+            <div style="text-align:center;padding:12px;color:var(--text3);font-size:12px;">Top 5 tasks each by priority and due date</div>
         </div>
         <div class="list" id="items-list"></div>
     </div>
@@ -178,6 +203,14 @@ header h1 { font-size:18px; font-weight:600; }
             
             <div class="result-box" id="result-box" style="display:none;">
                 <div id="result-content"></div>
+            </div>
+            
+            <div class="text-capture">
+                <div class="section-title" style="margin-bottom:8px;">Text to Tasks</div>
+                <div class="text-capture-hint">Paste text from Claude or any source. AI will extract and organize tasks.</div>
+                <textarea class="text-capture-area" id="text-input" placeholder="Paste your dictation text, meeting notes, or any text with tasks here..."></textarea>
+                <button class="btn btn-primary" style="width:100%" onclick="processTextToTasks()">Extract Tasks</button>
+                <div id="text-result" style="margin-top:12px;"></div>
             </div>
             
             <div class="token-warning" id="token-warning" style="display:none;">
@@ -255,7 +288,7 @@ header h1 { font-size:18px; font-weight:600; }
                 <button class="settings-item" type="button" onclick="reloadSampleData()">Reload sample data (101 items)</button>
                 <button class="settings-item danger" type="button" onclick="resetAll()">Reset all data</button>
             </div>
-            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.7 - AI Powered</div>
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.8 - AI Powered</div>
         </div>
     </div>
 
@@ -506,6 +539,22 @@ function populateProjects() {
 
 function render() {
     var list = document.getElementById('items-list');
+    var focusView = document.getElementById('focus-view');
+    var filtersBar = document.getElementById('filters-bar');
+    
+    // Handle focus/today view
+    if (filters.status === 'focus') {
+        list.style.display = 'none';
+        filtersBar.style.display = 'none';
+        focusView.style.display = 'block';
+        renderFocusView();
+        return;
+    } else {
+        list.style.display = 'block';
+        filtersBar.style.display = 'flex';
+        focusView.style.display = 'none';
+    }
+    
     var filtered = items.filter(function(item) {
         if (item.status === 'Completed') return false;
         if (filters.status !== 'all' && item.status !== filters.status) return false;
@@ -535,6 +584,73 @@ function render() {
     } else {
         list.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px;">No items</p>';
     }
+}
+
+function renderFocusView() {
+    var order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    var today = new Date();
+    
+    // Get active tasks, sorted by priority then due date
+    var activeTasks = items.filter(function(item) {
+        return item.status !== 'Completed' && item.status !== 'Someday/Maybe';
+    });
+    
+    activeTasks.sort(function(a, b) {
+        // First by priority
+        var pDiff = (order[a.priority] || 4) - (order[b.priority] || 4);
+        if (pDiff !== 0) return pDiff;
+        // Then by due date (earlier first, no date last)
+        var aDate = a.dueDate ? new Date(a.dueDate) : new Date('2099-12-31');
+        var bDate = b.dueDate ? new Date(b.dueDate) : new Date('2099-12-31');
+        return aDate - bDate;
+    });
+    
+    // Split by category
+    var professional = activeTasks.filter(function(t) { return t.category === 'Professional'; }).slice(0, 5);
+    var personal = activeTasks.filter(function(t) { return t.category !== 'Professional'; }).slice(0, 5);
+    
+    // Render professional
+    var proHtml = '';
+    if (professional.length === 0) {
+        proHtml = '<div class="focus-empty">No professional tasks</div>';
+    } else {
+        for (var i = 0; i < professional.length; i++) {
+            var t = professional[i];
+            proHtml += '<div class="focus-item">';
+            proHtml += '<div class="focus-check" onclick="event.stopPropagation();completeFocusTask(' + t.id + ')"></div>';
+            proHtml += '<div class="focus-text" onclick="showDetail(' + t.id + ')">' + t.item;
+            proHtml += '<div class="focus-meta">';
+            if (t.project) proHtml += t.project;
+            if (t.dueDate) proHtml += (t.project ? ' | ' : '') + 'Due: ' + formatDate(t.dueDate);
+            proHtml += '</div></div></div>';
+        }
+    }
+    document.getElementById('focus-pro-list').innerHTML = proHtml;
+    document.getElementById('focus-pro-count').textContent = professional.length;
+    
+    // Render personal
+    var perHtml = '';
+    if (personal.length === 0) {
+        perHtml = '<div class="focus-empty">No personal tasks</div>';
+    } else {
+        for (var j = 0; j < personal.length; j++) {
+            var t2 = personal[j];
+            perHtml += '<div class="focus-item">';
+            perHtml += '<div class="focus-check" onclick="event.stopPropagation();completeFocusTask(' + t2.id + ')"></div>';
+            perHtml += '<div class="focus-text" onclick="showDetail(' + t2.id + ')">' + t2.item;
+            perHtml += '<div class="focus-meta">';
+            if (t2.project) perHtml += t2.project;
+            if (t2.dueDate) perHtml += (t2.project ? ' | ' : '') + 'Due: ' + formatDate(t2.dueDate);
+            perHtml += '</div></div></div>';
+        }
+    }
+    document.getElementById('focus-per-list').innerHTML = perHtml;
+    document.getElementById('focus-per-count').textContent = personal.length;
+}
+
+function completeFocusTask(id) {
+    complete(id);
+    renderFocusView();
 }
 
 function formatDate(d) { if (!d) return ''; return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
@@ -1077,6 +1193,163 @@ function fallbackProcess(text) {
     save(); render(); updateStats();
     document.getElementById('mic-status').textContent = 'Tap to start';
     document.getElementById('result-content').innerHTML = '<div class="result-count">' + added + '</div><div class="result-label">tasks added (basic mode)</div>';
+}
+
+// ========== TEXT TO TASKS ==========
+function processTextToTasks() {
+    var text = document.getElementById('text-input').value.trim();
+    var resultDiv = document.getElementById('text-result');
+    
+    if (!text) {
+        resultDiv.innerHTML = '<div style="color:var(--critical);text-align:center;">Please paste some text first</div>';
+        return;
+    }
+    
+    var token = getGitHubToken();
+    if (!token) {
+        resultDiv.innerHTML = '<div style="color:var(--critical);text-align:center;">AI not configured. Go to Settings to add your GitHub Token.</div>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loading"></div><div style="margin-top:8px;color:var(--text2);">Extracting tasks...</div></div>';
+    
+    var projectList = projects.map(function(p) { return p.name; }).join(', ');
+    
+    var prompt = 'You are a GTD task extraction expert. Your job is to extract EVERY actionable task from the text and organize them properly.\n\n' +
+        'EXTRACTION RULES:\n' +
+        '1. Extract ALL actionable items - anything that needs to be done\n' +
+        '2. Split compound tasks: "call X and email Y" = 2 tasks\n' +
+        '3. Lists become tasks: "buy milk, eggs, bread" = 1 task "Buy groceries: milk, eggs, bread" OR 3 separate tasks\n' +
+        '4. Keep task descriptions clear and actionable\n' +
+        '5. Sequence tasks logically (dependencies first)\n\n' +
+        'PROJECT MATCHING (use EXACT names from this list or null if no match):\n' + projectList + '\n\n' +
+        'Project hints:\n' +
+        '- "World Bank" or "WB" or "Anurag" = "World Bank Group"\n' +
+        '- "HPE" or "Clearbook" = "HPE"\n' +
+        '- "CAA" or "Axiom" = "CAA"\n' +
+        '- "Riyadh" or "airline" = "Riyadh Air"\n' +
+        '- "Divya" or "wife" = "Family - Divya"\n' +
+        '- "Ananya" or "daughter" = "Family - Ananya"\n' +
+        '- health/exercise/doctor = Health project\n' +
+        '- AI topics = "AI Strategic" or "AI Skills"\n\n' +
+        'CATEGORY:\n' +
+        '- Work/client/business = "Professional"\n' +
+        '- Personal/family/health/home = "Personal"\n\n' +
+        'PRIORITY:\n' +
+        '- Critical: urgent, ASAP, emergency, today\n' +
+        '- High: important, priority, this week\n' +
+        '- Medium: default\n' +
+        '- Low: someday, eventually, maybe\n\n' +
+        'OUTPUT FORMAT (JSON only, no markdown):\n' +
+        '{"tasks":[{"task":"Clear action description","project":"Exact Project Name or null","category":"Professional or Personal","priority":"Medium","sequence":1},...],"summary":"Found X tasks: Y professional, Z personal"}\n\n' +
+        'IMPORTANT: sequence number indicates the order tasks should be done (1 = first). Group by project/context when logical.';
+
+    fetch(GITHUB_MODELS_URL, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: MODEL,
+            messages: [
+                { role: 'system', content: prompt },
+                { role: 'user', content: 'Extract and organize all tasks from this text:\n\n"' + text + '"' }
+            ],
+            temperature: 0.1,
+            max_tokens: 3000
+        })
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            return response.text().then(function(errText) {
+                throw new Error('API error ' + response.status);
+            });
+        }
+        return response.json();
+    })
+    .then(function(data) {
+        var content = data.choices[0].message.content;
+        console.log('Text-to-Tasks Response:', content);
+        
+        var json;
+        try {
+            var codeBlock = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
+            json = JSON.parse(codeBlock ? codeBlock[1] : content);
+        } catch (e) {
+            var objMatch = content.match(/\{[\s\S]*\}/);
+            if (objMatch) json = JSON.parse(objMatch[0]);
+            else throw new Error('Could not parse AI response');
+        }
+        
+        var tasks = json.tasks || [];
+        if (tasks.length === 0) {
+            resultDiv.innerHTML = '<div style="color:var(--text2);text-align:center;">No tasks found in the text</div>';
+            return;
+        }
+        
+        // Sort by sequence
+        tasks.sort(function(a, b) { return (a.sequence || 99) - (b.sequence || 99); });
+        
+        // Preview tasks before adding
+        var previewHtml = '<div style="margin-bottom:12px;font-weight:600;">' + tasks.length + ' tasks found:</div>';
+        for (var i = 0; i < tasks.length; i++) {
+            var t = tasks[i];
+            previewHtml += '<div style="padding:8px;background:var(--surface2);border-radius:6px;margin-bottom:6px;font-size:13px;">';
+            previewHtml += '<div>' + (i+1) + '. ' + t.task + '</div>';
+            previewHtml += '<div style="font-size:11px;color:var(--text3);margin-top:4px;">';
+            previewHtml += t.category + ' | ' + (t.project || 'No project') + ' | ' + t.priority;
+            previewHtml += '</div></div>';
+        }
+        previewHtml += '<div class="btn-row" style="margin-top:12px;">';
+        previewHtml += '<button class="btn btn-primary" style="flex:1" onclick="addExtractedTasks()">Add All Tasks</button>';
+        previewHtml += '<button class="btn btn-secondary" style="flex:1" onclick="clearTextResult()">Cancel</button>';
+        previewHtml += '</div>';
+        
+        resultDiv.innerHTML = previewHtml;
+        
+        // Store tasks for adding
+        window.pendingTextTasks = tasks;
+    })
+    .catch(function(error) {
+        console.error('Text-to-Tasks Error:', error);
+        resultDiv.innerHTML = '<div style="color:var(--critical);text-align:center;">Error: ' + error.message + '</div>';
+    });
+}
+
+function addExtractedTasks() {
+    var tasks = window.pendingTextTasks || [];
+    var added = 0;
+    
+    for (var i = 0; i < tasks.length; i++) {
+        var t = tasks[i];
+        var newItem = {
+            id: Date.now() + i,
+            item: t.task,
+            priority: t.priority || 'Medium',
+            status: 'Next Action',
+            category: t.category || 'Personal',
+            project: t.project || '',
+            notes: ''
+        };
+        items.unshift(newItem);
+        added++;
+    }
+    
+    save();
+    render();
+    updateStats();
+    
+    document.getElementById('text-result').innerHTML = '<div style="text-align:center;color:var(--low);font-weight:600;">' + added + ' tasks added!</div>';
+    document.getElementById('text-input').value = '';
+    window.pendingTextTasks = null;
+    
+    toast(added + ' tasks added');
+}
+
+function clearTextResult() {
+    document.getElementById('text-result').innerHTML = '';
+    window.pendingTextTasks = null;
 }
 
 // ========== EXPORT/IMPORT ==========
