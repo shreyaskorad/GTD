@@ -351,19 +351,66 @@ var projects = [];
 var filters = { status: 'all', priority: null, search: '' };
 
 var DEFAULT_PROJECTS = [
+    // Professional - Client Projects
     { id:'p1', name:'World Bank Group', status:'Active', startDate:'2025-10-01', deadline:'2026-03-31', owner:'Shreyas', stakeholders:'Anurag, WB Team', notes:'Skills Framework, QII, Climate Toolkit', category:'Professional' },
-    { id:'p2', name:'HPE ClearBook', status:'Active', startDate:'2025-11-15', deadline:'2026-02-28', owner:'Shreyas', stakeholders:'HPE Sales', notes:'Gamified sales experience', category:'Professional' },
-    { id:'p3', name:'CAA Axiom', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', stakeholders:'CAA Team', notes:'Cybersecurity, SAP, Axiom Hub', category:'Professional' },
+    { id:'p2', name:'HPE', status:'Active', startDate:'2025-11-15', deadline:'2026-02-28', owner:'Shreyas', stakeholders:'HPE Sales', notes:'Gamified sales experience - Clearbook', category:'Professional' },
+    { id:'p3', name:'CAA', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', stakeholders:'CAA Team', notes:'Cybersecurity, SAP, Axiom Hub', category:'Professional' },
     { id:'p4', name:'Riyadh Air', status:'Active', startDate:'2025-12-01', deadline:'2026-06-30', owner:'Shreyas', stakeholders:'Riyadh Air L&D', notes:'Design Thinking, Safety Sense', category:'Professional' },
     { id:'p5', name:'AstraZeneca', status:'Planning', startDate:'2026-01-01', deadline:'2026-04-30', owner:'Shreyas', stakeholders:'AZ Team', notes:'Website proposals', category:'Professional' },
     { id:'p6', name:'BAT', status:'Active', startDate:'2025-10-15', deadline:'2026-02-15', owner:'Shreyas', stakeholders:'BAT L&D', notes:'Webinar Tours', category:'Professional' },
+    
+    // Professional - AI & Strategy
     { id:'p7', name:'AI Strategic', status:'Active', startDate:'2025-08-01', deadline:null, owner:'Shreyas', notes:'AI workflows, co-creation', category:'Professional' },
     { id:'p8', name:'AI Skills', status:'Active', startDate:'2025-06-01', deadline:null, owner:'Shreyas', notes:'Daily practice, prompts', category:'Professional' },
-    { id:'p9', name:'Health', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Exercise, checkups', category:'Personal' },
-    { id:'p10', name:'Family - Divya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', category:'Personal' },
-    { id:'p11', name:'Family - Ananya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', category:'Personal' },
-    { id:'p12', name:'Finance', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Investments, taxes', category:'Personal' },
-    { id:'p13', name:'Upside Marketing', status:'Active', startDate:'2025-11-01', deadline:'2026-03-01', owner:'Shreyas', notes:'Website revamp', category:'Professional' }
+    { id:'p9', name:'AI Integration', status:'Active', startDate:'2025-06-01', deadline:null, owner:'Shreyas', notes:'Helping teams use AI', category:'Professional' },
+    { id:'p10', name:'Strategic Accounts', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'WB, HPE, Riyadh Air management', category:'Professional' },
+    
+    // Professional - Upside
+    { id:'p11', name:'Upside Marketing', status:'Active', startDate:'2025-11-01', deadline:'2026-03-01', owner:'Shreyas', notes:'Website revamp', category:'Professional' },
+    { id:'p12', name:'Presales', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'New opportunities', category:'Professional' },
+    { id:'p13', name:'Systems', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'IT, subscriptions', category:'Professional' },
+    { id:'p14', name:'Networking', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Building connections', category:'Professional' },
+    { id:'p15', name:'Industry', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Events, trends', category:'Professional' },
+    { id:'p16', name:'Reflection', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Identity, growth', category:'Professional' },
+    
+    // Personal - Business
+    { id:'p17', name:'Business Planning', status:'Active', startDate:null, deadline:'2026-03-31', owner:'Shreyas', notes:'New business after Upside', category:'Personal' },
+    { id:'p18', name:'Professional Identity', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Speaking, writing, coaching', category:'Personal' },
+    { id:'p19', name:'Personal Projects', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Website, side projects', category:'Personal' },
+    { id:'p20', name:'Goals', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'OKRs, planning', category:'Personal' },
+    
+    // Personal - Health
+    { id:'p21', name:'Health', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Exercise, checkups', category:'Personal' },
+    { id:'p22', name:'Health - Weight', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Lose 6 kilos', category:'Personal' },
+    { id:'p23', name:'Health - Sleep', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Critical for performance', category:'Personal' },
+    { id:'p24', name:'Health - Exercise', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'10K steps daily', category:'Personal' },
+    { id:'p25', name:'Health - Dentist', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Wisdom teeth', category:'Personal' },
+    { id:'p26', name:'Health - Diet', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Reduce outside food', category:'Personal' },
+    { id:'p27', name:'Mindfulness', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Screen time, presence', category:'Personal' },
+    
+    // Personal - Family
+    { id:'p28', name:'Family - Divya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Wife', category:'Personal' },
+    { id:'p29', name:'Family - Ananya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Daughter', category:'Personal' },
+    { id:'p30', name:'Family - Parents', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Both sets', category:'Personal' },
+    { id:'p31', name:'Family', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'General family', category:'Personal' },
+    
+    // Personal - Home & Finance
+    { id:'p32', name:'Finance', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Investments, taxes, insurance', category:'Personal' },
+    { id:'p33', name:'Home Renovations', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Garden, kitchen, bathroom', category:'Personal' },
+    { id:'p34', name:'Home - Minimalism', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Purging, organizing', category:'Personal' },
+    { id:'p35', name:'Office Setup', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Veranda office', category:'Personal' },
+    { id:'p36', name:'Home Office', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Equipment, setup', category:'Personal' },
+    
+    // Personal - Life
+    { id:'p37', name:'Events - Vacation', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Family trips', category:'Personal' },
+    { id:'p38', name:'Events - Date', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Date nights', category:'Personal' },
+    { id:'p39', name:'Events - Travel', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Dubai March?', category:'Personal' },
+    { id:'p40', name:'Events', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Dates, birthdays', category:'Personal' },
+    { id:'p41', name:'Relationships', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Friends', category:'Personal' },
+    { id:'p42', name:'Leisure', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Gaming, hobbies', category:'Personal' },
+    { id:'p43', name:'Transportation', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Bike', category:'Personal' },
+    { id:'p44', name:'Self-care', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Skincare', category:'Personal' },
+    { id:'p45', name:'Equipment', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Mic, gear', category:'Personal' }
 ];
 
 function init() {
