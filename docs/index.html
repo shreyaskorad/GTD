@@ -695,14 +695,26 @@ if (SR) {
             document.getElementById('mic-status').textContent = 'Listening: "' + transcript.slice(-50) + (transcript.length > 50 ? '...' : '') + '"';
         }
     };
-    recognition.onend = function() { if (isRecording) recognition.start(); };
+    recognition.onend = function() { 
+        // Only restart if still recording AND not stopping
+        if (isRecording && !isStopping) {
+            try { recognition.start(); } catch(e) { console.log('Restart failed:', e); }
+        }
+    };
     recognition.onerror = function(e) { 
         console.error('Speech error:', e.error);
         if (e.error === 'not-allowed') {
             document.getElementById('mic-status').textContent = 'Microphone access denied';
         }
+        // On error, also stop
+        if (e.error === 'aborted' || e.error === 'no-speech') {
+            isRecording = false;
+            isStopping = false;
+        }
     };
 }
+
+var isStopping = false;
 
 // Check for token on page load
 function checkTokenWarning() {
@@ -739,9 +751,13 @@ function startRecording() {
 }
 
 function stopRecording() {
+    isStopping = true;
     isRecording = false; 
-    recognition.stop(); 
     clearInterval(recordingTimer);
+    
+    // Stop recognition - try multiple times for Safari
+    try { recognition.stop(); } catch(e) { console.log('Stop error:', e); }
+    try { recognition.abort(); } catch(e) { }
     
     var micArea = document.getElementById('mic-area');
     var micBtn = document.getElementById('mic-btn');
@@ -749,6 +765,9 @@ function stopRecording() {
     micArea.classList.remove('recording');
     micBtn.classList.remove('recording'); 
     micBtn.textContent = 'Start';
+    
+    // Reset stopping flag after a delay
+    setTimeout(function() { isStopping = false; }, 500);
     
     if (!transcript.trim()) { 
         document.getElementById('mic-status').textContent = 'No speech detected. Tap to try again.'; 
