@@ -722,7 +722,7 @@ function stopRecording() {
     processWithAI(transcript);
 }
 
-async function processWithAI(text) {
+function processWithAI(text) {
     var token = getGitHubToken();
     var micArea = document.getElementById('mic-area');
     
@@ -760,31 +760,32 @@ async function processWithAI(text) {
         '{"type":"delete","match":"keywords to find the task"}\n' +
         '{"type":"priority","match":"keywords","priority":"High"}';
 
-    try {
-        var response = await fetch(GITHUB_MODELS_URL, {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Bearer ' + token,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                model: MODEL,
-                messages: [
-                    { role: 'system', content: prompt },
-                    { role: 'user', content: 'Voice recording:\n\n"' + text + '"\n\nExtract all actions (add, complete, delete, priority changes):' }
-                ],
-                temperature: 0.1,
-                max_tokens: 2000
-            })
-        });
-
+    fetch(GITHUB_MODELS_URL, {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            model: MODEL,
+            messages: [
+                { role: 'system', content: prompt },
+                { role: 'user', content: 'Voice recording:\n\n"' + text + '"\n\nExtract all actions (add, complete, delete, priority changes):' }
+            ],
+            temperature: 0.1,
+            max_tokens: 2000
+        })
+    })
+    .then(function(response) {
         if (!response.ok) {
-            var errText = await response.text();
-            console.error('API Error:', response.status, errText);
-            throw new Error('API error ' + response.status + '. Check your GitHub token in Settings.');
+            return response.text().then(function(errText) {
+                console.error('API Error:', response.status, errText);
+                throw new Error('API error ' + response.status + '. Check your GitHub token in Settings.');
+            });
         }
-
-        var data = await response.json();
+        return response.json();
+    })
+    .then(function(data) {
         var content = data.choices[0].message.content;
         console.log('AI Response:', content);
         
@@ -799,12 +800,12 @@ async function processWithAI(text) {
         }
         
         executeActions(json.actions || [], text, json.summary || '');
-        
-    } catch (error) {
+    })
+    .catch(function(error) {
         console.error('AI Error:', error);
         document.getElementById('result-content').innerHTML = '<div style="color:var(--critical)">AI error: ' + error.message + '</div><div style="margin-top:8px">Trying basic mode...</div>';
         setTimeout(function() { fallbackProcess(text); }, 1000);
-    }
+    });
 }
 
 function executeActions(actions, transcript, interpretation) {
