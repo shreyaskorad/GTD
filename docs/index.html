@@ -36,18 +36,27 @@ header h1 { font-size:18px; font-weight:600; }
 .item-meta span { margin-right:16px; }
 .capture { padding:16px; }
 .section-title { font-size:15px; font-weight:600; margin-bottom:16px; }
-.mic-area { text-align:center; padding:40px 32px; background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:16px; }
-.mic-btn { width:80px; height:80px; border-radius:50%; border:2px solid var(--border); background:var(--surface); color:var(--text); font-size:14px; font-weight:500; cursor:pointer; }
-.mic-btn.recording { border-color:var(--critical); color:var(--critical); }
-.mic-status { margin-top:16px; font-size:13px; color:var(--text2); }
-.mic-time { font-size:32px; font-weight:300; margin-top:8px; font-variant-numeric:tabular-nums; }
-.mic-hint { margin-top:16px; font-size:12px; color:var(--text3); line-height:1.5; }
-.result-box { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px; margin-bottom:16px; }
-.result-count { font-size:24px; font-weight:600; color:var(--accent); }
-.result-label { font-size:13px; color:var(--text2); margin-top:4px; }
-.result-actions { margin-top:12px; font-size:13px; color:var(--text2); text-align:left; line-height:1.6; }
-.result-actions div { padding:4px 0; border-bottom:1px solid var(--border); }
-.result-actions div:last-child { border-bottom:none; }
+.mic-area { text-align:center; padding:32px; background:var(--surface); border:1px solid var(--border); border-radius:16px; margin-bottom:16px; transition:all 0.3s; }
+.mic-area.recording { border-color:var(--critical); background:linear-gradient(135deg, #fff5f5 0%, #fff 100%); }
+.mic-area.processing { border-color:var(--accent); background:linear-gradient(135deg, #f0f7ff 0%, #fff 100%); }
+.mic-btn { width:100px; height:100px; border-radius:50%; border:3px solid var(--border); background:var(--surface); color:var(--text); font-size:15px; font-weight:600; cursor:pointer; transition:all 0.2s; }
+.mic-btn:active { transform:scale(0.95); }
+.mic-btn.recording { border-color:var(--critical); color:var(--critical); background:#fff5f5; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(211,47,47,0.3)} 50%{box-shadow:0 0 0 15px rgba(211,47,47,0)} }
+.mic-status { margin-top:16px; font-size:14px; color:var(--text2); font-weight:500; }
+.mic-time { font-size:40px; font-weight:300; margin-top:8px; font-variant-numeric:tabular-nums; color:var(--text); }
+.capture-hints { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; margin-bottom:16px; }
+.hint-title { font-size:12px; font-weight:600; color:var(--text2); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+.hint-item { font-size:13px; color:var(--text3); padding:6px 0; border-bottom:1px solid var(--border); }
+.hint-item:last-child { border-bottom:none; }
+.result-box { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; margin-bottom:16px; }
+.result-count { font-size:32px; font-weight:700; color:var(--accent); }
+.result-label { font-size:14px; color:var(--text2); margin-top:4px; }
+.result-actions { margin-top:16px; font-size:13px; color:var(--text); text-align:left; }
+.result-actions div { padding:8px 12px; background:var(--surface2); border-radius:6px; margin-bottom:6px; }
+.result-actions div:last-child { margin-bottom:0; }
+.result-transcript { margin-top:16px; padding-top:16px; border-top:1px solid var(--border); font-size:12px; color:var(--text3); }
+.token-warning { background:#fff8e1; border:1px solid #ffe082; border-radius:12px; padding:16px; text-align:center; font-size:13px; color:#f57c00; }
 .btn { padding:12px 20px; font-size:14px; border:none; border-radius:8px; cursor:pointer; font-weight:500; }
 .btn-primary { background:var(--accent); color:#fff; }
 .btn-secondary { background:var(--surface2); color:var(--text); }
@@ -149,15 +158,29 @@ header h1 { font-size:18px; font-weight:600; }
 
     <div class="view" id="v-capture">
         <div class="capture">
-            <div class="section-title">AI Voice Capture</div>
-            <div class="mic-area">
+            <div class="section-title">Voice Capture</div>
+            
+            <div class="mic-area" id="mic-area">
                 <button class="mic-btn" id="mic-btn">Start</button>
-                <div class="mic-status" id="mic-status">Tap to start</div>
+                <div class="mic-status" id="mic-status">Tap to start recording</div>
                 <div class="mic-time" id="mic-time">0:00</div>
-                <div class="mic-hint">Speak naturally. Say things like "I finished the World Bank task" or "Add follow up with Anurag to CAA project"</div>
             </div>
+            
+            <div class="capture-hints">
+                <div class="hint-title">What you can say:</div>
+                <div class="hint-item">Add: "I need to call John about the project"</div>
+                <div class="hint-item">Complete: "I finished the World Bank task"</div>
+                <div class="hint-item">Delete: "Remove the grocery task"</div>
+                <div class="hint-item">Multiple: "Call John, email Sarah, and book flights"</div>
+            </div>
+            
             <div class="result-box" id="result-box" style="display:none;">
                 <div id="result-content"></div>
+            </div>
+            
+            <div class="token-warning" id="token-warning" style="display:none;">
+                <div style="font-weight:600;margin-bottom:4px;">AI not configured</div>
+                <div>Go to Settings → GitHub Token to enable smart capture</div>
             </div>
         </div>
     </div>
@@ -371,7 +394,7 @@ function init() {
     if (!projects || !Array.isArray(projects)) {
         projects = DEFAULT_PROJECTS;
     }
-    populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus();
+    populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus(); checkTokenWarning();
 }
 
 function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: items, projects: projects, lastModified: new Date().toISOString() })); }
@@ -383,39 +406,71 @@ function populateProjects() {
 }
 
 function render() {
-    const list = document.getElementById('items-list');
-    let filtered = items.filter(item => {
+    var list = document.getElementById('items-list');
+    var filtered = items.filter(function(item) {
         if (item.status === 'Completed') return false;
         if (filters.status !== 'all' && item.status !== filters.status) return false;
         if (filters.priority && item.priority !== filters.priority) return false;
-        if (filters.search && !`${item.item} ${item.project} ${item.notes}`.toLowerCase().includes(filters.search.toLowerCase())) return false;
+        if (filters.search) {
+            var searchText = (item.item + ' ' + item.project + ' ' + item.notes).toLowerCase();
+            if (searchText.indexOf(filters.search.toLowerCase()) === -1) return false;
+        }
         return true;
     });
-    const order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
-    filtered.sort((a, b) => (order[a.priority] || 4) - (order[b.priority] || 4));
-    list.innerHTML = filtered.length ? filtered.map(item => `
-        <div class="item" onclick="showDetail(${item.id})">
-            <div class="item-row"><div class="item-title">${item.item}</div><div class="item-priority ${(item.priority || '').toLowerCase()}"></div></div>
-            <div class="item-meta">${item.project ? `<span>${item.project}</span>` : ''}${item.dueDate ? `<span>Due: ${formatDate(item.dueDate)}</span>` : ''}${item.waiting_for ? `<span>Waiting: ${item.waiting_for}</span>` : ''}</div>
-        </div>
-    `).join('') : '<p style="text-align:center;color:var(--text3);padding:40px;">No items</p>';
+    var order = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+    filtered.sort(function(a, b) { return (order[a.priority] || 4) - (order[b.priority] || 4); });
+    
+    if (filtered.length) {
+        var html = '';
+        for (var i = 0; i < filtered.length; i++) {
+            var item = filtered[i];
+            html += '<div class="item" onclick="showDetail(' + item.id + ')">';
+            html += '<div class="item-row"><div class="item-title">' + item.item + '</div><div class="item-priority ' + (item.priority || '').toLowerCase() + '"></div></div>';
+            html += '<div class="item-meta">';
+            if (item.project) html += '<span>' + item.project + '</span>';
+            if (item.dueDate) html += '<span>Due: ' + formatDate(item.dueDate) + '</span>';
+            if (item.waiting_for) html += '<span>Waiting: ' + item.waiting_for + '</span>';
+            html += '</div></div>';
+        }
+        list.innerHTML = html;
+    } else {
+        list.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px;">No items</p>';
+    }
 }
 
 function formatDate(d) { if (!d) return ''; return new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }); }
 
 function renderProjects() {
-    const list = document.getElementById('projects-list');
-    list.innerHTML = projects.filter(p => p.status !== 'Completed').map(p => {
-        const tasks = items.filter(i => i.project === p.name && i.status !== 'Completed');
-        const total = items.filter(i => i.project === p.name).length;
-        const done = items.filter(i => i.project === p.name && i.status === 'Completed').length;
-        const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-        const daysLeft = p.deadline ? Math.ceil((new Date(p.deadline) - new Date()) / 86400000) : null;
-        return `<div class="proj-card" onclick="showProjectDetail('${p.id}')">
-            <div class="proj-header"><div class="proj-name">${p.name}</div><span class="proj-status ${p.status.toLowerCase().replace(' ','-')}">${p.status}</span></div>
-            <div class="proj-body"><div class="proj-meta">${p.deadline ? `<div><span class="proj-meta-label">Deadline</span><br><span class="proj-meta-value${daysLeft < 14 ? ' danger' : ''}">${formatDate(p.deadline)} (${daysLeft}d)</span></div>` : ''}<div><span class="proj-meta-label">Tasks</span><br><span class="proj-meta-value">${tasks.length} active</span></div></div>${total > 0 ? `<div class="proj-progress"><div class="proj-progress-bar" style="width:${progress}%"></div></div><div class="proj-tasks">${progress}% (${done}/${total})</div>` : ''}</div>
-        </div>`;
-    }).join('') || '<p style="text-align:center;color:var(--text3);padding:40px;">No projects</p>';
+    var list = document.getElementById('projects-list');
+    var activeProjects = projects.filter(function(p) { return p.status !== 'Completed'; });
+    
+    if (activeProjects.length === 0) {
+        list.innerHTML = '<p style="text-align:center;color:var(--text3);padding:40px;">No projects</p>';
+        return;
+    }
+    
+    var html = '';
+    for (var i = 0; i < activeProjects.length; i++) {
+        var p = activeProjects[i];
+        var tasks = items.filter(function(t) { return t.project === p.name && t.status !== 'Completed'; });
+        var total = items.filter(function(t) { return t.project === p.name; }).length;
+        var done = items.filter(function(t) { return t.project === p.name && t.status === 'Completed'; }).length;
+        var progress = total > 0 ? Math.round((done / total) * 100) : 0;
+        var daysLeft = p.deadline ? Math.ceil((new Date(p.deadline) - new Date()) / 86400000) : null;
+        
+        html += '<div class="proj-card" onclick="showProjectDetail(\'' + p.id + '\')">';
+        html += '<div class="proj-header"><div class="proj-name">' + p.name + '</div><span class="proj-status ' + p.status.toLowerCase().replace(' ','-') + '">' + p.status + '</span></div>';
+        html += '<div class="proj-body"><div class="proj-meta">';
+        if (p.deadline) {
+            html += '<div><span class="proj-meta-label">Deadline</span><br><span class="proj-meta-value' + (daysLeft < 14 ? ' danger' : '') + '">' + formatDate(p.deadline) + ' (' + daysLeft + 'd)</span></div>';
+        }
+        html += '<div><span class="proj-meta-label">Tasks</span><br><span class="proj-meta-value">' + tasks.length + ' active</span></div></div>';
+        if (total > 0) {
+            html += '<div class="proj-progress"><div class="proj-progress-bar" style="width:' + progress + '%"></div></div><div class="proj-tasks">' + progress + '% (' + done + '/' + total + ')</div>';
+        }
+        html += '</div></div>';
+    }
+    list.innerHTML = html;
 }
 
 function showProjectDetail(id) {
@@ -507,21 +562,45 @@ if (SR) {
         for (var i = e.resultIndex; i < e.results.length; i++) {
             if (e.results[i].isFinal) transcript += e.results[i][0].transcript + ' '; 
         }
+        // Show live transcript
+        if (transcript.trim()) {
+            document.getElementById('mic-status').textContent = 'Listening: "' + transcript.slice(-50) + (transcript.length > 50 ? '...' : '') + '"';
+        }
     };
     recognition.onend = function() { if (isRecording) recognition.start(); };
+    recognition.onerror = function(e) { 
+        console.error('Speech error:', e.error);
+        if (e.error === 'not-allowed') {
+            document.getElementById('mic-status').textContent = 'Microphone access denied';
+        }
+    };
+}
+
+// Check for token on page load
+function checkTokenWarning() {
+    var warning = document.getElementById('token-warning');
+    if (warning) {
+        warning.style.display = getGitHubToken() ? 'none' : 'block';
+    }
 }
 
 document.getElementById('mic-btn').onclick = function() { 
-    if (!recognition) { toast('Speech not supported'); return; } 
+    if (!recognition) { toast('Speech not supported in this browser'); return; } 
     if (isRecording) stopRecording(); else startRecording(); 
 };
 
 function startRecording() {
     isRecording = true; recordingTime = 0; transcript = '';
-    document.getElementById('mic-btn').classList.add('recording'); 
-    document.getElementById('mic-btn').textContent = 'Stop';
-    document.getElementById('mic-status').textContent = 'Recording...'; 
+    var micArea = document.getElementById('mic-area');
+    var micBtn = document.getElementById('mic-btn');
+    
+    micArea.classList.add('recording');
+    micBtn.classList.add('recording'); 
+    micBtn.textContent = 'Stop';
+    document.getElementById('mic-status').textContent = 'Listening...'; 
+    document.getElementById('mic-time').textContent = '0:00';
     document.getElementById('result-box').style.display = 'none';
+    
     recognition.start();
     recordingTimer = setInterval(function() { 
         recordingTime++; 
@@ -535,48 +614,64 @@ function stopRecording() {
     isRecording = false; 
     recognition.stop(); 
     clearInterval(recordingTimer);
-    document.getElementById('mic-btn').classList.remove('recording'); 
-    document.getElementById('mic-btn').textContent = 'Start';
+    
+    var micArea = document.getElementById('mic-area');
+    var micBtn = document.getElementById('mic-btn');
+    
+    micArea.classList.remove('recording');
+    micBtn.classList.remove('recording'); 
+    micBtn.textContent = 'Start';
     
     if (!transcript.trim()) { 
-        document.getElementById('mic-status').textContent = 'Nothing captured'; 
+        document.getElementById('mic-status').textContent = 'No speech detected. Tap to try again.'; 
         return; 
     }
     
-    document.getElementById('mic-status').textContent = 'AI analyzing...';
+    micArea.classList.add('processing');
+    document.getElementById('mic-status').textContent = 'Processing with AI...';
     document.getElementById('result-box').style.display = 'block';
-    document.getElementById('result-content').innerHTML = 'Processing with AI...';
+    document.getElementById('result-content').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">Analyzing your recording...</div>';
     
     processWithAI(transcript);
 }
 
 async function processWithAI(text) {
     var token = getGitHubToken();
+    var micArea = document.getElementById('mic-area');
     
     if (!token) {
-        document.getElementById('result-content').innerHTML = '<div style="color:var(--critical)">No GitHub token. Go to Settings to add one.</div>';
-        setTimeout(function() { fallbackProcess(text); }, 500);
+        micArea.classList.remove('processing');
+        document.getElementById('mic-status').textContent = 'Tap to start recording';
+        document.getElementById('result-content').innerHTML = '<div style="color:var(--critical);text-align:center;padding:20px;"><div style="font-weight:600;margin-bottom:8px;">AI not configured</div><div style="font-size:13px;">Go to Settings → GitHub Token to enable smart capture.<br><br>Using basic mode for now...</div></div>';
+        setTimeout(function() { fallbackProcess(text); }, 1500);
         return;
     }
     
     console.log('Voice transcript:', text);
     
     var projectList = projects.map(function(p) { return p.name; }).join(', ');
-    var existingTasks = items.filter(function(i) { return i.status !== 'Completed'; }).slice(0, 15).map(function(i) { return i.item; }).join('; ');
+    var existingTasks = items.filter(function(i) { return i.status !== 'Completed'; }).slice(0, 20).map(function(i) { return '"' + i.item.substring(0, 40) + '"'; }).join(', ');
     
-    var prompt = 'You extract tasks from voice recordings. Find EVERY action item.\n\n' +
+    var prompt = 'You are a GTD task assistant. Extract actions from natural voice recordings.\n\n' +
+        'USER CAN:\n' +
+        '1. ADD tasks: "I need to...", "Remind me to...", "Add...", "Want to...", any action mentioned\n' +
+        '2. COMPLETE tasks: "I finished...", "Done with...", "Completed...", "Already did..."\n' +
+        '3. DELETE tasks: "Remove...", "Delete...", "Cancel...", "Nevermind about..."\n' +
+        '4. UPDATE priority: "Make X urgent", "X is high priority"\n\n' +
         'RULES:\n' +
-        '- Each separate action = separate entry in actions array\n' +
-        '- Split compound tasks: "call X and email Y" = 2 tasks\n' +
-        '- Remove filler words (um, uh, like, you know)\n' +
-        '- Short task names - just the action\n' +
-        '- Match to projects when mentioned\n\n' +
-        'Projects: ' + projectList + '\n' +
-        'Existing tasks (for completions): ' + existingTasks + '\n\n' +
-        'JSON format:\n' +
-        '{"actions":[{"type":"add","task":"text","project":"name or null","priority":"Medium"}],"summary":"X tasks"}\n' +
-        'For done tasks: {"type":"complete","match":"keyword"}\n' +
-        'For delete: {"type":"delete","match":"keyword"}';
+        '- Extract EVERY action as a separate item\n' +
+        '- Split compound statements: "call X and email Y" = 2 actions\n' +
+        '- Clean up filler words but keep meaning\n' +
+        '- Match projects when mentioned: ' + projectList + '\n' +
+        '- Match completions/deletions to these existing tasks: ' + existingTasks + '\n\n' +
+        'PRIORITY: Critical (urgent/ASAP), High (important), Medium (default), Low (someday)\n\n' +
+        'RESPOND WITH ONLY THIS JSON:\n' +
+        '{"actions":[...],"summary":"Brief description"}\n\n' +
+        'Action types:\n' +
+        '{"type":"add","task":"clean task text","project":"project name or null","priority":"Medium"}\n' +
+        '{"type":"complete","match":"keywords to find the task"}\n' +
+        '{"type":"delete","match":"keywords to find the task"}\n' +
+        '{"type":"priority","match":"keywords","priority":"High"}';
 
     try {
         var response = await fetch(GITHUB_MODELS_URL, {
@@ -589,17 +684,17 @@ async function processWithAI(text) {
                 model: MODEL,
                 messages: [
                     { role: 'system', content: prompt },
-                    { role: 'user', content: 'Extract ALL tasks from this recording. List each task separately:\n\n"' + text + '"' }
+                    { role: 'user', content: 'Voice recording:\n\n"' + text + '"\n\nExtract all actions (add, complete, delete, priority changes):' }
                 ],
-                temperature: 0.2,
+                temperature: 0.1,
                 max_tokens: 2000
             })
         });
 
         if (!response.ok) {
             var errText = await response.text();
-            console.error('API Response:', errText);
-            throw new Error('API ' + response.status);
+            console.error('API Error:', response.status, errText);
+            throw new Error('API error ' + response.status + '. Check your GitHub token in Settings.');
         }
 
         var data = await response.json();
@@ -648,40 +743,76 @@ function executeActions(actions, transcript, interpretation) {
                 notes: ''
             });
             added++;
-            actionLog.push('+ "' + action.task + '"' + (proj ? ' → ' + proj.name : ''));
+            var priColor = action.priority === 'Critical' ? 'var(--critical)' : action.priority === 'High' ? 'var(--high)' : 'var(--accent)';
+            actionLog.push('<span style="color:' + priColor + '">+</span> ' + action.task + (proj ? ' <span style="color:var(--text3)">→ ' + proj.name + '</span>' : ''));
         }
         else if (action.type === 'complete' && action.match) {
             var matchItem = items.find(function(i) { return i.status !== 'Completed' && i.item.toLowerCase().indexOf(action.match.toLowerCase()) > -1; });
-            if (matchItem) { matchItem.status = 'Completed'; completed++; actionLog.push('✓ "' + matchItem.item + '"'); }
+            if (matchItem) { 
+                matchItem.status = 'Completed'; 
+                completed++; 
+                actionLog.push('<span style="color:var(--low)">✓</span> Completed: ' + matchItem.item); 
+            } else {
+                actionLog.push('<span style="color:var(--text3)">?</span> Could not find: "' + action.match + '"');
+            }
         }
         else if (action.type === 'delete' && action.match) {
             var idx = -1;
             for (var i = 0; i < items.length; i++) {
                 if (items[i].item.toLowerCase().indexOf(action.match.toLowerCase()) > -1) { idx = i; break; }
             }
-            if (idx > -1) { var removed = items.splice(idx, 1)[0]; deleted++; actionLog.push('✗ "' + removed.item + '"'); }
+            if (idx > -1) { 
+                var removed = items.splice(idx, 1)[0]; 
+                deleted++; 
+                actionLog.push('<span style="color:var(--critical)">✗</span> Deleted: ' + removed.item); 
+            } else {
+                actionLog.push('<span style="color:var(--text3)">?</span> Could not find: "' + action.match + '"');
+            }
+        }
+        else if (action.type === 'priority' && action.match) {
+            var prioItem = items.find(function(i) { return i.status !== 'Completed' && i.item.toLowerCase().indexOf(action.match.toLowerCase()) > -1; });
+            if (prioItem && action.priority) { 
+                prioItem.priority = action.priority; 
+                updated++; 
+                actionLog.push('<span style="color:var(--high)">↑</span> Priority → ' + action.priority + ': ' + prioItem.item); 
+            }
         }
     });
     
     save(); render(); renderProjects(); updateStats(); populateProjects();
-    document.getElementById('mic-status').textContent = 'Tap to start';
     
+    // Reset mic area
+    var micArea = document.getElementById('mic-area');
+    micArea.classList.remove('processing');
+    document.getElementById('mic-status').textContent = 'Tap to start recording';
+    
+    // Build result display
     var html = '';
     if (actionLog.length) {
-        html = '<div class="result-count">' + actionLog.length + '</div><div class="result-label">actions</div><div class="result-actions">';
+        var totalActions = added + completed + deleted + updated;
+        var summary = [];
+        if (added) summary.push(added + ' added');
+        if (completed) summary.push(completed + ' completed');
+        if (deleted) summary.push(deleted + ' deleted');
+        if (updated) summary.push(updated + ' updated');
+        
+        html = '<div class="result-count">' + totalActions + '</div>';
+        html += '<div class="result-label">' + summary.join(', ') + '</div>';
+        html += '<div class="result-actions">';
         for (var i = 0; i < actionLog.length; i++) {
             html += '<div>' + actionLog[i] + '</div>';
         }
         html += '</div>';
     } else {
-        html = '<div style="color:var(--text2)">No actions detected</div>';
+        html = '<div style="text-align:center;padding:20px;"><div style="font-size:18px;margin-bottom:8px;">No actions found</div><div style="color:var(--text3);font-size:13px;">Try being more specific, like "Add call John" or "I finished the report"</div></div>';
     }
     
+    // Show transcript for reference
     if (transcript) {
-        html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)"><b>Heard:</b> "' + transcript + '"</div>';
+        html += '<div class="result-transcript"><b>You said:</b> "' + transcript + '"</div>';
     }
     if (interpretation) {
-        html += '<div style="font-size:11px;color:var(--text3);margin-top:4px"><b>AI:</b> ' + interpretation + '</div>';
+        html += '<div style="font-size:11px;color:var(--text3);margin-top:4px">' + interpretation + '</div>';
     }
     
     document.getElementById('result-content').innerHTML = html;
