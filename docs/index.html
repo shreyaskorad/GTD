@@ -341,8 +341,19 @@ if (isSessionValid()) unlockApp();
 else if (isFirstTime()) { document.getElementById('auth-title').textContent = 'Set Your PIN'; document.getElementById('auth-desc').textContent = 'Create a 4-6 digit PIN to secure your GTD'; }
 
 // ========== GITHUB TOKEN ==========
-function getGitHubToken() { return localStorage.getItem(TOKEN_KEY); }
+// Set your default token here (will be used if localStorage is empty)
+// This is safe for personal use since the repo is private or you control access
+var DEFAULT_GH_TOKEN = ''; // Paste your token here between the quotes
+
+function getGitHubToken() { 
+    return localStorage.getItem(TOKEN_KEY) || DEFAULT_GH_TOKEN; 
+}
 function setGitHubToken(token) { localStorage.setItem(TOKEN_KEY, token); updateTokenStatus(); }
+
+// Auto-save default token to localStorage on first load
+if (DEFAULT_GH_TOKEN && !localStorage.getItem(TOKEN_KEY)) {
+    localStorage.setItem(TOKEN_KEY, DEFAULT_GH_TOKEN);
+}
 
 function setupGitHubToken() {
     var current = getGitHubToken();
