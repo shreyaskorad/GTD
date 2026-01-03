@@ -343,7 +343,16 @@ const DEFAULT_PROJECTS = [
 function init() {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) { const data = JSON.parse(stored); items = data.items || []; projects = data.projects || DEFAULT_PROJECTS; }
-    else if (typeof GTD_INITIAL_DATA !== 'undefined') { items = GTD_INITIAL_DATA.map((item, i) => { const { context, ...rest } = item; return { ...rest, id: item.id || i + 1 }; }); projects = DEFAULT_PROJECTS; save(); }
+    else if (typeof GTD_INITIAL_DATA !== 'undefined') { 
+        items = GTD_INITIAL_DATA.map(function(item, i) { 
+            var newItem = {};
+            for (var key in item) { if (key !== 'context') newItem[key] = item[key]; }
+            newItem.id = item.id || i + 1;
+            return newItem;
+        }); 
+        projects = DEFAULT_PROJECTS; 
+        save(); 
+    }
     populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus();
 }
 
@@ -694,7 +703,12 @@ function clearCompleted() { if (confirm('Clear completed?')) { items = items.fil
 function reloadSampleData() { 
     if (confirm('Reload all 101 sample items? This will replace your current data.')) { 
         if (typeof GTD_INITIAL_DATA !== 'undefined') {
-            items = GTD_INITIAL_DATA.map((item, i) => { const { context, ...rest } = item; return { ...rest, id: item.id || i + 1 }; });
+            items = GTD_INITIAL_DATA.map(function(item, i) { 
+                var newItem = {};
+                for (var key in item) { if (key !== 'context') newItem[key] = item[key]; }
+                newItem.id = item.id || i + 1;
+                return newItem;
+            });
             projects = DEFAULT_PROJECTS;
             save(); render(); renderProjects(); updateStats(); populateProjects();
             toast('Loaded 101 items');
