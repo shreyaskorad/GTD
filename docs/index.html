@@ -243,14 +243,7 @@ header h1 { font-size:18px; font-weight:600; }
 
 <script>
 // ========== SAFARI FIX ==========
-// Enable touch events for Safari iOS - required for onclick to work on non-native elements
 try { document.addEventListener('touchstart', function() {}, {passive: true}); } catch(e) { document.addEventListener('touchstart', function() {}); }
-
-// Debug: Log errors to help diagnose Safari issues
-window.onerror = function(msg, url, line, col, error) {
-    alert('Error: ' + msg + '\nLine: ' + line);
-    return false;
-};
 
 // ========== CONFIG ==========
 const STORAGE_KEY = 'gtd_ai_v6';
@@ -503,148 +496,147 @@ function switchView(name) {
 }
 
 // ========== AI VOICE CAPTURE ==========
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recognition = null, isRecording = false, recordingTime = 0, recordingTimer = null, transcript = '';
+var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+var recognition = null, isRecording = false, recordingTime = 0, recordingTimer = null, transcript = '';
 
 if (SR) {
-    recognition = new SR(); recognition.continuous = true; recognition.interimResults = true;
-    recognition.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) if (e.results[i].isFinal) transcript += e.results[i][0].transcript + ' '; };
-    recognition.onend = () => { if (isRecording) recognition.start(); };
+    recognition = new SR(); 
+    recognition.continuous = true; 
+    recognition.interimResults = true;
+    recognition.onresult = function(e) { 
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) transcript += e.results[i][0].transcript + ' '; 
+        }
+    };
+    recognition.onend = function() { if (isRecording) recognition.start(); };
 }
 
-document.getElementById('mic-btn').onclick = () => { if (!recognition) { toast('Speech not supported'); return; } if (isRecording) stopRecording(); else startRecording(); };
+document.getElementById('mic-btn').onclick = function() { 
+    if (!recognition) { toast('Speech not supported'); return; } 
+    if (isRecording) stopRecording(); else startRecording(); 
+};
 
 function startRecording() {
     isRecording = true; recordingTime = 0; transcript = '';
-    document.getElementById('mic-btn').classList.add('recording'); document.getElementById('mic-btn').textContent = 'Stop';
-    document.getElementById('mic-status').textContent = 'Recording...'; document.getElementById('result-box').style.display = 'none';
+    document.getElementById('mic-btn').classList.add('recording'); 
+    document.getElementById('mic-btn').textContent = 'Stop';
+    document.getElementById('mic-status').textContent = 'Recording...'; 
+    document.getElementById('result-box').style.display = 'none';
     recognition.start();
-    recordingTimer = setInterval(() => { recordingTime++; document.getElementById('mic-time').textContent = `${Math.floor(recordingTime/60)}:${(recordingTime%60).toString().padStart(2,'0')}`; }, 1000);
+    recordingTimer = setInterval(function() { 
+        recordingTime++; 
+        var mins = Math.floor(recordingTime/60);
+        var secs = recordingTime % 60;
+        document.getElementById('mic-time').textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+    }, 1000);
 }
 
 function stopRecording() {
-    isRecording = false; recognition.stop(); clearInterval(recordingTimer);
-    document.getElementById('mic-btn').classList.remove('recording'); document.getElementById('mic-btn').textContent = 'Start';
+    isRecording = false; 
+    recognition.stop(); 
+    clearInterval(recordingTimer);
+    document.getElementById('mic-btn').classList.remove('recording'); 
+    document.getElementById('mic-btn').textContent = 'Start';
     
-    if (!transcript.trim()) { document.getElementById('mic-status').textContent = 'Nothing captured'; return; }
+    if (!transcript.trim()) { 
+        document.getElementById('mic-status').textContent = 'Nothing captured'; 
+        return; 
+    }
     
     document.getElementById('mic-status').textContent = 'AI analyzing...';
     document.getElementById('result-box').style.display = 'block';
-    document.getElementById('result-content').innerHTML = '<div class="loading"></div> Processing with AI...';
+    document.getElementById('result-content').innerHTML = 'Processing with AI...';
     
     processWithAI(transcript);
 }
 
 async function processWithAI(text) {
-    const token = getGitHubToken();
+    var token = getGitHubToken();
     
     if (!token) {
-        document.getElementById('result-content').innerHTML = '<div style="color:var(--critical)">No GitHub token set. Using basic mode.</div>';
-        setTimeout(() => fallbackProcess(text), 500);
+        document.getElementById('result-content').innerHTML = '<div style="color:var(--critical)">No GitHub token. Go to Settings to add one.</div>';
+        setTimeout(function() { fallbackProcess(text); }, 500);
         return;
     }
     
-    // Show what was captured for debugging
     console.log('Voice transcript:', text);
     
-    const projectNames = projects.map(p => p.name).join(', ');
-    const taskSummary = items.filter(i => i.status !== 'Completed').slice(0, 20).map(i => `- "${i.item}" (${i.project || 'no project'})`).join('\n');
+    var projectList = projects.map(function(p) { return p.name; }).join(', ');
+    var existingTasks = items.filter(function(i) { return i.status !== 'Completed'; }).slice(0, 15).map(function(i) { return i.item; }).join('; ');
     
-    const systemPrompt = `You extract MULTIPLE tasks from messy voice recordings. The user rambles with filler words - your job is to find EVERY SINGLE actionable item.
-
-CRITICAL RULES:
-1. Extract ALL tasks mentioned - users often embed 3-7 tasks in one recording
-2. Each separate thing to do = separate task in the actions array
-3. "and", "also", "plus", "another thing", "oh and" often introduce new tasks
-4. Be AGGRESSIVE - if something sounds like it might be a task, ADD IT
-5. Clean up filler words (um, uh, like, so, basically, you know) but keep the action
-6. Short task descriptions are better - just the core action
-
-TASK INDICATORS (any of these = a task):
-- "need to", "have to", "should", "gotta", "want to", "going to", "will", "must"
-- "remind me", "don't forget", "make sure", "remember to"
-- "follow up", "check on", "look into", "figure out", "think about"
-- "call", "email", "text", "message", "talk to", "meet with"
-- "buy", "get", "pick up", "order"
-- "schedule", "book", "plan", "organize"
-- "review", "read", "check", "update", "finish", "complete", "do"
-- ANY action verb followed by something
-
-EXAMPLE INPUT: "so um I need to call John about the project and also like I should probably email Sarah about the deadline oh and don't forget to pick up groceries and maybe think about that health checkup thing"
-EXAMPLE OUTPUT: 4 tasks - "Call John about project", "Email Sarah about deadline", "Pick up groceries", "Schedule health checkup"
-
-PROJECTS: ${projectNames}
-CURRENT TASKS (for matching completions): ${taskSummary}
-
-Return ONLY valid JSON:
-{
-  "actions": [
-    {"type": "add", "task": "short clean task", "project": "matched project or null", "priority": "Medium", "waiting_for": null}
-  ],
-  "raw_interpretation": "Found X tasks: brief list"
-}
-
-For completions use: {"type": "complete", "match": "keywords"}
-For deletions use: {"type": "delete", "match": "keywords"}
-
-IMPORTANT: Return MULTIPLE actions if the user mentioned multiple things to do!`;
+    var prompt = 'You extract tasks from voice recordings. Find EVERY action item.\n\n' +
+        'RULES:\n' +
+        '- Each separate action = separate entry in actions array\n' +
+        '- Split compound tasks: "call X and email Y" = 2 tasks\n' +
+        '- Remove filler words (um, uh, like, you know)\n' +
+        '- Short task names - just the action\n' +
+        '- Match to projects when mentioned\n\n' +
+        'Projects: ' + projectList + '\n' +
+        'Existing tasks (for completions): ' + existingTasks + '\n\n' +
+        'JSON format:\n' +
+        '{"actions":[{"type":"add","task":"text","project":"name or null","priority":"Medium"}],"summary":"X tasks"}\n' +
+        'For done tasks: {"type":"complete","match":"keyword"}\n' +
+        'For delete: {"type":"delete","match":"keyword"}';
 
     try {
-        const response = await fetch(GITHUB_MODELS_URL, {
+        var response = await fetch(GITHUB_MODELS_URL, {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
+                'Authorization': 'Bearer ' + token,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 model: MODEL,
                 messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: `Voice recording transcript: "${text}"` }
+                    { role: 'system', content: prompt },
+                    { role: 'user', content: 'Extract ALL tasks from this recording. List each task separately:\n\n"' + text + '"' }
                 ],
-                temperature: 0.5,
-                max_tokens: 1500
+                temperature: 0.2,
+                max_tokens: 2000
             })
         });
 
         if (!response.ok) {
-            const err = await response.text();
-            console.error('API Response:', err);
-            throw new Error(`API ${response.status}`);
+            var errText = await response.text();
+            console.error('API Response:', errText);
+            throw new Error('API ' + response.status);
         }
 
-        const data = await response.json();
-        const content = data.choices[0].message.content;
+        var data = await response.json();
+        var content = data.choices[0].message.content;
         console.log('AI Response:', content);
         
-        // Parse JSON from response (handle markdown code blocks)
-        let json;
+        var json;
         try {
-            const jsonMatch = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
-            json = JSON.parse(jsonMatch ? jsonMatch[1] : content);
+            var codeBlock = content.match(/```json\s*([\s\S]*?)\s*```/) || content.match(/```\s*([\s\S]*?)\s*```/);
+            json = JSON.parse(codeBlock ? codeBlock[1] : content);
         } catch (e) {
-            // Try to extract JSON object from text
-            const objMatch = content.match(/\{[\s\S]*\}/);
+            var objMatch = content.match(/\{[\s\S]*\}/);
             if (objMatch) json = JSON.parse(objMatch[0]);
             else throw new Error('Could not parse AI response');
         }
         
-        executeActions(json.actions || [], text, json.raw_interpretation);
+        executeActions(json.actions || [], text, json.summary || '');
         
     } catch (error) {
         console.error('AI Error:', error);
-        document.getElementById('result-content').innerHTML = `<div style="color:var(--critical)">AI error: ${error.message}</div><div style="margin-top:8px">Using fallback mode...</div>`;
-        setTimeout(() => fallbackProcess(text), 1000);
+        document.getElementById('result-content').innerHTML = '<div style="color:var(--critical)">AI error: ' + error.message + '</div><div style="margin-top:8px">Trying basic mode...</div>';
+        setTimeout(function() { fallbackProcess(text); }, 1000);
     }
 }
 
-function executeActions(actions, transcript = '', interpretation = '') {
-    let added = 0, completed = 0, deleted = 0, updated = 0;
-    const actionLog = [];
+function executeActions(actions, transcript, interpretation) {
+    transcript = transcript || '';
+    interpretation = interpretation || '';
+    var added = 0, completed = 0, deleted = 0, updated = 0;
+    var actionLog = [];
     
-    actions.forEach(action => {
+    actions.forEach(function(action) {
         if (action.type === 'add' && action.task) {
-            const proj = projects.find(p => p.name.toLowerCase().includes((action.project || '').toLowerCase()));
+            var proj = null;
+            if (action.project) {
+                proj = projects.find(function(p) { return p.name.toLowerCase().indexOf(action.project.toLowerCase()) > -1; });
+            }
             items.unshift({
                 id: Date.now() + Math.random(),
                 item: action.task,
@@ -656,62 +648,78 @@ function executeActions(actions, transcript = '', interpretation = '') {
                 notes: ''
             });
             added++;
-            actionLog.push(`+ "${action.task}"${proj ? ` → ${proj.name}` : ''}`);
+            actionLog.push('+ "' + action.task + '"' + (proj ? ' → ' + proj.name : ''));
         }
         else if (action.type === 'complete' && action.match) {
-            const match = items.find(i => i.status !== 'Completed' && i.item.toLowerCase().includes(action.match.toLowerCase()));
-            if (match) { match.status = 'Completed'; completed++; actionLog.push(`✓ "${match.item}"`); }
+            var matchItem = items.find(function(i) { return i.status !== 'Completed' && i.item.toLowerCase().indexOf(action.match.toLowerCase()) > -1; });
+            if (matchItem) { matchItem.status = 'Completed'; completed++; actionLog.push('✓ "' + matchItem.item + '"'); }
         }
         else if (action.type === 'delete' && action.match) {
-            const idx = items.findIndex(i => i.item.toLowerCase().includes(action.match.toLowerCase()));
-            if (idx > -1) { const removed = items.splice(idx, 1)[0]; deleted++; actionLog.push(`✗ "${removed.item}"`); }
-        }
-        else if (action.type === 'update_project' && action.project) {
-            const proj = projects.find(p => p.name.toLowerCase().includes(action.project.toLowerCase()));
-            if (proj && action.field) { proj[action.field] = action.value; updated++; actionLog.push(`↻ ${proj.name}: ${action.field}`); }
+            var idx = -1;
+            for (var i = 0; i < items.length; i++) {
+                if (items[i].item.toLowerCase().indexOf(action.match.toLowerCase()) > -1) { idx = i; break; }
+            }
+            if (idx > -1) { var removed = items.splice(idx, 1)[0]; deleted++; actionLog.push('✗ "' + removed.item + '"'); }
         }
     });
     
     save(); render(); renderProjects(); updateStats(); populateProjects();
     document.getElementById('mic-status').textContent = 'Tap to start';
     
-    // Show results with transcript for debugging
-    let html = '';
+    var html = '';
     if (actionLog.length) {
-        html = `<div class="result-count">${actionLog.length}</div><div class="result-label">actions</div><div class="result-actions">${actionLog.map(a => `<div>${a}</div>`).join('')}</div>`;
+        html = '<div class="result-count">' + actionLog.length + '</div><div class="result-label">actions</div><div class="result-actions">';
+        for (var i = 0; i < actionLog.length; i++) {
+            html += '<div>' + actionLog[i] + '</div>';
+        }
+        html += '</div>';
     } else {
-        html = `<div style="color:var(--text2)">No actions detected</div>`;
+        html = '<div style="color:var(--text2)">No actions detected</div>';
     }
     
-    // Show what was heard (helps debug)
     if (transcript) {
-        html += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)"><b>Heard:</b> "${transcript}"</div>`;
+        html += '<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)"><b>Heard:</b> "' + transcript + '"</div>';
     }
     if (interpretation) {
-        html += `<div style="font-size:11px;color:var(--text3);margin-top:4px"><b>Understood:</b> ${interpretation}</div>`;
+        html += '<div style="font-size:11px;color:var(--text3);margin-top:4px"><b>AI:</b> ' + interpretation + '</div>';
     }
     
     document.getElementById('result-content').innerHTML = html;
 }
 
 function fallbackProcess(text) {
-    // Simple pattern matching fallback
-    const chunks = text.split(/[.!?]+/).filter(s => s.trim().length > 5);
-    let added = 0;
+    var chunks = text.split(/[.!?]+/).filter(function(s) { return s.trim().length > 5; });
+    var added = 0;
     
-    chunks.forEach(chunk => {
-        const lower = chunk.toLowerCase();
-        if (/finished|completed|done|checked off/.test(lower)) return; // Skip completions in fallback
+    chunks.forEach(function(chunk) {
+        var lower = chunk.toLowerCase();
+        if (/finished|completed|done|checked off/.test(lower)) return;
         
-        const task = { id: Date.now() + Math.random(), item: chunk.trim().replace(/^(i need to|have to|should|must|want to)\s*/i, '').replace(/^\w/, c => c.toUpperCase()), priority: 'Medium', status: 'Next Action', category: 'Personal', project: '', notes: '' };
+        var taskText = chunk.trim().replace(/^(i need to|have to|should|must|want to)\s*/i, '');
+        taskText = taskText.charAt(0).toUpperCase() + taskText.slice(1);
+        
+        var task = { 
+            id: Date.now() + Math.random(), 
+            item: taskText, 
+            priority: 'Medium', 
+            status: 'Next Action', 
+            category: 'Personal', 
+            project: '', 
+            notes: '' 
+        };
         
         if (/urgent|critical|asap/.test(lower)) task.priority = 'Critical';
         else if (/important|priority/.test(lower)) task.priority = 'High';
         
         if (/work|office|client|project/.test(lower)) task.category = 'Professional';
         
-        for (const p of projects) {
-            if (lower.includes(p.name.toLowerCase().split(' ')[0].toLowerCase())) { task.project = p.name; task.category = p.category; break; }
+        for (var i = 0; i < projects.length; i++) {
+            var p = projects[i];
+            if (lower.indexOf(p.name.toLowerCase().split(' ')[0].toLowerCase()) > -1) { 
+                task.project = p.name; 
+                task.category = p.category; 
+                break; 
+            }
         }
         
         if (task.item.length > 5) { items.unshift(task); added++; }
@@ -719,7 +727,7 @@ function fallbackProcess(text) {
     
     save(); render(); updateStats();
     document.getElementById('mic-status').textContent = 'Tap to start';
-    document.getElementById('result-content').innerHTML = `<div class="result-count">${added}</div><div class="result-label">tasks added (basic mode)</div>`;
+    document.getElementById('result-content').innerHTML = '<div class="result-count">' + added + '</div><div class="result-label">tasks added (basic mode)</div>';
 }
 
 // ========== EXPORT/IMPORT ==========
