@@ -1868,7 +1868,8 @@ function toggleLogRecording() {
 }
 
 function startLogRecording() {
-    if (!('webkitSpeechRecognition' in window)) {
+    var SpeechRecog = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecog) {
         toast('Speech not supported. Use text input.');
         showLogTextInput();
         return;
@@ -1879,32 +1880,55 @@ function startLogRecording() {
     btn.classList.add('recording');
     document.getElementById('log-status').textContent = 'Listening...';
     
-    logRecognition = new webkitSpeechRecognition();
+    logRecognition = new SpeechRecog();
     logRecognition.continuous = false;
-    logRecognition.interimResults = false;
+    logRecognition.interimResults = true;
     logRecognition.lang = 'en-US';
     
+    var finalText = '';
+    
     logRecognition.onresult = function(e) {
-        var text = e.results[0][0].transcript;
-        addLogEntry(text);
-        stopLogRecording();
+        var interimText = '';
+        for (var i = 0; i < e.results.length; i++) {
+            if (e.results[i].isFinal) {
+                finalText += e.results[i][0].transcript;
+            } else {
+                interimText += e.results[i][0].transcript;
+            }
+        }
+        // Show what we're hearing
+        var display = finalText || interimText;
+        if (display) {
+            document.getElementById('log-status').textContent = '"' + display.slice(-40) + '"';
+        }
     };
     
     logRecognition.onerror = function(e) {
-        console.error('Log speech error:', e);
+        console.error('Log speech error:', e.error);
         stopLogRecording();
         if (e.error === 'not-allowed') {
-            toast('Mic access denied');
+            toast('Mic access denied. Check Safari settings.');
+        } else if (e.error === 'no-speech') {
+            toast('No speech detected. Try again.');
         } else {
-            toast('Try again');
+            toast('Error: ' + e.error);
         }
     };
     
     logRecognition.onend = function() {
+        if (finalText && finalText.trim()) {
+            addLogEntry(finalText.trim());
+        }
         stopLogRecording();
     };
     
-    logRecognition.start();
+    try {
+        logRecognition.start();
+    } catch(e) {
+        console.error('Failed to start recognition:', e);
+        toast('Failed to start. Try again.');
+        stopLogRecording();
+    }
 }
 
 function stopLogRecording() {
