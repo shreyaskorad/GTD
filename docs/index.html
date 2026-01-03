@@ -119,6 +119,12 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 
 /* Projects */
 .project-card { background:var(--surface); border-radius:var(--radius); padding:16px; margin-bottom:12px; }
+.project-card.parent { border-bottom-left-radius:0; border-bottom-right-radius:0; margin-bottom:0; }
+.project-card.sub { margin-left:20px; background:var(--surface2); border-top-left-radius:0; border-top-right-radius:0; margin-bottom:0; padding:12px 16px; }
+.project-card.sub:last-child { border-bottom-left-radius:var(--radius); border-bottom-right-radius:var(--radius); margin-bottom:12px; }
+.project-card.sub .project-name { font-size:14px; color:var(--text2); }
+.sub-projects { margin-bottom:12px; }
+.sub-projects .project-card.sub:first-child { border-top:1px solid var(--surface3); }
 .project-name { font-size:16px; font-weight:600; margin-bottom:8px; }
 .project-meta { display:flex; gap:16px; font-size:13px; color:var(--text2); }
 .project-progress { height:4px; background:var(--surface3); border-radius:2px; margin-top:12px; overflow:hidden; }
@@ -259,7 +265,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
                 </div>
             </div>
             
-            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.0</div>
+            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.1</div>
         </div>
     </div>
 </div>
@@ -425,66 +431,79 @@ function updateTokenStatus() {
 
 // ========== DEFAULT PROJECTS ==========
 var DEFAULT_PROJECTS = [
-    // Professional - Client Projects
-    { id:'p1', name:'World Bank Group', status:'Active', startDate:'2025-10-01', deadline:'2026-03-31', owner:'Shreyas', stakeholders:'Anurag, WB Team', notes:'Skills Framework, QII, Climate Toolkit', category:'Professional' },
-    { id:'p2', name:'HPE', status:'Active', startDate:'2025-11-15', deadline:'2026-02-28', owner:'Shreyas', stakeholders:'HPE Sales', notes:'Gamified sales experience - Clearbook', category:'Professional' },
-    { id:'p3', name:'CAA', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', stakeholders:'CAA Team', notes:'Cybersecurity, SAP, Axiom Hub', category:'Professional' },
-    { id:'p4', name:'Riyadh Air', status:'Active', startDate:'2025-12-01', deadline:'2026-06-30', owner:'Shreyas', stakeholders:'Riyadh Air L&D', notes:'Design Thinking, Safety Sense', category:'Professional' },
-    { id:'p5', name:'AstraZeneca', status:'Planning', startDate:'2026-01-01', deadline:'2026-04-30', owner:'Shreyas', stakeholders:'AZ Team', notes:'Website proposals', category:'Professional' },
-    { id:'p6', name:'BAT', status:'Active', startDate:'2025-10-15', deadline:'2026-02-15', owner:'Shreyas', stakeholders:'BAT L&D', notes:'Webinar Tours', category:'Professional' },
+    // Professional - Client Projects (Top-level)
+    { id:'p1', name:'World Bank Group', status:'Active', startDate:'2025-10-01', deadline:'2026-03-31', owner:'Shreyas', stakeholders:'Anurag, WB Team', notes:'Skills Framework, QII, Climate Toolkit', category:'Professional', parentId:null },
+    { id:'p1a', name:'Skills Framework', status:'Active', startDate:'2025-10-01', deadline:'2026-02-28', owner:'Shreyas', notes:'WB Skills Framework project', category:'Professional', parentId:'p1' },
+    { id:'p1b', name:'QII', status:'Active', startDate:'2025-11-01', deadline:'2026-03-31', owner:'Shreyas', notes:'Quality Infrastructure Investment', category:'Professional', parentId:'p1' },
+    { id:'p1c', name:'Climate Toolkit', status:'Planning', startDate:'2026-01-01', deadline:'2026-03-31', owner:'Shreyas', notes:'Climate awareness toolkit', category:'Professional', parentId:'p1' },
+    
+    { id:'p2', name:'HPE', status:'Active', startDate:'2025-11-15', deadline:'2026-02-28', owner:'Shreyas', stakeholders:'HPE Sales', notes:'Gamified sales experience - Clearbook', category:'Professional', parentId:null },
+    { id:'p2a', name:'Clearbook', status:'Active', startDate:'2025-11-15', deadline:'2026-02-28', owner:'Shreyas', notes:'Gamified sales experience', category:'Professional', parentId:'p2' },
+    
+    { id:'p3', name:'CAA', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', stakeholders:'CAA Team', notes:'Cybersecurity, SAP, Axiom Hub', category:'Professional', parentId:null },
+    { id:'p3a', name:'Cybersecurity', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', notes:'CAA Cybersecurity module', category:'Professional', parentId:'p3' },
+    { id:'p3b', name:'SAP', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', notes:'CAA SAP module', category:'Professional', parentId:'p3' },
+    { id:'p3c', name:'Axiom Hub', status:'Active', startDate:'2025-09-01', deadline:'2026-01-31', owner:'Shreyas', notes:'CAA Axiom Hub', category:'Professional', parentId:'p3' },
+    
+    { id:'p4', name:'Riyadh Air', status:'Active', startDate:'2025-12-01', deadline:'2026-06-30', owner:'Shreyas', stakeholders:'Riyadh Air L&D', notes:'Design Thinking, Safety Sense', category:'Professional', parentId:null },
+    { id:'p4a', name:'Design Thinking', status:'Active', startDate:'2025-12-01', deadline:'2026-03-31', owner:'Shreyas', notes:'Riyadh Air Design Thinking', category:'Professional', parentId:'p4' },
+    { id:'p4b', name:'Safety Sense', status:'Planning', startDate:'2026-01-01', deadline:'2026-06-30', owner:'Shreyas', notes:'Riyadh Air Safety Sense', category:'Professional', parentId:'p4' },
+    
+    { id:'p5', name:'AstraZeneca', status:'Planning', startDate:'2026-01-01', deadline:'2026-04-30', owner:'Shreyas', stakeholders:'AZ Team', notes:'Website proposals', category:'Professional', parentId:null },
+    { id:'p6', name:'BAT', status:'Active', startDate:'2025-10-15', deadline:'2026-02-15', owner:'Shreyas', stakeholders:'BAT L&D', notes:'Webinar Tours', category:'Professional', parentId:null },
     
     // Professional - AI & Strategy
-    { id:'p7', name:'AI Strategic', status:'Active', startDate:'2025-08-01', deadline:null, owner:'Shreyas', notes:'AI workflows, co-creation', category:'Professional' },
-    { id:'p8', name:'AI Skills', status:'Active', startDate:'2025-06-01', deadline:null, owner:'Shreyas', notes:'Daily practice, prompts', category:'Professional' },
-    { id:'p9', name:'AI Integration', status:'Active', startDate:'2025-06-01', deadline:null, owner:'Shreyas', notes:'Helping teams use AI', category:'Professional' },
-    { id:'p10', name:'Strategic Accounts', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'WB, HPE, Riyadh Air management', category:'Professional' },
+    { id:'p7', name:'AI Strategic', status:'Active', startDate:'2025-08-01', deadline:null, owner:'Shreyas', notes:'AI workflows, co-creation', category:'Professional', parentId:null },
+    { id:'p8', name:'AI Skills', status:'Active', startDate:'2025-06-01', deadline:null, owner:'Shreyas', notes:'Daily practice, prompts', category:'Professional', parentId:null },
+    { id:'p9', name:'AI Integration', status:'Active', startDate:'2025-06-01', deadline:null, owner:'Shreyas', notes:'Helping teams use AI', category:'Professional', parentId:null },
+    { id:'p10', name:'Strategic Accounts', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'WB, HPE, Riyadh Air management', category:'Professional', parentId:null },
     
     // Professional - Upside
-    { id:'p11', name:'Upside Marketing', status:'Active', startDate:'2025-11-01', deadline:'2026-03-01', owner:'Shreyas', notes:'Website revamp', category:'Professional' },
-    { id:'p12', name:'Presales', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'New opportunities', category:'Professional' },
-    { id:'p13', name:'Systems', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'IT, subscriptions', category:'Professional' },
-    { id:'p14', name:'Networking', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Building connections', category:'Professional' },
-    { id:'p15', name:'Industry', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Events, trends', category:'Professional' },
-    { id:'p16', name:'Reflection', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Identity, growth', category:'Professional' },
+    { id:'p11', name:'Upside Marketing', status:'Active', startDate:'2025-11-01', deadline:'2026-03-01', owner:'Shreyas', notes:'Website revamp', category:'Professional', parentId:null },
+    { id:'p12', name:'Presales', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'New opportunities', category:'Professional', parentId:null },
+    { id:'p13', name:'Systems', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'IT, subscriptions', category:'Professional', parentId:null },
+    { id:'p14', name:'Networking', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Building connections', category:'Professional', parentId:null },
+    { id:'p15', name:'Industry', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Events, trends', category:'Professional', parentId:null },
+    { id:'p16', name:'Reflection', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Identity, growth', category:'Professional', parentId:null },
     
     // Personal - Business
-    { id:'p17', name:'Business Planning', status:'Active', startDate:null, deadline:'2026-03-31', owner:'Shreyas', notes:'New business after Upside', category:'Personal' },
-    { id:'p18', name:'Professional Identity', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Speaking, writing, coaching', category:'Personal' },
-    { id:'p19', name:'Personal Projects', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Website, side projects', category:'Personal' },
-    { id:'p20', name:'Goals', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'OKRs, planning', category:'Personal' },
+    { id:'p17', name:'Business Planning', status:'Active', startDate:null, deadline:'2026-03-31', owner:'Shreyas', notes:'New business after Upside', category:'Personal', parentId:null },
+    { id:'p18', name:'Professional Identity', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Speaking, writing, coaching', category:'Personal', parentId:null },
+    { id:'p19', name:'Personal Projects', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Website, side projects', category:'Personal', parentId:null },
+    { id:'p20', name:'Goals', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'OKRs, planning', category:'Personal', parentId:null },
     
     // Personal - Health
-    { id:'p21', name:'Health', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Exercise, checkups', category:'Personal' },
-    { id:'p22', name:'Health - Weight', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Lose 6 kilos', category:'Personal' },
-    { id:'p23', name:'Health - Sleep', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Critical for performance', category:'Personal' },
-    { id:'p24', name:'Health - Exercise', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'10K steps daily', category:'Personal' },
-    { id:'p25', name:'Health - Dentist', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Wisdom teeth', category:'Personal' },
-    { id:'p26', name:'Health - Diet', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Reduce outside food', category:'Personal' },
-    { id:'p27', name:'Mindfulness', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Screen time, presence', category:'Personal' },
+    { id:'p21', name:'Health', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Exercise, checkups', category:'Personal', parentId:null },
+    { id:'p21a', name:'Weight', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Lose 6 kilos', category:'Personal', parentId:'p21' },
+    { id:'p21b', name:'Sleep', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Critical for performance', category:'Personal', parentId:'p21' },
+    { id:'p21c', name:'Exercise', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'10K steps daily', category:'Personal', parentId:'p21' },
+    { id:'p21d', name:'Dentist', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Wisdom teeth', category:'Personal', parentId:'p21' },
+    { id:'p21e', name:'Diet', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Reduce outside food', category:'Personal', parentId:'p21' },
+    { id:'p27', name:'Mindfulness', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Screen time, presence', category:'Personal', parentId:null },
     
     // Personal - Family
-    { id:'p28', name:'Family - Divya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Wife', category:'Personal' },
-    { id:'p29', name:'Family - Ananya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Daughter', category:'Personal' },
-    { id:'p30', name:'Family - Parents', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Both sets', category:'Personal' },
-    { id:'p31', name:'Family', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'General family', category:'Personal' },
+    { id:'p28', name:'Family', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'General family', category:'Personal', parentId:null },
+    { id:'p28a', name:'Divya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Wife', category:'Personal', parentId:'p28' },
+    { id:'p28b', name:'Ananya', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Daughter', category:'Personal', parentId:'p28' },
+    { id:'p28c', name:'Parents', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Both sets', category:'Personal', parentId:'p28' },
     
     // Personal - Home & Finance
-    { id:'p32', name:'Finance', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Investments, taxes, insurance', category:'Personal' },
-    { id:'p33', name:'Home Renovations', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Garden, kitchen, bathroom', category:'Personal' },
-    { id:'p34', name:'Home - Minimalism', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Purging, organizing', category:'Personal' },
-    { id:'p35', name:'Office Setup', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Veranda office', category:'Personal' },
-    { id:'p36', name:'Home Office', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Equipment, setup', category:'Personal' },
+    { id:'p32', name:'Finance', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Investments, taxes, insurance', category:'Personal', parentId:null },
+    { id:'p33', name:'Home', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Renovations, maintenance', category:'Personal', parentId:null },
+    { id:'p33a', name:'Renovations', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Garden, kitchen, bathroom', category:'Personal', parentId:'p33' },
+    { id:'p33b', name:'Minimalism', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Purging, organizing', category:'Personal', parentId:'p33' },
+    { id:'p33c', name:'Office Setup', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Veranda office', category:'Personal', parentId:'p33' },
     
     // Personal - Life
-    { id:'p37', name:'Events - Vacation', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Family trips', category:'Personal' },
-    { id:'p38', name:'Events - Date', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Date nights', category:'Personal' },
-    { id:'p39', name:'Events - Travel', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Dubai March?', category:'Personal' },
-    { id:'p40', name:'Events', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Dates, birthdays', category:'Personal' },
-    { id:'p41', name:'Relationships', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Friends', category:'Personal' },
-    { id:'p42', name:'Leisure', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Gaming, hobbies', category:'Personal' },
-    { id:'p43', name:'Transportation', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Bike', category:'Personal' },
-    { id:'p44', name:'Self-care', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Skincare', category:'Personal' },
-    { id:'p45', name:'Equipment', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Mic, gear', category:'Personal' }
+    { id:'p37', name:'Events', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Dates, birthdays, trips', category:'Personal', parentId:null },
+    { id:'p37a', name:'Vacation', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Family trips', category:'Personal', parentId:'p37' },
+    { id:'p37b', name:'Date Nights', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'With Divya', category:'Personal', parentId:'p37' },
+    { id:'p37c', name:'Travel', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Dubai March?', category:'Personal', parentId:'p37' },
+    { id:'p41', name:'Relationships', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Friends', category:'Personal', parentId:null },
+    { id:'p42', name:'Leisure', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Gaming, hobbies', category:'Personal', parentId:null },
+    { id:'p43', name:'Transportation', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Bike', category:'Personal', parentId:null },
+    { id:'p44', name:'Self-care', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Skincare', category:'Personal', parentId:null },
+    { id:'p45', name:'Equipment', status:'Active', startDate:null, deadline:null, owner:'Shreyas', notes:'Mic, gear', category:'Personal', parentId:null }
 ];
 
 function init() {
@@ -547,8 +566,24 @@ function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ items: item
 
 function populateProjects() {
     if (!projects || !Array.isArray(projects)) return;
-    var names = projects.map(function(p) { return p.name; }).sort();
-    document.getElementById('f-project').innerHTML = '<option value="">None</option>' + names.map(function(n) { return '<option value="' + n + '">' + n + '</option>'; }).join('');
+    
+    // Build hierarchical list: parent projects first, then children
+    var topLevel = projects.filter(function(p) { return !p.parentId; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
+    var options = '<option value="">None</option>';
+    
+    for (var i = 0; i < topLevel.length; i++) {
+        var parent = topLevel[i];
+        options += '<option value="' + parent.name + '">' + parent.name + '</option>';
+        
+        // Find children of this parent
+        var children = projects.filter(function(p) { return p.parentId === parent.id; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
+        for (var j = 0; j < children.length; j++) {
+            var child = children[j];
+            options += '<option value="' + child.name + '">&nbsp;&nbsp;↳ ' + child.name + '</option>';
+        }
+    }
+    
+    document.getElementById('f-project').innerHTML = options;
 }
 
 function render() {
@@ -674,16 +709,24 @@ function renderProjects() {
         return;
     }
     
+    // Get top-level active projects
+    var topLevel = activeProjects.filter(function(p) { return !p.parentId; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
+    
     var html = '';
-    for (var i = 0; i < activeProjects.length; i++) {
-        var p = activeProjects[i];
+    for (var i = 0; i < topLevel.length; i++) {
+        var p = topLevel[i];
         var tasks = items.filter(function(t) { return t.project === p.name && t.status !== 'Completed'; });
         var total = items.filter(function(t) { return t.project === p.name; }).length;
         var done = items.filter(function(t) { return t.project === p.name && t.status === 'Completed'; }).length;
         var progress = total > 0 ? Math.round((done / total) * 100) : 0;
         
-        html += '<div class="project-card" onclick="showProjectDetail(\'' + p.id + '\')">';
-        html += '<div class="project-name">' + p.name + '</div>';
+        // Get children for this project
+        var children = activeProjects.filter(function(c) { return c.parentId === p.id; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
+        var hasChildren = children.length > 0;
+        
+        // Parent project card
+        html += '<div class="project-card' + (hasChildren ? ' parent' : '') + '" onclick="showProjectDetail(\'' + p.id + '\')">';
+        html += '<div class="project-name">' + p.name + (hasChildren ? ' <span style="color:var(--text3);font-weight:400">(' + children.length + ')</span>' : '') + '</div>';
         html += '<div class="project-meta"><span>' + tasks.length + ' tasks</span>';
         if (p.deadline) html += '<span>Due ' + formatDate(p.deadline) + '</span>';
         html += '</div>';
@@ -691,6 +734,29 @@ function renderProjects() {
             html += '<div class="project-progress"><div class="project-bar" style="width:' + progress + '%"></div></div>';
         }
         html += '</div>';
+        
+        // Render children (sub-projects)
+        if (hasChildren) {
+            html += '<div class="sub-projects">';
+            for (var j = 0; j < children.length; j++) {
+                var child = children[j];
+                var childTasks = items.filter(function(t) { return t.project === child.name && t.status !== 'Completed'; });
+                var childTotal = items.filter(function(t) { return t.project === child.name; }).length;
+                var childDone = items.filter(function(t) { return t.project === child.name && t.status === 'Completed'; }).length;
+                var childProgress = childTotal > 0 ? Math.round((childDone / childTotal) * 100) : 0;
+                
+                html += '<div class="project-card sub" onclick="showProjectDetail(\'' + child.id + '\')">';
+                html += '<div class="project-name">↳ ' + child.name + '</div>';
+                html += '<div class="project-meta"><span>' + childTasks.length + ' tasks</span>';
+                if (child.deadline) html += '<span>Due ' + formatDate(child.deadline) + '</span>';
+                html += '</div>';
+                if (childTotal > 0) {
+                    html += '<div class="project-progress"><div class="project-bar" style="width:' + childProgress + '%"></div></div>';
+                }
+                html += '</div>';
+            }
+            html += '</div>';
+        }
     }
     list.innerHTML = html;
 }
@@ -701,8 +767,31 @@ function showProjectDetail(id) {
     if (!p) return;
     var tasks = items.filter(function(t) { return t.project === p.name && t.status !== 'Completed'; });
     
+    // Find parent project if exists
+    var parentProject = null;
+    if (p.parentId) {
+        for (var k = 0; k < projects.length; k++) { if (projects[k].id === p.parentId) { parentProject = projects[k]; break; } }
+    }
+    
+    // Find sub-projects
+    var subProjects = projects.filter(function(sp) { return sp.parentId === p.id && sp.status !== 'Completed'; });
+    
+    // Build parent options for dropdown (only top-level projects, excluding self)
+    var topLevel = projects.filter(function(pr) { return !pr.parentId && pr.id !== p.id && pr.status !== 'Completed'; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
+    var parentOptions = '<option value="">No parent</option>';
+    for (var m = 0; m < topLevel.length; m++) {
+        var sel = p.parentId === topLevel[m].id ? ' selected' : '';
+        parentOptions += '<option value="' + topLevel[m].id + '"' + sel + '>' + topLevel[m].name + '</option>';
+    }
+    
     var html = '<div class="sheet-handle"></div>';
     html += '<div class="input-group"><input class="input" id="edit-proj-name" value="' + p.name + '" style="font-size:17px;font-weight:600;" onchange="updateProjectName(\'' + id + '\',this.value)"></div>';
+    
+    // Show parent selector if this is a sub-project or allow making it one
+    if (!subProjects.length) {
+        html += '<div class="input-group"><label class="input-label">Parent Project</label><select class="input select" onchange="updateProject(\'' + id + '\',\'parentId\',this.value||null)">' + parentOptions + '</select></div>';
+    }
+    
     html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Status</label><select class="input select" onchange="updateProject(\'' + id + '\',\'status\',this.value)">';
     html += '<option ' + (p.status==='Planning'?'selected':'') + '>Planning</option>';
     html += '<option ' + (p.status==='Active'?'selected':'') + '>Active</option>';
@@ -714,6 +803,20 @@ function showProjectDetail(id) {
     html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Start</label><input type="date" class="input" value="' + (p.startDate||'') + '" onchange="updateProject(\'' + id + '\',\'startDate\',this.value)"></div>';
     html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Deadline</label><input type="date" class="input" value="' + (p.deadline||'') + '" onchange="updateProject(\'' + id + '\',\'deadline\',this.value)"></div></div>';
     html += '<div class="input-group"><label class="input-label">Notes</label><input class="input" value="' + (p.notes||'') + '" placeholder="Project notes..." onchange="updateProject(\'' + id + '\',\'notes\',this.value)"></div>';
+    
+    // Show sub-projects section if this is a parent project
+    if (subProjects.length > 0) {
+        html += '<div style="font-size:12px;color:var(--text3);margin:20px 0 12px;text-transform:uppercase;letter-spacing:1px;">' + subProjects.length + ' Sub-Projects</div>';
+        for (var n = 0; n < subProjects.length; n++) {
+            var sp = subProjects[n];
+            var spTasks = items.filter(function(t) { return t.project === sp.name && t.status !== 'Completed'; }).length;
+            html += '<div class="project-card sub" style="margin-left:0;background:var(--surface2);margin-bottom:8px" onclick="closeProjectModal();setTimeout(function(){showProjectDetail(\'' + sp.id + '\')},300)">';
+            html += '<div class="project-name" style="font-size:14px">↳ ' + sp.name + '</div>';
+            html += '<div class="project-meta"><span>' + spTasks + ' tasks</span></div></div>';
+        }
+    }
+    
+    // Show tasks section
     html += '<div style="font-size:12px;color:var(--text3);margin:20px 0 12px;text-transform:uppercase;letter-spacing:1px;">' + tasks.length + ' Active Tasks</div>';
     if (tasks.length) {
         for (var j = 0; j < tasks.length; j++) {
@@ -757,9 +860,18 @@ function deleteProject(id) { projects = projects.filter(function(p) { return p.i
 
 function showAddProject() {
     var today = new Date().toISOString().split('T')[0];
+    
+    // Build parent project options (only top-level projects can be parents)
+    var topLevel = projects.filter(function(p) { return !p.parentId && p.status !== 'Completed'; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
+    var parentOptions = '<option value="">No parent (top-level)</option>';
+    for (var i = 0; i < topLevel.length; i++) {
+        parentOptions += '<option value="' + topLevel[i].id + '">' + topLevel[i].name + '</option>';
+    }
+    
     var html = '<div class="sheet-handle"></div>';
     html += '<div class="sheet-title">New Project</div>';
     html += '<div class="input-group"><input class="input" id="np-name" placeholder="Project name"></div>';
+    html += '<div class="input-group"><label class="input-label">Parent Project</label><select class="input select" id="np-parent">' + parentOptions + '</select></div>';
     html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Status</label><select class="input select" id="np-status"><option>Planning</option><option selected>Active</option></select></div>';
     html += '<div class="input-group" style="margin:0;flex:1;"><label class="input-label">Category</label><select class="input select" id="np-cat"><option value="Professional">Work</option><option>Personal</option></select></div></div>';
     html += '<div class="btn-row" style="margin-bottom:16px;"><div class="input-group" style="margin:0;flex:1;"><label class="input-label">Start</label><input type="date" class="input" id="np-start" value="' + today + '"></div>';
@@ -771,7 +883,8 @@ function showAddProject() {
 
 function addProject() {
     var name = document.getElementById('np-name').value.trim(); if (!name) { toast('Enter name'); return; }
-    projects.push({ id: 'p' + Date.now(), name: name, status: document.getElementById('np-status').value, category: document.getElementById('np-cat').value, startDate: document.getElementById('np-start').value || null, deadline: document.getElementById('np-deadline').value || null, owner: 'Shreyas' });
+    var parentId = document.getElementById('np-parent').value || null;
+    projects.push({ id: 'p' + Date.now(), name: name, status: document.getElementById('np-status').value, category: document.getElementById('np-cat').value, startDate: document.getElementById('np-start').value || null, deadline: document.getElementById('np-deadline').value || null, owner: 'Shreyas', parentId: parentId });
     save(); renderProjects(); populateProjects(); closeProjectModal(); toast('Created');
 }
 
@@ -785,10 +898,20 @@ function showDetail(id) {
     for (var i = 0; i < items.length; i++) { if (items[i].id === id) { item = items[i]; break; } }
     if (!item) return;
     
+    // Build hierarchical project options
+    var topLevel = projects.filter(function(p) { return !p.parentId; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
     var projectOptions = '<option value="">None</option>';
-    for (var p = 0; p < projects.length; p++) {
-        var sel = projects[p].name === item.project ? ' selected' : '';
-        projectOptions += '<option value="' + projects[p].name + '"' + sel + '>' + projects[p].name + '</option>';
+    for (var p = 0; p < topLevel.length; p++) {
+        var parent = topLevel[p];
+        var sel = parent.name === item.project ? ' selected' : '';
+        projectOptions += '<option value="' + parent.name + '"' + sel + '>' + parent.name + '</option>';
+        
+        // Add children
+        var children = projects.filter(function(c) { return c.parentId === parent.id; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
+        for (var c = 0; c < children.length; c++) {
+            var childSel = children[c].name === item.project ? ' selected' : '';
+            projectOptions += '<option value="' + children[c].name + '"' + childSel + '>&nbsp;&nbsp;↳ ' + children[c].name + '</option>';
+        }
     }
     
     var html = '<div class="sheet-handle"></div>';
