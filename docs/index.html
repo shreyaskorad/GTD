@@ -244,7 +244,13 @@ header h1 { font-size:18px; font-weight:600; }
 <script>
 // ========== SAFARI FIX ==========
 // Enable touch events for Safari iOS - required for onclick to work on non-native elements
-document.addEventListener('touchstart', function() {}, {passive: true});
+try { document.addEventListener('touchstart', function() {}, {passive: true}); } catch(e) { document.addEventListener('touchstart', function() {}); }
+
+// Debug: Log errors to help diagnose Safari issues
+window.onerror = function(msg, url, line, col, error) {
+    alert('Error: ' + msg + '\nLine: ' + line);
+    return false;
+};
 
 // ========== CONFIG ==========
 const STORAGE_KEY = 'gtd_ai_v6';
