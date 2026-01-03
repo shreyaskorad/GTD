@@ -279,6 +279,11 @@ var DEVICE_KEY = 'gtd_device_id';
 var GITHUB_MODELS_URL = 'https://models.inference.ai.azure.com/chat/completions';
 var MODEL = 'gpt-4o-mini'; // Fast and cheap, great for this use case
 
+// ========== DATA (must be before any code that runs) ==========
+var items = [];
+var projects = [];
+var filters = { status: 'all', priority: null, search: '' };
+
 // ========== SECURITY ==========
 function getDeviceId() {
     var id = localStorage.getItem(DEVICE_KEY);
@@ -351,11 +356,7 @@ function updateTokenStatus() {
     if (status) status.style.color = getGitHubToken() ? 'var(--low)' : 'var(--text3)';
 }
 
-// ========== DATA ==========
-var items = [];
-var projects = [];
-var filters = { status: 'all', priority: null, search: '' };
-
+// ========== DEFAULT PROJECTS ==========
 var DEFAULT_PROJECTS = [
     // Professional - Client Projects
     { id:'p1', name:'World Bank Group', status:'Active', startDate:'2025-10-01', deadline:'2026-03-31', owner:'Shreyas', stakeholders:'Anurag, WB Team', notes:'Skills Framework, QII, Climate Toolkit', category:'Professional' },
