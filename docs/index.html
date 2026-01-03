@@ -501,45 +501,46 @@ async function processWithAI(text) {
     console.log('Voice transcript:', text);
     
     const projectNames = projects.map(p => p.name).join(', ');
-    const taskSummary = items.filter(i => i.status !== 'Completed').slice(0, 30).map(i => `- "${i.item}" (${i.project || 'no project'}, ${i.priority})`).join('\n');
+    const taskSummary = items.filter(i => i.status !== 'Completed').slice(0, 20).map(i => `- "${i.item}" (${i.project || 'no project'})`).join('\n');
     
-    const systemPrompt = `You are an expert GTD assistant that extracts actionable tasks from messy, natural voice recordings.
+    const systemPrompt = `You extract MULTIPLE tasks from messy voice recordings. The user rambles with filler words - your job is to find EVERY SINGLE actionable item.
 
-CRITICAL: The user speaks naturally with filler words (um, uh, like, you know, so, basically, I mean), pauses, repetition, and rambling. Your job is to find EVERY actionable item hidden in their speech.
+CRITICAL RULES:
+1. Extract ALL tasks mentioned - users often embed 3-7 tasks in one recording
+2. Each separate thing to do = separate task in the actions array
+3. "and", "also", "plus", "another thing", "oh and" often introduce new tasks
+4. Be AGGRESSIVE - if something sounds like it might be a task, ADD IT
+5. Clean up filler words (um, uh, like, so, basically, you know) but keep the action
+6. Short task descriptions are better - just the core action
 
-RULES:
-1. ALWAYS extract at least one action. If the speech mentions anything to do, add it.
-2. Clean up the task text - remove filler words but keep the core action.
-3. Be AGGRESSIVE about finding tasks. "I need to maybe think about calling John" = task to call John.
-4. Split compound statements: "call John and email Sarah" = 2 tasks.
-5. Look for these patterns indicating tasks:
-   - "need to", "have to", "should", "gotta", "want to", "going to", "will"
-   - "remind me", "don't forget", "make sure"  
-   - "follow up", "check on", "look into", "figure out"
-   - Anything someone mentions they haven't done yet
-6. If user mentions completing/finishing something, mark it complete.
-7. If unclear, default to ADDING a task rather than doing nothing.
+TASK INDICATORS (any of these = a task):
+- "need to", "have to", "should", "gotta", "want to", "going to", "will", "must"
+- "remind me", "don't forget", "make sure", "remember to"
+- "follow up", "check on", "look into", "figure out", "think about"
+- "call", "email", "text", "message", "talk to", "meet with"
+- "buy", "get", "pick up", "order"
+- "schedule", "book", "plan", "organize"
+- "review", "read", "check", "update", "finish", "complete", "do"
+- ANY action verb followed by something
+
+EXAMPLE INPUT: "so um I need to call John about the project and also like I should probably email Sarah about the deadline oh and don't forget to pick up groceries and maybe think about that health checkup thing"
+EXAMPLE OUTPUT: 4 tasks - "Call John about project", "Email Sarah about deadline", "Pick up groceries", "Schedule health checkup"
 
 PROJECTS: ${projectNames}
-(Match by partial name - "World Bank" = "World Bank Group", "CAA" = "CAA Axiom")
+CURRENT TASKS (for matching completions): ${taskSummary}
 
-CURRENT TASKS:
-${taskSummary}
-
-OUTPUT FORMAT - Return ONLY this JSON:
+Return ONLY valid JSON:
 {
   "actions": [
-    {"type": "add", "task": "clean task description", "project": "matched project or null", "priority": "Medium", "waiting_for": null},
-    {"type": "complete", "match": "keywords to match existing task"},
-    {"type": "delete", "match": "keywords to match"},
-    {"type": "update_project", "project": "name", "field": "deadline", "value": "2026-02-15"}
+    {"type": "add", "task": "short clean task", "project": "matched project or null", "priority": "Medium", "waiting_for": null}
   ],
-  "raw_interpretation": "brief note on what you understood"
+  "raw_interpretation": "Found X tasks: brief list"
 }
 
-Priority guide: "urgent/asap/critical/emergency" = Critical, "important/priority/soon" = High, "whenever/maybe/someday" = Low, else Medium.
+For completions use: {"type": "complete", "match": "keywords"}
+For deletions use: {"type": "delete", "match": "keywords"}
 
-NEVER return empty actions array if the user said ANYTHING actionable. When in doubt, add a task.`;
+IMPORTANT: Return MULTIPLE actions if the user mentioned multiple things to do!`;
 
     try {
         const response = await fetch(GITHUB_MODELS_URL, {
@@ -637,8 +638,7 @@ function executeActions(actions, transcript = '', interpretation = '') {
     
     // Show what was heard (helps debug)
     if (transcript) {
-        const shortTranscript = transcript.length > 100 ? transcript.slice(0, 100) + '...' : transcript;
-        html += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)"><b>Heard:</b> "${shortTranscript}"</div>`;
+        html += `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)"><b>Heard:</b> "${transcript}"</div>`;
     }
     if (interpretation) {
         html += `<div style="font-size:11px;color:var(--text3);margin-top:4px"><b>Understood:</b> ${interpretation}</div>`;
