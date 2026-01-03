@@ -232,6 +232,11 @@ header h1 { font-size:18px; font-weight:600; }
             <div class="settings-group">
                 <button class="settings-item" type="button" onclick="setupGitHubToken()">GitHub Token <span id="token-status" style="float:right;color:var(--text3)">Not set</span></button>
             </div>
+            <div class="settings-label">Analytics</div>
+            <div class="settings-group">
+                <button class="settings-item" type="button" onclick="showCompletionLog()">View Completion Log</button>
+                <button class="settings-item" type="button" onclick="showProductivityStats()">Productivity Stats</button>
+            </div>
             <div class="settings-label">Security</div>
             <div class="settings-group">
                 <button class="settings-item" type="button" onclick="changePin()">Change PIN</button>
@@ -242,6 +247,7 @@ header h1 { font-size:18px; font-weight:600; }
                 <button class="settings-item" type="button" onclick="exportJSON()">Export JSON</button>
                 <button class="settings-item" type="button" onclick="document.getElementById('import-file').click()">Import JSON</button>
                 <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(this.files[0])">
+                <button class="settings-item" type="button" onclick="exportCompletionLog()">Export Completion Log (CSV)</button>
             </div>
             <div class="settings-label">Manage</div>
             <div class="settings-group">
@@ -249,9 +255,12 @@ header h1 { font-size:18px; font-weight:600; }
                 <button class="settings-item" type="button" onclick="reloadSampleData()">Reload sample data (101 items)</button>
                 <button class="settings-item danger" type="button" onclick="resetAll()">Reset all data</button>
             </div>
-            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.2 - AI Powered</div>
+            <div style="text-align:center;padding:24px;color:var(--text3);font-size:12px;">GTD v6.7 - AI Powered</div>
         </div>
     </div>
+
+    <!-- Completion Log Modal -->
+    <div class="modal" id="modal-log"><div class="modal-content" id="log-content" style="max-height:80vh;overflow-y:auto;"></div></div>
 </div>
 
 <nav class="nav hidden" id="main-nav">
@@ -276,6 +285,7 @@ var PIN_KEY = 'gtd_pin_hash';
 var TOKEN_KEY = 'gtd_gh_token';
 var SESSION_KEY = 'gtd_session';
 var DEVICE_KEY = 'gtd_device_id';
+var LOG_KEY = 'gtd_completed_log';
 
 // GitHub Models API endpoint
 var GITHUB_MODELS_URL = 'https://models.inference.ai.azure.com/chat/completions';
@@ -285,6 +295,7 @@ var MODEL = 'gpt-4o-mini'; // Fast and cheap, great for this use case
 var items = [];
 var projects = [];
 var filters = { status: 'all', priority: null, search: '' };
+var completedLog = [];
 
 // ========== SECURITY ==========
 function getDeviceId() {
@@ -598,6 +609,7 @@ function showProjectDetail(id) {
 }
 
 function closeProjectModal() { document.getElementById('modal-project').classList.remove('open'); }
+function closeLogModal() { document.getElementById('modal-log').classList.remove('open'); }
 function updateProject(id, field, value) { 
     var p = null;
     for (var i = 0; i < projects.length; i++) { if (projects[i].id === id) { p = projects[i]; break; } }
@@ -656,8 +668,47 @@ function closeModal() { document.getElementById('modal-detail').classList.remove
 function complete(id) { 
     var item = null;
     for (var i = 0; i < items.length; i++) { if (items[i].id === id) { item = items[i]; break; } }
-    if (item) { item.status = 'Completed'; save(); render(); renderProjects(); updateStats(); closeModal(); toast('Done'); } 
+    if (item) { 
+        // Log completion details
+        var now = new Date();
+        var createdAt = new Date(item.id); // id is timestamp
+        var daysToComplete = Math.round((now - createdAt) / (1000 * 60 * 60 * 24));
+        var logEntry = {
+            id: item.id,
+            task: item.item,
+            project: item.project || 'None',
+            priority: item.priority,
+            category: item.category,
+            createdAt: createdAt.toISOString(),
+            completedAt: now.toISOString(),
+            daysToComplete: daysToComplete,
+            completedDay: now.toLocaleDateString('en-US', { weekday: 'long' }),
+            completedHour: now.getHours()
+        };
+        logCompletion(logEntry);
+        
+        item.status = 'Completed'; 
+        item.completedAt = now.toISOString();
+        save(); render(); renderProjects(); updateStats(); closeModal(); toast('Done'); 
+    } 
 }
+
+// Completed tasks log functions
+function logCompletion(entry) {
+    completedLog = loadCompletedLog();
+    completedLog.unshift(entry);
+    // Keep last 500 entries
+    if (completedLog.length > 500) completedLog = completedLog.slice(0, 500);
+    localStorage.setItem(LOG_KEY, JSON.stringify(completedLog));
+}
+
+function loadCompletedLog() {
+    try {
+        var stored = localStorage.getItem(LOG_KEY);
+        return stored ? JSON.parse(stored) : [];
+    } catch(e) { return []; }
+}
+
 function deleteItem(id) { if (confirm('Delete?')) { items = items.filter(function(i) { return i.id !== id; }); save(); render(); renderProjects(); updateStats(); closeModal(); toast('Deleted'); } }
 
 function addItem() {
@@ -1074,6 +1125,167 @@ function reloadSampleData() {
 function resetAll() { if (confirm('Reset all?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
 function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2000); }
 
+// ========== COMPLETION LOG FUNCTIONS ==========
+function showCompletionLog() {
+    var log = loadCompletedLog();
+    var html = '<div class="modal-header"><div class="modal-title">Completion Log (' + log.length + ' tasks)</div><button class="close-btn" onclick="closeLogModal()">x</button></div>';
+    
+    if (log.length === 0) {
+        html += '<p style="text-align:center;color:var(--text3);padding:40px;">No completed tasks yet</p>';
+    } else {
+        html += '<div style="padding:16px;">';
+        // Group by date
+        var byDate = {};
+        for (var i = 0; i < log.length; i++) {
+            var entry = log[i];
+            var date = entry.completedAt ? entry.completedAt.split('T')[0] : 'Unknown';
+            if (!byDate[date]) byDate[date] = [];
+            byDate[date].push(entry);
+        }
+        
+        var dates = Object.keys(byDate).sort().reverse();
+        for (var d = 0; d < dates.length; d++) {
+            var date = dates[d];
+            var entries = byDate[date];
+            html += '<div style="font-weight:600;margin:16px 0 8px;color:var(--text2);">' + formatLogDate(date) + ' (' + entries.length + ')</div>';
+            for (var j = 0; j < entries.length; j++) {
+                var e = entries[j];
+                var daysText = e.daysToComplete === 0 ? 'Same day' : e.daysToComplete === 1 ? '1 day' : e.daysToComplete + ' days';
+                html += '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;">';
+                html += '<div style="font-weight:500;">' + e.task + '</div>';
+                html += '<div style="color:var(--text3);font-size:11px;margin-top:4px;">';
+                html += e.priority + ' | ' + (e.project || 'No project') + ' | ' + daysText + ' to complete';
+                html += '</div></div>';
+            }
+        }
+        html += '</div>';
+    }
+    
+    document.getElementById('log-content').innerHTML = html;
+    document.getElementById('modal-log').classList.add('open');
+}
+
+function showProductivityStats() {
+    var log = loadCompletedLog();
+    var html = '<div class="modal-header"><div class="modal-title">Productivity Stats</div><button class="close-btn" onclick="closeLogModal()">x</button></div>';
+    
+    if (log.length < 5) {
+        html += '<p style="text-align:center;color:var(--text3);padding:40px;">Complete more tasks to see stats</p>';
+    } else {
+        // Calculate stats
+        var totalDays = 0, count = 0;
+        var byProject = {}, byPriority = {}, byDay = {}, byHour = {};
+        var last7days = 0, last30days = 0;
+        var now = new Date();
+        
+        for (var i = 0; i < log.length; i++) {
+            var e = log[i];
+            totalDays += e.daysToComplete || 0;
+            count++;
+            
+            // By project
+            var proj = e.project || 'No project';
+            byProject[proj] = (byProject[proj] || 0) + 1;
+            
+            // By priority
+            byPriority[e.priority] = (byPriority[e.priority] || 0) + 1;
+            
+            // By day of week
+            byDay[e.completedDay] = (byDay[e.completedDay] || 0) + 1;
+            
+            // By hour
+            var hourBucket = e.completedHour < 12 ? 'Morning (6-12)' : e.completedHour < 17 ? 'Afternoon (12-5)' : 'Evening (5-10)';
+            byHour[hourBucket] = (byHour[hourBucket] || 0) + 1;
+            
+            // Recent activity
+            var completedDate = new Date(e.completedAt);
+            var daysAgo = Math.floor((now - completedDate) / (1000 * 60 * 60 * 24));
+            if (daysAgo <= 7) last7days++;
+            if (daysAgo <= 30) last30days++;
+        }
+        
+        var avgDays = (totalDays / count).toFixed(1);
+        
+        html += '<div style="padding:16px;">';
+        
+        // Summary
+        html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">';
+        html += '<div style="background:var(--surface2);padding:16px;border-radius:8px;text-align:center;"><div style="font-size:24px;font-weight:600;">' + log.length + '</div><div style="font-size:11px;color:var(--text3);">Total Completed</div></div>';
+        html += '<div style="background:var(--surface2);padding:16px;border-radius:8px;text-align:center;"><div style="font-size:24px;font-weight:600;">' + avgDays + '</div><div style="font-size:11px;color:var(--text3);">Avg Days to Complete</div></div>';
+        html += '<div style="background:var(--surface2);padding:16px;border-radius:8px;text-align:center;"><div style="font-size:24px;font-weight:600;">' + last7days + '</div><div style="font-size:11px;color:var(--text3);">Last 7 Days</div></div>';
+        html += '<div style="background:var(--surface2);padding:16px;border-radius:8px;text-align:center;"><div style="font-size:24px;font-weight:600;">' + last30days + '</div><div style="font-size:11px;color:var(--text3);">Last 30 Days</div></div>';
+        html += '</div>';
+        
+        // Top projects
+        html += '<div style="font-weight:600;margin:16px 0 8px;">Top Projects</div>';
+        var projArr = Object.keys(byProject).map(function(k) { return {name:k, count:byProject[k]}; }).sort(function(a,b) { return b.count - a.count; }).slice(0,5);
+        for (var p = 0; p < projArr.length; p++) {
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>' + projArr[p].name + '</span><span style="color:var(--text3);">' + projArr[p].count + '</span></div>';
+        }
+        
+        // By priority
+        html += '<div style="font-weight:600;margin:16px 0 8px;">By Priority</div>';
+        var priorities = ['Critical', 'High', 'Medium', 'Low'];
+        for (var pr = 0; pr < priorities.length; pr++) {
+            var pName = priorities[pr];
+            if (byPriority[pName]) {
+                html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>' + pName + '</span><span style="color:var(--text3);">' + byPriority[pName] + '</span></div>';
+            }
+        }
+        
+        // Best days
+        html += '<div style="font-weight:600;margin:16px 0 8px;">Most Productive Days</div>';
+        var dayArr = Object.keys(byDay).map(function(k) { return {name:k, count:byDay[k]}; }).sort(function(a,b) { return b.count - a.count; });
+        for (var dd = 0; dd < dayArr.length; dd++) {
+            html += '<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;"><span>' + dayArr[dd].name + '</span><span style="color:var(--text3);">' + dayArr[dd].count + '</span></div>';
+        }
+        
+        html += '</div>';
+    }
+    
+    document.getElementById('log-content').innerHTML = html;
+    document.getElementById('modal-log').classList.add('open');
+}
+
+function formatLogDate(dateStr) {
+    var d = new Date(dateStr);
+    var today = new Date();
+    var yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (dateStr === today.toISOString().split('T')[0]) return 'Today';
+    if (dateStr === yesterday.toISOString().split('T')[0]) return 'Yesterday';
+    return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function closeLogModal() { document.getElementById('modal-log').classList.remove('open'); }
+
+function exportCompletionLog() {
+    var log = loadCompletedLog();
+    if (log.length === 0) { toast('No data to export'); return; }
+    
+    var csv = 'Task,Project,Priority,Category,Created,Completed,Days to Complete,Day,Hour\n';
+    for (var i = 0; i < log.length; i++) {
+        var e = log[i];
+        csv += '"' + (e.task || '').replace(/"/g, '""') + '",';
+        csv += '"' + (e.project || '') + '",';
+        csv += e.priority + ',';
+        csv += e.category + ',';
+        csv += e.createdAt + ',';
+        csv += e.completedAt + ',';
+        csv += e.daysToComplete + ',';
+        csv += e.completedDay + ',';
+        csv += e.completedHour + '\n';
+    }
+    
+    var blob = new Blob([csv], { type: 'text/csv' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'gtd-completion-log.csv';
+    a.click();
+    toast('Downloaded CSV');
+}
+
 function setupListeners() {
     var tabs = document.querySelectorAll('.tab');
     for (var i = 0; i < tabs.length; i++) {
@@ -1113,6 +1325,7 @@ function setupListeners() {
     
     document.getElementById('modal-detail').onclick = function(e) { if (e.target.id === 'modal-detail') closeModal(); };
     document.getElementById('modal-project').onclick = function(e) { if (e.target.id === 'modal-project') closeProjectModal(); };
+    document.getElementById('modal-log').onclick = function(e) { if (e.target.id === 'modal-log') closeLogModal(); };
 }
 </script>
 </body>
