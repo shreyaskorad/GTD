@@ -145,24 +145,36 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 .toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--surface2); color:var(--text); padding:12px 24px; border-radius:100px; font-size:14px; font-weight:500; transition:all 0.3s; z-index:200; opacity:0; pointer-events:none; border:1px solid var(--border); }
 
 /* Life Log */
-.log-date { font-size:18px; font-weight:600; padding:20px 20px 12px; display:flex; justify-content:space-between; align-items:center; }
+.log-header { padding:20px 20px 0; display:flex; justify-content:space-between; align-items:center; }
+.log-date { font-size:18px; font-weight:600; }
 .log-date-nav { display:flex; gap:8px; }
-.log-date-btn { width:32px; height:32px; border-radius:50%; border:none; background:var(--surface2); color:var(--text2); font-size:14px; cursor:pointer; }
-.log-entries { padding:0 16px; }
+.log-date-btn { width:36px; height:36px; border-radius:50%; border:none; background:var(--surface2); color:var(--text); font-size:16px; cursor:pointer; }
+.log-entries { padding:0 16px 16px; }
 .log-entry { background:var(--surface); border-radius:var(--radius); padding:14px 16px; margin-bottom:8px; position:relative; }
-.log-time { font-size:12px; color:var(--accent); font-weight:600; margin-bottom:4px; font-variant-numeric:tabular-nums; }
+.log-entry.processing { opacity:0.6; }
+.log-time { font-size:11px; color:var(--accent); font-weight:600; margin-bottom:6px; font-variant-numeric:tabular-nums; letter-spacing:0.5px; }
 .log-text { font-size:15px; line-height:1.5; }
+.log-category { display:inline-block; font-size:10px; color:var(--text3); background:var(--surface2); padding:3px 8px; border-radius:4px; margin-top:8px; text-transform:uppercase; letter-spacing:0.5px; }
 .log-empty { text-align:center; padding:60px 40px; color:var(--text3); }
-.log-capture { margin:16px; padding:24px 20px; background:var(--surface); border-radius:20px; text-align:center; }
-.log-mic-btn { width:70px; height:70px; border-radius:50%; border:3px solid var(--accent); background:transparent; color:var(--accent); font-size:28px; cursor:pointer; transition:all 0.2s; }
-.log-mic-btn.recording { border-color:var(--critical); color:var(--critical); animation:pulse 1.5s infinite; }
-.log-status { margin-top:16px; font-size:14px; color:var(--text2); }
-.log-actions { display:flex; gap:8px; margin-top:16px; justify-content:center; }
-.log-action-btn { padding:10px 20px; font-size:13px; font-weight:500; border-radius:20px; border:none; cursor:pointer; }
-.log-share-btn { position:absolute; top:12px; right:12px; width:28px; height:28px; border-radius:50%; border:none; background:var(--surface2); color:var(--text3); font-size:12px; cursor:pointer; }
-.log-summary { margin:16px; padding:16px; background:var(--surface); border-radius:var(--radius); }
-.log-summary-title { font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; }
-.log-summary-copy { padding:12px; background:var(--surface2); border-radius:8px; font-size:13px; line-height:1.6; white-space:pre-wrap; max-height:200px; overflow-y:auto; }
+.log-capture { margin:16px; padding:28px 20px; background:linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border-radius:20px; text-align:center; border:1px solid var(--border); }
+.log-mic-btn { width:80px; height:80px; border-radius:50%; border:none; background:var(--accent); color:#fff; font-size:32px; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 20px rgba(59,130,246,0.3); }
+.log-mic-btn:active { transform:scale(0.95); }
+.log-mic-btn.recording { background:var(--critical); box-shadow:0 4px 20px rgba(239,68,68,0.4); animation:pulse 1.5s infinite; }
+.log-status { margin-top:16px; font-size:14px; color:var(--text2); min-height:20px; }
+.log-transcript { margin-top:12px; padding:12px; background:var(--surface2); border-radius:8px; font-size:14px; color:var(--text); text-align:left; display:none; max-height:80px; overflow-y:auto; }
+.log-transcript.active { display:block; }
+.log-actions { display:flex; gap:10px; margin-top:20px; justify-content:center; }
+.log-action-btn { padding:12px 24px; font-size:13px; font-weight:600; border-radius:20px; border:none; cursor:pointer; background:var(--surface2); color:var(--text); }
+.log-action-btn:active { opacity:0.8; }
+.log-share-btn { position:absolute; top:10px; right:10px; width:30px; height:30px; border-radius:50%; border:none; background:var(--surface2); color:var(--text3); font-size:13px; cursor:pointer; }
+.log-delete-btn { position:absolute; top:10px; right:46px; width:30px; height:30px; border-radius:50%; border:none; background:var(--surface2); color:var(--critical); font-size:13px; cursor:pointer; }
+.log-summary { margin:0 16px 16px; padding:16px; background:var(--surface); border-radius:var(--radius); }
+.log-summary-title { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+.log-summary-copy { padding:12px; background:var(--surface2); border-radius:8px; font-size:13px; line-height:1.7; white-space:pre-wrap; max-height:180px; overflow-y:auto; }
+.log-stats { display:flex; gap:12px; margin:0 16px 16px; }
+.log-stat { flex:1; background:var(--surface); border-radius:var(--radius); padding:14px; text-align:center; }
+.log-stat-num { font-size:24px; font-weight:700; color:var(--accent); }
+.log-stat-label { font-size:11px; color:var(--text3); margin-top:4px; text-transform:uppercase; }
 .toast.show { transform:translateX(-50%) translateY(0); opacity:1; }
 .loading { display:inline-block; width:20px; height:20px; border:2px solid var(--border); border-top-color:var(--accent); border-radius:50%; animation:spin 0.8s linear infinite; }
 @keyframes spin { to { transform:rotate(360deg); } }
@@ -239,8 +251,8 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 
     <!-- Life Log View -->
     <div class="view" id="v-log">
-        <div class="log-date">
-            <span id="log-date-display">Today</span>
+        <div class="log-header">
+            <div class="log-date" id="log-date-display">Today</div>
             <div class="log-date-nav">
                 <button class="log-date-btn" onclick="logPrevDay()">←</button>
                 <button class="log-date-btn" onclick="logNextDay()">→</button>
@@ -249,16 +261,31 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
         
         <div class="log-capture">
             <button class="log-mic-btn" id="log-mic-btn" onclick="toggleLogRecording()">🎤</button>
-            <div class="log-status" id="log-status">Tap to log what you're doing</div>
+            <div class="log-status" id="log-status">Tap to capture</div>
+            <div class="log-transcript" id="log-transcript"></div>
             <div class="log-actions">
-                <button class="log-action-btn btn-secondary" onclick="showLogTextInput()">Type</button>
-                <button class="log-action-btn btn-secondary" onclick="copyDaySummary()">Copy Day</button>
+                <button class="log-action-btn" onclick="showLogTextInput()">✏️ Type</button>
+                <button class="log-action-btn" onclick="copyDaySummary()">📋 Copy Day</button>
+            </div>
+        </div>
+        
+        <div class="log-stats" id="log-stats" style="display:none;">
+            <div class="log-stat">
+                <div class="log-stat-num" id="log-entry-count">0</div>
+                <div class="log-stat-label">Entries</div>
+            </div>
+            <div class="log-stat">
+                <div class="log-stat-num" id="log-hours-covered">0</div>
+                <div class="log-stat-label">Hours Covered</div>
             </div>
         </div>
         
         <div class="log-summary" id="log-summary" style="display:none;">
-            <div class="log-summary-title">Day Summary (tap to copy)</div>
-            <div class="log-summary-copy" id="log-summary-text" onclick="copyDaySummary()"></div>
+            <div class="log-summary-title">
+                <span>Day Summary</span>
+                <button class="log-action-btn" style="padding:6px 12px;font-size:11px;" onclick="copyDaySummary()">Copy</button>
+            </div>
+            <div class="log-summary-copy" id="log-summary-text"></div>
         </div>
         
         <div class="log-entries" id="log-entries"></div>
@@ -312,7 +339,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
                 </div>
             </div>
             
-            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.2</div>
+            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.3</div>
         </div>
     </div>
 </div>
@@ -1879,6 +1906,8 @@ function startLogRecording() {
     var btn = document.getElementById('log-mic-btn');
     btn.classList.add('recording');
     document.getElementById('log-status').textContent = 'Listening...';
+    document.getElementById('log-transcript').textContent = '';
+    document.getElementById('log-transcript').classList.add('active');
     
     logRecognition = new SpeechRecog();
     logRecognition.continuous = false;
@@ -1896,10 +1925,11 @@ function startLogRecording() {
                 interimText += e.results[i][0].transcript;
             }
         }
-        // Show what we're hearing
+        // Show live transcript
         var display = finalText || interimText;
         if (display) {
-            document.getElementById('log-status').textContent = '"' + display.slice(-40) + '"';
+            document.getElementById('log-transcript').textContent = display;
+            document.getElementById('log-status').textContent = 'Speaking...';
         }
     };
     
@@ -1917,6 +1947,7 @@ function startLogRecording() {
     
     logRecognition.onend = function() {
         if (finalText && finalText.trim()) {
+            document.getElementById('log-status').textContent = 'Processing...';
             addLogEntry(finalText.trim());
         }
         stopLogRecording();
@@ -1935,7 +1966,8 @@ function stopLogRecording() {
     logRecording = false;
     var btn = document.getElementById('log-mic-btn');
     btn.classList.remove('recording');
-    document.getElementById('log-status').textContent = 'Tap to log what you\'re doing';
+    document.getElementById('log-status').textContent = 'Tap to capture';
+    document.getElementById('log-transcript').classList.remove('active');
     
     if (logRecognition) {
         try { logRecognition.stop(); } catch(e) {}
@@ -1943,26 +1975,100 @@ function stopLogRecording() {
     }
 }
 
-function addLogEntry(text) {
-    if (!text || !text.trim()) return;
+function addLogEntry(rawText) {
+    if (!rawText || !rawText.trim()) return;
     
     var now = new Date();
     var entry = {
         id: 'log_' + Date.now(),
-        text: text.trim(),
+        rawText: rawText.trim(),
+        text: rawText.trim(),
         timestamp: now.toISOString(),
         date: now.toISOString().split('T')[0],
-        time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+        time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+        category: null,
+        processing: true
     };
     
     lifeLog.unshift(entry);
     saveLifeLog();
     renderLogEntries();
-    toast('Logged');
+    
+    // Process with AI to clean up and categorize
+    processLogEntryWithAI(entry.id, rawText);
+}
+
+function processLogEntryWithAI(entryId, rawText) {
+    var token = localStorage.getItem(TOKEN_KEY);
+    if (!token) {
+        // No token, just use raw text
+        updateLogEntry(entryId, rawText, null);
+        return;
+    }
+    
+    var prompt = 'Clean up and improve this life log entry spoken via voice dictation. Fix grammar, remove filler words, and make it a clear, concise statement of what the person is doing or thinking. Also categorize it.\n\nRaw input: "' + rawText + '"\n\nRespond with ONLY valid JSON (no markdown):\n{"text": "cleaned up version", "category": "one of: work, meeting, break, travel, personal, thinking, health, family, other"}';
+    
+    fetch(GITHUB_MODELS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+            model: MODEL,
+            messages: [{ role: 'user', content: prompt }],
+            max_tokens: 150,
+            temperature: 0.3
+        })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            var content = data.choices[0].message.content.trim();
+            // Try to parse JSON
+            try {
+                // Remove markdown code blocks if present
+                content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                var result = JSON.parse(content);
+                updateLogEntry(entryId, result.text || rawText, result.category || null);
+            } catch(e) {
+                console.log('Failed to parse AI response:', content);
+                updateLogEntry(entryId, rawText, null);
+            }
+        } else {
+            updateLogEntry(entryId, rawText, null);
+        }
+    })
+    .catch(function(err) {
+        console.error('AI processing failed:', err);
+        updateLogEntry(entryId, rawText, null);
+    });
+}
+
+function updateLogEntry(entryId, text, category) {
+    for (var i = 0; i < lifeLog.length; i++) {
+        if (lifeLog[i].id === entryId) {
+            lifeLog[i].text = text;
+            lifeLog[i].category = category;
+            lifeLog[i].processing = false;
+            break;
+        }
+    }
+    saveLifeLog();
+    renderLogEntries();
+}
+
+function deleteLogEntry(id) {
+    for (var i = 0; i < lifeLog.length; i++) {
+        if (lifeLog[i].id === id) {
+            lifeLog.splice(i, 1);
+            break;
+        }
+    }
+    saveLifeLog();
+    renderLogEntries();
+    toast('Deleted');
 }
 
 function showLogTextInput() {
-    var text = prompt('What are you doing?');
+    var text = prompt('What are you doing right now?');
     if (text && text.trim()) {
         addLogEntry(text.trim());
     }
@@ -1988,8 +2094,22 @@ function renderLogEntries() {
     // Filter entries for the selected date
     var dayEntries = lifeLog.filter(function(e) { return e.date === dateStr; });
     
+    // Update stats
+    var statsEl = document.getElementById('log-stats');
+    if (dayEntries.length > 0) {
+        statsEl.style.display = 'flex';
+        document.getElementById('log-entry-count').textContent = dayEntries.length;
+        
+        // Calculate hours covered (difference between first and last entry)
+        var times = dayEntries.map(function(e) { return new Date(e.timestamp).getTime(); });
+        var hoursCovered = Math.round((Math.max.apply(null, times) - Math.min.apply(null, times)) / (1000 * 60 * 60));
+        document.getElementById('log-hours-covered').textContent = hoursCovered || '<1';
+    } else {
+        statsEl.style.display = 'none';
+    }
+    
     if (dayEntries.length === 0) {
-        container.innerHTML = '<div class="log-empty"><div style="font-size:48px;opacity:0.3;margin-bottom:16px;">📝</div>No entries for this day</div>';
+        container.innerHTML = '<div class="log-empty"><div style="font-size:48px;opacity:0.3;margin-bottom:16px;">📝</div><div>No entries yet</div><div style="font-size:13px;margin-top:8px;color:var(--text3)">Tap the mic to log what you\'re doing</div></div>';
         document.getElementById('log-summary').style.display = 'none';
         return;
     }
@@ -1998,10 +2118,15 @@ function renderLogEntries() {
     var html = '';
     for (var i = 0; i < dayEntries.length; i++) {
         var entry = dayEntries[i];
-        html += '<div class="log-entry">';
-        html += '<button class="log-share-btn" onclick="shareLogEntry(\'' + entry.id + '\')" title="Copy">📋</button>';
-        html += '<div class="log-time">' + entry.time + '</div>';
+        var processingClass = entry.processing ? ' processing' : '';
+        html += '<div class="log-entry' + processingClass + '">';
+        html += '<button class="log-delete-btn" onclick="event.stopPropagation();if(confirm(\'Delete?\')){deleteLogEntry(\'' + entry.id + '\')}" title="Delete">×</button>';
+        html += '<button class="log-share-btn" onclick="event.stopPropagation();shareLogEntry(\'' + entry.id + '\')" title="Copy">📋</button>';
+        html += '<div class="log-time">' + entry.time + (entry.processing ? ' <span class="loading"></span>' : '') + '</div>';
         html += '<div class="log-text">' + entry.text + '</div>';
+        if (entry.category) {
+            html += '<div class="log-category">' + entry.category + '</div>';
+        }
         html += '</div>';
     }
     container.innerHTML = html;
@@ -2020,10 +2145,24 @@ function buildDaySummary(entries, dateStr) {
     
     var lines = displayDate + ':\n\n';
     
-    // Group by hour blocks for cleaner summary
-    for (var i = entries.length - 1; i >= 0; i--) {
-        var e = entries[i];
-        lines += '• ' + e.time + ': ' + e.text + '\n';
+    // Sort entries oldest first for chronological summary
+    var sorted = entries.slice().sort(function(a, b) {
+        return new Date(a.timestamp) - new Date(b.timestamp);
+    });
+    
+    for (var i = 0; i < sorted.length; i++) {
+        var e = sorted[i];
+        var catEmoji = '';
+        if (e.category === 'work') catEmoji = '💼 ';
+        else if (e.category === 'meeting') catEmoji = '🤝 ';
+        else if (e.category === 'break') catEmoji = '☕ ';
+        else if (e.category === 'travel') catEmoji = '🚗 ';
+        else if (e.category === 'personal') catEmoji = '🏠 ';
+        else if (e.category === 'thinking') catEmoji = '💭 ';
+        else if (e.category === 'health') catEmoji = '🏃 ';
+        else if (e.category === 'family') catEmoji = '👨‍👩‍👧 ';
+        
+        lines += catEmoji + e.time + ' - ' + e.text + '\n';
     }
     
     summaryText.textContent = lines.trim();
