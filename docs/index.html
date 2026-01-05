@@ -60,9 +60,9 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 
 /* Bottom Nav - Ultra minimal */
 .nav { position:fixed; bottom:0; left:0; right:0; background:var(--surface); border-top:1px solid var(--border); display:flex; justify-content:space-around; padding:12px 0; padding-bottom:calc(12px + env(safe-area-inset-bottom)); }
-.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:var(--text3); font-size:10px; font-weight:500; cursor:pointer; padding:4px 16px; }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; background:none; border:none; color:var(--text3); font-size:12px; font-weight:500; cursor:pointer; padding:8px 12px; }
 .nav-item.active { color:var(--accent); }
-.nav-icon { font-size:22px; }
+.nav-icon { display:none; }
 
 /* Modal - Sheet style */
 .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:100; align-items:flex-end; backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); }
@@ -351,11 +351,11 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 
 <!-- Bottom Navigation -->
 <nav class="nav hidden" id="main-nav">
-    <button class="nav-item active" data-v="list"><span class="nav-icon">☐</span>Tasks</button>
-    <button class="nav-item" data-v="projects"><span class="nav-icon">◫</span>Projects</button>
-    <button class="nav-item" data-v="log"><span class="nav-icon">◎</span>Log</button>
-    <button class="nav-item" data-v="capture"><span class="nav-icon">◉</span>Capture</button>
-    <button class="nav-item" data-v="settings"><span class="nav-icon">⚙</span>Settings</button>
+    <button class="nav-item active" data-v="list"><span class="nav-icon"></span>Tasks</button>
+    <button class="nav-item" data-v="projects"><span class="nav-icon"></span>Projects</button>
+    <button class="nav-item" data-v="log"><span class="nav-icon"></span>Log</button>
+    <button class="nav-item" data-v="capture"><span class="nav-icon"></span>Capture</button>
+    <button class="nav-item" data-v="settings"><span class="nav-icon"></span>Settings</button>
 </nav>
 
 <!-- Task Detail Modal -->
@@ -715,7 +715,7 @@ function render() {
         }
         list.innerHTML = html;
     } else {
-        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">✓</div><div class="empty-state-text">All clear!</div></div>';
+        list.innerHTML = '<div class="empty-state"><div class="empty-state-icon"></div><div class="empty-state-text">All clear!</div></div>';
     }
 }
 
@@ -1372,9 +1372,9 @@ function executeActions(actions, transcript, interpretation) {
             if (matchItem) { 
                 matchItem.status = 'Completed'; 
                 completed++; 
-                actionLog.push('<span style="color:var(--low)">✓</span> Completed: ' + matchItem.item); 
+                actionLog.push('<span style="color:var(--low)">[done]</span> Completed: ' + matchItem.item); 
             } else {
-                actionLog.push('<span style="color:var(--text3)">?</span> Could not find: "' + action.match + '"');
+                actionLog.push('<span style="color:var(--text3)">[?]</span> Could not find: "' + action.match + '"');
             }
         }
         else if (action.type === 'delete' && action.match) {
