@@ -1994,19 +1994,19 @@ function addLogEntry(rawText) {
     saveLifeLog();
     renderLogEntries();
     
-    // Process with AI to clean up and categorize
+    // Process with AI to clean up, categorize, and potentially split into multiple entries
     processLogEntryWithAI(entry.id, rawText);
 }
 
 function processLogEntryWithAI(entryId, rawText) {
     var token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
-        // No token, just use raw text
+        // No token, just use raw text as single entry
         updateLogEntry(entryId, rawText, null);
         return;
     }
     
-    var prompt = 'Clean up and improve this life log entry spoken via voice dictation. Fix grammar, remove filler words, and make it a clear, concise statement of what the person is doing or thinking. Also categorize it.\n\nRaw input: "' + rawText + '"\n\nRespond with ONLY valid JSON (no markdown):\n{"text": "cleaned up version", "category": "one of: work, meeting, break, travel, personal, thinking, health, family, other"}';
+    var prompt = 'You are processing a voice dictation for a life log / time tracker. The user spoke about what they are doing, have done, or are thinking about.\n\nIMPORTANT: If the speech contains MULTIPLE distinct activities, thoughts, or events, split them into SEPARATE entries. Each distinct activity gets its own entry.\n\nExamples:\n- "just finished the call now heading to lunch" → 2 entries\n- "wrapped up the World Bank meeting, sent the follow-up email, now taking a coffee break" → 3 entries\n- "thinking about the HPE proposal" → 1 entry\n\nFor each entry:\n1. Clean up grammar, remove filler words (um, uh, like)\n2. Make it a clear, concise statement\n3. Categorize: work, meeting, break, travel, personal, thinking, health, family, other\n\nRaw speech: "' + rawText + '"\n\nRespond with ONLY valid JSON array (no markdown):\n[{"text": "cleaned activity 1", "category": "category1"}, {"text": "cleaned activity 2", "category": "category2"}]\n\nEven if there is only 1 activity, return it as an array with 1 item.';
     
     fetch(GITHUB_MODELS_URL, {
         method: 'POST',
@@ -2014,7 +2014,7 @@ function processLogEntryWithAI(entryId, rawText) {
         body: JSON.stringify({
             model: MODEL,
             messages: [{ role: 'user', content: prompt }],
-            max_tokens: 150,
+            max_tokens: 500,
             temperature: 0.3
         })
     })
@@ -2022,14 +2022,51 @@ function processLogEntryWithAI(entryId, rawText) {
     .then(function(data) {
         if (data.choices && data.choices[0] && data.choices[0].message) {
             var content = data.choices[0].message.content.trim();
-            // Try to parse JSON
             try {
                 // Remove markdown code blocks if present
                 content = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-                var result = JSON.parse(content);
-                updateLogEntry(entryId, result.text || rawText, result.category || null);
+                var entries = JSON.parse(content);
+                
+                if (Array.isArray(entries) && entries.length > 0) {
+                    // Update the original entry with the first result
+                    updateLogEntry(entryId, entries[0].text || rawText, entries[0].category || null);
+                    
+                    // Create additional entries for the rest (if any)
+                    if (entries.length > 1) {
+                        var now = new Date();
+                        for (var i = 1; i < entries.length; i++) {
+                            // Offset each additional entry by 1 second to maintain order
+                            var entryTime = new Date(now.getTime() - (i * 1000));
+                            var newEntry = {
+                                id: 'log_' + Date.now() + '_' + i,
+                                rawText: entries[i].text,
+                                text: entries[i].text,
+                                timestamp: entryTime.toISOString(),
+                                date: entryTime.toISOString().split('T')[0],
+                                time: entryTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
+                                category: entries[i].category || null,
+                                processing: false
+                            };
+                            // Insert after the original entry position
+                            var originalIndex = -1;
+                            for (var j = 0; j < lifeLog.length; j++) {
+                                if (lifeLog[j].id === entryId) { originalIndex = j; break; }
+                            }
+                            if (originalIndex >= 0) {
+                                lifeLog.splice(originalIndex + i, 0, newEntry);
+                            } else {
+                                lifeLog.unshift(newEntry);
+                            }
+                        }
+                        saveLifeLog();
+                        renderLogEntries();
+                        toast(entries.length + ' entries created');
+                    }
+                } else {
+                    updateLogEntry(entryId, rawText, null);
+                }
             } catch(e) {
-                console.log('Failed to parse AI response:', content);
+                console.log('Failed to parse AI response:', content, e);
                 updateLogEntry(entryId, rawText, null);
             }
         } else {
