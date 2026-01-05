@@ -163,11 +163,12 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 .log-status { margin-top:16px; font-size:14px; color:var(--text2); min-height:20px; }
 .log-transcript { margin-top:12px; padding:12px; background:var(--surface2); border-radius:8px; font-size:14px; color:var(--text); text-align:left; display:none; max-height:80px; overflow-y:auto; }
 .log-transcript.active { display:block; }
-.log-actions { display:flex; gap:10px; margin-top:20px; justify-content:center; }
+.log-actions { display:flex; gap:10px; margin-top:20px; justify-content:center; flex-wrap:wrap; }
 .log-action-btn { padding:12px 24px; font-size:13px; font-weight:600; border-radius:20px; border:none; cursor:pointer; background:var(--surface2); color:var(--text); }
 .log-action-btn:active { opacity:0.8; }
+.log-action-btn.danger { background:transparent; color:var(--critical); border:1px solid var(--critical); }
 .log-share-btn { position:absolute; top:10px; right:10px; width:30px; height:30px; border-radius:50%; border:none; background:var(--surface2); color:var(--text3); font-size:13px; cursor:pointer; }
-.log-delete-btn { position:absolute; top:10px; right:46px; width:30px; height:30px; border-radius:50%; border:none; background:var(--surface2); color:var(--critical); font-size:13px; cursor:pointer; }
+.log-delete-btn { position:absolute; top:10px; right:46px; width:30px; height:30px; border-radius:50%; border:none; background:rgba(239,68,68,0.15); color:var(--critical); font-size:16px; font-weight:bold; cursor:pointer; }
 .log-summary { margin:0 16px 16px; padding:16px; background:var(--surface); border-radius:var(--radius); }
 .log-summary-title { font-size:11px; color:var(--text3); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
 .log-summary-copy { padding:12px; background:var(--surface2); border-radius:8px; font-size:13px; line-height:1.7; white-space:pre-wrap; max-height:180px; overflow-y:auto; }
@@ -266,6 +267,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
             <div class="log-actions">
                 <button class="log-action-btn" onclick="showLogTextInput()">Type</button>
                 <button class="log-action-btn" onclick="copyDaySummary()">Copy Day</button>
+                <button class="log-action-btn danger" onclick="clearDayLogs()">Clear Day</button>
             </div>
         </div>
         
@@ -2102,6 +2104,25 @@ function deleteLogEntry(id) {
     saveLifeLog();
     renderLogEntries();
     toast('Deleted');
+}
+
+function clearDayLogs() {
+    var dateStr = logViewDate.toISOString().split('T')[0];
+    var dayEntries = lifeLog.filter(function(e) { return e.date === dateStr; });
+    
+    if (dayEntries.length === 0) {
+        toast('No entries to clear');
+        return;
+    }
+    
+    if (!confirm('Delete all ' + dayEntries.length + ' entries for this day?')) {
+        return;
+    }
+    
+    lifeLog = lifeLog.filter(function(e) { return e.date !== dateStr; });
+    saveLifeLog();
+    renderLogEntries();
+    toast('Cleared ' + dayEntries.length + ' entries');
 }
 
 function showLogTextInput() {
