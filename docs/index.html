@@ -260,12 +260,12 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
         </div>
         
         <div class="log-capture">
-            <button class="log-mic-btn" id="log-mic-btn" onclick="toggleLogRecording()">🎤</button>
+            <button class="log-mic-btn" id="log-mic-btn" onclick="toggleLogRecording()">Rec</button>
             <div class="log-status" id="log-status">Tap to capture</div>
             <div class="log-transcript" id="log-transcript"></div>
             <div class="log-actions">
-                <button class="log-action-btn" onclick="showLogTextInput()">✏️ Type</button>
-                <button class="log-action-btn" onclick="copyDaySummary()">📋 Copy Day</button>
+                <button class="log-action-btn" onclick="showLogTextInput()">Type</button>
+                <button class="log-action-btn" onclick="copyDaySummary()">Copy Day</button>
             </div>
         </div>
         
@@ -351,7 +351,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 <nav class="nav hidden" id="main-nav">
     <button class="nav-item active" data-v="list"><span class="nav-icon">☐</span>Tasks</button>
     <button class="nav-item" data-v="projects"><span class="nav-icon">◫</span>Projects</button>
-    <button class="nav-item" data-v="log"><span class="nav-icon">📝</span>Log</button>
+    <button class="nav-item" data-v="log"><span class="nav-icon">◎</span>Log</button>
     <button class="nav-item" data-v="capture"><span class="nav-icon">◉</span>Capture</button>
     <button class="nav-item" data-v="settings"><span class="nav-icon">⚙</span>Settings</button>
 </nav>
@@ -2146,7 +2146,7 @@ function renderLogEntries() {
     }
     
     if (dayEntries.length === 0) {
-        container.innerHTML = '<div class="log-empty"><div style="font-size:48px;opacity:0.3;margin-bottom:16px;">📝</div><div>No entries yet</div><div style="font-size:13px;margin-top:8px;color:var(--text3)">Tap the mic to log what you\'re doing</div></div>';
+        container.innerHTML = '<div class="log-empty"><div style="font-size:32px;opacity:0.3;margin-bottom:16px;">No entries yet</div><div style="font-size:13px;margin-top:8px;color:var(--text3)">Tap to log what you are doing</div></div>';
         document.getElementById('log-summary').style.display = 'none';
         return;
     }
@@ -2158,7 +2158,7 @@ function renderLogEntries() {
         var processingClass = entry.processing ? ' processing' : '';
         html += '<div class="log-entry' + processingClass + '">';
         html += '<button class="log-delete-btn" onclick="event.stopPropagation();if(confirm(\'Delete?\')){deleteLogEntry(\'' + entry.id + '\')}" title="Delete">×</button>';
-        html += '<button class="log-share-btn" onclick="event.stopPropagation();shareLogEntry(\'' + entry.id + '\')" title="Copy">📋</button>';
+        html += '<button class="log-share-btn" onclick="event.stopPropagation();shareLogEntry(\'' + entry.id + '\')" title="Copy">C</button>';
         html += '<div class="log-time">' + entry.time + (entry.processing ? ' <span class="loading"></span>' : '') + '</div>';
         html += '<div class="log-text">' + entry.text + '</div>';
         if (entry.category) {
@@ -2189,17 +2189,8 @@ function buildDaySummary(entries, dateStr) {
     
     for (var i = 0; i < sorted.length; i++) {
         var e = sorted[i];
-        var catEmoji = '';
-        if (e.category === 'work') catEmoji = '💼 ';
-        else if (e.category === 'meeting') catEmoji = '🤝 ';
-        else if (e.category === 'break') catEmoji = '☕ ';
-        else if (e.category === 'travel') catEmoji = '🚗 ';
-        else if (e.category === 'personal') catEmoji = '🏠 ';
-        else if (e.category === 'thinking') catEmoji = '💭 ';
-        else if (e.category === 'health') catEmoji = '🏃 ';
-        else if (e.category === 'family') catEmoji = '👨‍👩‍👧 ';
-        
-        lines += catEmoji + e.time + ' - ' + e.text + '\n';
+        var catLabel = e.category ? '[' + e.category + '] ' : '';
+        lines += e.time + ' - ' + catLabel + e.text + '\n';
     }
     
     summaryText.textContent = lines.trim();
