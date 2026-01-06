@@ -360,7 +360,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
                 </div>
             </div>
             
-            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.3</div>
+            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.5.1</div>
         </div>
     </div>
 </div>
@@ -446,6 +446,15 @@ var lifeLog = [];
 var logViewDate = new Date();
 var logRecording = false;
 var logRecognition = null;
+
+// ========== HELPER FUNCTIONS ==========
+// Get local date string in YYYY-MM-DD format (avoids UTC conversion issues)
+function getLocalDateString(date) {
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    return year + '-' + (month < 10 ? '0' : '') + month + '-' + (day < 10 ? '0' : '') + day;
+}
 
 // ========== SECURITY ==========
 function getDeviceId() {
@@ -660,6 +669,21 @@ function init() {
     var storedLog = localStorage.getItem(LIFELOG_KEY);
     if (storedLog) {
         try { lifeLog = JSON.parse(storedLog); } catch(e) { lifeLog = []; }
+    }
+    // Migrate lifeLog entries to use local dates (fix UTC timezone issue)
+    var migrated = false;
+    for (var i = 0; i < lifeLog.length; i++) {
+        var entry = lifeLog[i];
+        if (entry.timestamp) {
+            var localDate = getLocalDateString(new Date(entry.timestamp));
+            if (entry.date !== localDate) {
+                entry.date = localDate;
+                migrated = true;
+            }
+        }
+    }
+    if (migrated) {
+        saveLifeLog();
     }
     // Set default filter to focus (Today view)
     filters.status = 'focus';
@@ -969,7 +993,7 @@ function updateProject(id, field, value) {
 function deleteProject(id) { projects = projects.filter(function(p) { return p.id !== id; }); save(); renderProjects(); closeProjectModal(); toast('Deleted'); }
 
 function showAddProject() {
-    var today = new Date().toISOString().split('T')[0];
+    var today = getLocalDateString(new Date());
     
     // Build parent project options (only top-level projects can be parents)
     var topLevel = projects.filter(function(p) { return !p.parentId && p.status !== 'Completed'; }).sort(function(a,b) { return a.name.localeCompare(b.name); });
@@ -1907,8 +1931,8 @@ function formatLogDate(dateStr) {
     var yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    if (dateStr === today.toISOString().split('T')[0]) return 'Today';
-    if (dateStr === yesterday.toISOString().split('T')[0]) return 'Yesterday';
+    if (dateStr === getLocalDateString(today)) return 'Today';
+    if (dateStr === getLocalDateString(yesterday)) return 'Yesterday';
     return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
@@ -2169,7 +2193,7 @@ function addLogEntry(rawText) {
         rawText: rawText.trim(),
         text: rawText.trim(),
         timestamp: now.toISOString(),
-        date: now.toISOString().split('T')[0],
+        date: getLocalDateString(now),
         time: now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
         category: null,
         processing: true
@@ -2231,7 +2255,7 @@ function processLogEntryWithAI(entryId, rawText) {
                                 rawText: entry.text,
                                 text: entry.text,
                                 timestamp: entryTime.toISOString(),
-                                date: entryTime.toISOString().split('T')[0],
+                                date: getLocalDateString(entryTime),
                                 time: entryTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
                                 category: entry.category || null,
                                 status: entry.status || 'logged',
@@ -2285,7 +2309,7 @@ function updateLogEntryWithTime(entryId, text, category, newTime, status) {
             lifeLog[i].category = category;
             lifeLog[i].status = status || 'logged';
             lifeLog[i].timestamp = newTime.toISOString();
-            lifeLog[i].date = newTime.toISOString().split('T')[0];
+            lifeLog[i].date = getLocalDateString(newTime);
             lifeLog[i].time = newTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
             lifeLog[i].processing = false;
             break;
@@ -2311,7 +2335,7 @@ function deleteLogEntry(id) {
 }
 
 function clearDayLogs() {
-    var dateStr = logViewDate.toISOString().split('T')[0];
+    var dateStr = getLocalDateString(logViewDate);
     var dayEntries = lifeLog.filter(function(e) { return e.date === dateStr; });
     
     if (dayEntries.length === 0) {
@@ -2356,17 +2380,25 @@ function closeLogTextModal() {
 
 function renderLogEntries() {
     var container = document.getElementById('log-entries');
-    var dateStr = logViewDate.toISOString().split('T')[0];
+    
+    // Use local date string (YYYY-MM-DD) to avoid timezone issues
+    var year = logViewDate.getFullYear();
+    var month = String(logViewDate.getMonth() + 1).padStart(2, '0');
+    var day = String(logViewDate.getDate()).padStart(2, '0');
+    var dateStr = year + '-' + month + '-' + day;
     
     // Update date display
     var today = new Date();
     var yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
+    var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+    var yesterdayStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
+    
     var displayText = 'Today';
-    if (dateStr === yesterday.toISOString().split('T')[0]) {
+    if (dateStr === yesterdayStr) {
         displayText = 'Yesterday';
-    } else if (dateStr !== today.toISOString().split('T')[0]) {
+    } else if (dateStr !== todayStr) {
         displayText = logViewDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
     }
     document.getElementById('log-date-display').textContent = displayText;
@@ -2427,7 +2459,7 @@ function buildDaySummary(entries, dateStr) {
     
     // Build formatted summary
     var today = new Date();
-    var displayDate = dateStr === today.toISOString().split('T')[0] ? 'Today' : new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    var displayDate = dateStr === getLocalDateString(today) ? 'Today' : new Date(dateStr).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
     
     var lines = displayDate + ':\n\n';
     
@@ -2506,7 +2538,7 @@ function logNextDay() {
     nextDay.setDate(nextDay.getDate() + 1);
     
     // Don't go beyond today
-    if (nextDay.toISOString().split('T')[0] <= today.toISOString().split('T')[0]) {
+    if (getLocalDateString(nextDay) <= getLocalDateString(today)) {
         logViewDate = nextDay;
         renderLogEntries();
     }
