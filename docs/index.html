@@ -1962,27 +1962,29 @@ function startLogRecording() {
     logRecognition.maxAlternatives = 1;
     
     var finalText = '';
-    var lastUpdateTime = Date.now();
+    var lastResultIndex = 0;
     
     logRecognition.onresult = function(e) {
-        lastUpdateTime = Date.now();
         var interimText = '';
         
-        // Build complete transcript from all final results
-        finalText = '';
-        for (var i = 0; i < e.results.length; i++) {
+        // Accumulate only NEW final results (starting from lastResultIndex)
+        for (var i = lastResultIndex; i < e.results.length; i++) {
             if (e.results[i].isFinal) {
                 finalText += e.results[i][0].transcript + ' ';
+                lastResultIndex = i + 1;
             } else {
                 interimText = e.results[i][0].transcript;
             }
         }
         
-        // Show live transcript (final + interim)
+        // Show live transcript (accumulated final + current interim)
         var display = (finalText + interimText).trim();
         if (display) {
             document.getElementById('log-transcript').textContent = display;
-            document.getElementById('log-status').textContent = 'Speaking... (' + Math.floor(display.split(' ').length / 150 * 60) + 's worth)';
+            var wordCount = display.split(' ').length;
+            var estMinutes = Math.floor(wordCount / 150);
+            var estSeconds = Math.floor((wordCount % 150) / 2.5);
+            document.getElementById('log-status').textContent = 'Speaking... (~' + estMinutes + 'm ' + estSeconds + 's)';
         }
     };
     
@@ -2002,21 +2004,28 @@ function startLogRecording() {
     };
     
     logRecognition.onend = function() {
-        // Only process if user manually stopped (not auto-ended)
-        if (logRecording && finalText && finalText.trim()) {
-            document.getElementById('log-status').textContent = 'Processing...';
-            addLogEntry(finalText.trim());
-            stopLogRecording();
-        } else if (logRecording) {
-            // Auto-restart if still in recording mode (handles Safari timeouts)
-            console.log('Recognition ended unexpectedly, restarting...');
-            try {
-                logRecognition.start();
-            } catch(e) {
-                console.error('Restart failed:', e);
-                stopLogRecording();
+        console.log('Recognition ended. logRecording:', logRecording, 'finalText length:', finalText.length);
+        
+        // If user stopped recording, process the transcript
+        if (!logRecording) {
+            if (finalText && finalText.trim()) {
+                document.getElementById('log-status').textContent = 'Processing...';
+                addLogEntry(finalText.trim());
             }
-        } else {
+            return;
+        }
+        
+        // If still recording (unexpected stop), try to restart
+        console.log('Unexpected stop, attempting restart...');
+        try {
+            lastResultIndex = 0; // Reset for next session
+            logRecognition.start();
+        } catch(e) {
+            console.error('Restart failed:', e);
+            if (finalText && finalText.trim()) {
+                document.getElementById('log-status').textContent = 'Processing...';
+                addLogEntry(finalText.trim());
+            }
             stopLogRecording();
         }
     };
