@@ -26,10 +26,12 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 .qf { padding:8px 16px; font-size:13px; font-weight:500; border-radius:20px; border:none; background:var(--surface2); color:var(--text2); cursor:pointer; white-space:nowrap; transition:all 0.2s; }
 .qf.active { background:var(--accent); color:#fff; }
 .qf.critical.active { background:var(--critical); }
+.qf.doing.active { background:#f59e0b; }
 
 /* Task List */
 .task-list { padding:0 16px; }
 .task { display:flex; align-items:flex-start; gap:14px; padding:16px; margin-bottom:2px; background:var(--surface); border-radius:var(--radius); cursor:pointer; transition:background 0.15s; }
+.task.in-progress { border-left:3px solid #f59e0b; }
 .task:active { background:var(--surface2); }
 .task-check { width:24px; height:24px; border:2px solid var(--border); border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.2s; }
 .task-check:hover { border-color:var(--accent); }
@@ -211,6 +213,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
             <button class="qf active" data-status="focus">Today</button>
             <button class="qf" data-status="all">All</button>
             <button class="qf critical" data-p="Critical">Urgent</button>
+            <button class="qf doing" data-status="In Progress">Doing</button>
             <button class="qf" data-status="Next Action">Actions</button>
             <button class="qf" data-status="Waiting For">Waiting</button>
         </div>
@@ -710,10 +713,12 @@ function render() {
         var html = '';
         for (var i = 0; i < filtered.length; i++) {
             var item = filtered[i];
-            html += '<div class="task" onclick="showDetail(' + item.id + ')">';
+            var inProgressClass = item.status === 'In Progress' ? ' in-progress' : '';
+            html += '<div class="task' + inProgressClass + '" onclick="showDetail(' + item.id + ')">';
             html += '<div class="task-check" onclick="event.stopPropagation();complete(' + item.id + ')"></div>';
             html += '<div class="task-body"><div class="task-title">' + item.item + '</div>';
             html += '<div class="task-subtitle">';
+            if (item.status === 'In Progress') html += '<span style="color:#f59e0b;font-weight:600">Doing</span>';
             if (item.project) html += '<span>' + item.project + '</span>';
             if (item.dueDate) html += '<span>Due ' + formatDate(item.dueDate) + '</span>';
             html += '</div></div>';
@@ -1028,6 +1033,7 @@ function showDetail(id) {
     html += '</div>';
     html += '<div class="input-group"><label class="input-label">Status</label><select class="input select" id="edit-status">';
     html += '<option value="Next Action"' + (item.status==='Next Action'?' selected':'') + '>Next Action</option>';
+    html += '<option value="In Progress"' + (item.status==='In Progress'?' selected':'') + '>In Progress</option>';
     html += '<option value="Waiting For"' + (item.status==='Waiting For'?' selected':'') + '>Waiting For</option>';
     html += '<option value="Someday/Maybe"' + (item.status==='Someday/Maybe'?' selected':'') + '>Someday/Maybe</option></select></div>';
     html += '<button class="btn btn-primary" style="margin-bottom:12px" onclick="saveTask(' + item.id + ')">Save Changes</button>';
@@ -1264,9 +1270,10 @@ function processWithAI(text) {
         'CRITICAL: Extract MORE tasks, not fewer. When in doubt, CREATE A TASK.\n\n' +
         'OPERATIONS:\n' +
         '1. ADD: Any verb phrase = task. "need to", "should", "want to", "have to", "going to", "will", "must", "gotta", "planning to", or just action verbs\n' +
-        '2. COMPLETE: "finished", "done", "completed", "already did", "checked off"\n' +
+        '2. COMPLETE: "finished", "done", "completed", "already did", "checked off", "wrapped up"\n' +
         '3. DELETE: "remove", "delete", "cancel", "forget about", "nevermind"\n' +
-        '4. PRIORITY: "urgent", "important", "high priority", "critical", "ASAP"\n\n' +
+        '4. PRIORITY: "urgent", "important", "high priority", "critical", "ASAP"\n' +
+        '5. IN_PROGRESS: "working on", "doing", "currently", "in the middle of", "started" - mark as currently being worked on\n\n' +
         'TASK EXTRACTION RULES:\n' +
         '- SPLIT everything: "call X and email Y and review Z" = 3 separate tasks\n' +
         '- Lists are multiple tasks: "buy milk, eggs, bread" = 3 tasks OR 1 task "Buy groceries: milk, eggs, bread"\n' +
@@ -1275,6 +1282,10 @@ function processWithAI(text) {
         '- Follow-ups are tasks: "then after that..." = new task\n' +
         '- Reminders are tasks: "remind me", "don\'t forget" = task\n' +
         '- Questions about action = task: "should I call?" = "Call [person] - decide"\n\n' +
+        'STATUS DETECTION:\n' +
+        '- "done", "finished", "completed", "wrapped up" → type: "complete"\n' +
+        '- "working on", "doing", "currently", "started", "in progress" → type: "in_progress"\n' +
+        '- "need to", "should", "will", "have to", "planning to" → type: "add" (new task)\n\n' +
         'PROJECT MATCHING (use EXACT names from this list):\n' + projectList + '\n\n' +
         'Project assignment rules:\n' +
         '- "World Bank" or "WB" or "Anurag" → "World Bank Group"\n' +
@@ -1290,14 +1301,14 @@ function processWithAI(text) {
         '- Work/client mentions → match to client project\n' +
         '- Personal/home/family → match to personal project\n' +
         '- If unclear, use null (no project)\n\n' +
-        'EXISTING TASKS (for complete/delete matching):\n' + existingTasks + '\n\n' +
+        'EXISTING TASKS (for complete/delete/in_progress matching):\n' + existingTasks + '\n\n' +
         'PRIORITY GUIDE:\n' +
         '- Critical: "urgent", "ASAP", "emergency", "today", "right now"\n' +
         '- High: "important", "priority", "soon", "this week"\n' +
         '- Medium: default for most tasks\n' +
         '- Low: "someday", "when I have time", "eventually", "maybe"\n\n' +
         'OUTPUT FORMAT (JSON only, no markdown):\n' +
-        '{"actions":[{"type":"add","task":"Clean task description","project":"Exact Project Name or null","priority":"Medium"},...],"summary":"X tasks added, Y completed"}\n\n' +
+        '{"actions":[{"type":"add|complete|delete|priority|in_progress","task":"For add: clean task description","match":"For complete/delete/in_progress: text to find in existing tasks","project":"Exact Project Name or null","priority":"Medium"},...],"summary":"X tasks added, Y completed, Z in progress"}\n\n' +
         'REMEMBER: Extract MORE tasks. If someone rambles for 1 minute, there are probably 4-8 tasks embedded. Find them ALL.';
 
     fetch(GITHUB_MODELS_URL, {
@@ -1403,6 +1414,32 @@ function executeActions(actions, transcript, interpretation) {
                 prioItem.priority = action.priority; 
                 updated++; 
                 actionLog.push('<span style="color:var(--high)">↑</span> Priority → ' + action.priority + ': ' + prioItem.item); 
+            }
+        }
+        else if (action.type === 'in_progress' && action.match) {
+            var inProgItem = items.find(function(i) { return i.status !== 'Completed' && i.item.toLowerCase().indexOf(action.match.toLowerCase()) > -1; });
+            if (inProgItem) { 
+                inProgItem.status = 'In Progress'; 
+                updated++; 
+                actionLog.push('<span style="color:var(--high)">[doing]</span> Started: ' + inProgItem.item); 
+            } else {
+                // Task not found - create it as a new task in progress
+                var proj = null;
+                if (action.project) {
+                    proj = projects.find(function(p) { return p.name.toLowerCase().indexOf(action.project.toLowerCase()) > -1; });
+                }
+                items.unshift({
+                    id: Date.now() + Math.random(),
+                    item: action.match,
+                    priority: action.priority || 'Medium',
+                    status: 'In Progress',
+                    category: proj ? proj.category : 'Personal',
+                    project: proj ? proj.name : '',
+                    waiting_for: '',
+                    notes: ''
+                });
+                added++;
+                actionLog.push('<span style="color:var(--high)">[doing]</span> + ' + action.match + (proj ? ' <span style="color:var(--text3)">→ ' + proj.name + '</span>' : ''));
             }
         }
     });
