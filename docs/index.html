@@ -170,7 +170,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 .log-mic-btn:active { transform:scale(0.95); }
 .log-mic-btn.recording { background:var(--critical); box-shadow:0 4px 20px rgba(239,68,68,0.4); animation:pulse 1.5s infinite; }
 .log-status { margin-top:16px; font-size:14px; color:var(--text2); min-height:20px; }
-.log-transcript { margin-top:12px; padding:12px; background:var(--surface2); border-radius:8px; font-size:14px; color:var(--text); text-align:left; display:none; max-height:80px; overflow-y:auto; }
+.log-transcript { margin-top:12px; padding:12px; background:var(--surface2); border-radius:8px; font-size:14px; color:var(--text); text-align:left; display:none; max-height:200px; overflow-y:auto; }
 .log-transcript.active { display:block; }
 .log-actions { display:flex; gap:10px; margin-top:20px; justify-content:center; flex-wrap:wrap; }
 .log-action-btn { padding:12px 24px; font-size:13px; font-weight:600; border-radius:20px; border:none; cursor:pointer; background:var(--surface2); color:var(--text); }
@@ -243,7 +243,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
     <!-- Capture View -->
     <div class="view" id="v-capture">
         <div class="capture-area" id="capture-area">
-            <button class="capture-btn" id="mic-btn">Tap</button>
+            <button class="capture-btn" id="mic-btn">Speak</button>
             <div class="capture-status" id="mic-status">Tap to speak</div>
             <div class="capture-time" id="mic-time">0:00</div>
         </div>
@@ -271,8 +271,8 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
         </div>
         
         <div class="log-capture">
-            <button class="log-mic-btn" id="log-mic-btn" onclick="toggleLogRecording()">Rec</button>
-            <div class="log-status" id="log-status">Tap to capture</div>
+            <button class="log-mic-btn" id="log-mic-btn" onclick="toggleLogRecording()">Speak</button>
+            <div class="log-status" id="log-status">Tap to speak</div>
             <div class="log-transcript" id="log-transcript"></div>
             <div class="log-actions">
                 <button class="log-action-btn" onclick="showLogTextInput()">Type</button>
@@ -1245,20 +1245,21 @@ function stopRecording() {
     
     micArea.classList.remove('recording');
     micBtn.classList.remove('recording'); 
-    micBtn.textContent = 'Start';
+    micBtn.textContent = 'Speak';
     
     // Reset stopping flag after a delay
     setTimeout(function() { isStopping = false; }, 500);
     
     if (!transcript.trim()) { 
         document.getElementById('mic-status').textContent = 'No speech detected. Tap to try again.'; 
+        document.getElementById('mic-time').textContent = '0:00';
         return; 
     }
     
     micArea.classList.add('processing');
     document.getElementById('mic-status').textContent = 'Processing with AI...';
     document.getElementById('result-box').style.display = 'block';
-    document.getElementById('result-content').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)">Analyzing your recording...</div>';
+    document.getElementById('result-content').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><div class="loading"></div><div style="margin-top:12px;">Analyzing your recording...</div></div>';
     
     processWithAI(transcript);
 }
@@ -1954,6 +1955,8 @@ function toggleLogRecording() {
     }
 }
 
+var logRecordingStart = null;
+
 function startLogRecording() {
     var SpeechRecog = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecog) {
@@ -1963,11 +1966,28 @@ function startLogRecording() {
     }
     
     logRecording = true;
+    logRecordingStart = Date.now();
     var btn = document.getElementById('log-mic-btn');
     btn.classList.add('recording');
-    document.getElementById('log-status').textContent = 'Listening...';
+    btn.textContent = 'Stop';
+    document.getElementById('log-status').textContent = 'Listening... 0:00';
     document.getElementById('log-transcript').textContent = '';
     document.getElementById('log-transcript').classList.add('active');
+    
+    // Update timer every second
+    var timerInterval = setInterval(function() {
+        if (!logRecording) {
+            clearInterval(timerInterval);
+            return;
+        }
+        var elapsed = Math.floor((Date.now() - logRecordingStart) / 1000);
+        var mins = Math.floor(elapsed / 60);
+        var secs = elapsed % 60;
+        var timeStr = mins + ':' + (secs < 10 ? '0' : '') + secs;
+        var transcript = document.getElementById('log-transcript').textContent;
+        var wordCount = transcript ? transcript.trim().split(/\s+/).length : 0;
+        document.getElementById('log-status').textContent = 'Recording ' + timeStr + ' (' + wordCount + ' words)';
+    }, 1000);
     
     logRecognition = new SpeechRecog();
     logRecognition.continuous = true;  // Keep listening continuously
@@ -2004,9 +2024,9 @@ function startLogRecording() {
     
     logRecognition.onerror = function(e) {
         console.error('Log speech error:', e.error);
-        // Don't stop on no-speech error in continuous mode
-        if (e.error === 'no-speech') {
-            console.log('Paused, waiting for speech...');
+        // Don't stop on no-speech or aborted error in continuous mode
+        if (e.error === 'no-speech' || e.error === 'aborted') {
+            console.log('Paused or aborted, continuing...');
             return;
         }
         stopLogRecording();
@@ -2018,27 +2038,25 @@ function startLogRecording() {
     };
     
     logRecognition.onend = function() {
-        console.log('Recognition ended. logRecording:', logRecording, 'finalText length:', finalText.length);
+        console.log('Recognition ended. logRecording:', logRecording);
         
-        // If user stopped recording, process the transcript
+        // If user already stopped, don't do anything (stopLogRecording handles it)
         if (!logRecording) {
-            if (finalText && finalText.trim()) {
-                document.getElementById('log-status').textContent = 'Processing...';
-                addLogEntry(finalText.trim());
-            }
             return;
         }
         
-        // If still recording (unexpected stop), try to restart
+        // If still recording (unexpected Safari timeout), try to restart
         console.log('Unexpected stop, attempting restart...');
         try {
-            lastResultIndex = 0; // Reset for next session
+            lastResultIndex = 0; // Reset for next session  
             logRecognition.start();
         } catch(e) {
             console.error('Restart failed:', e);
-            if (finalText && finalText.trim()) {
+            // Fall back to processing what we have
+            var transcriptText = document.getElementById('log-transcript').textContent || '';
+            if (transcriptText.trim()) {
                 document.getElementById('log-status').textContent = 'Processing...';
-                addLogEntry(finalText.trim());
+                addLogEntry(transcriptText.trim());
             }
             stopLogRecording();
         }
@@ -2054,15 +2072,30 @@ function startLogRecording() {
 }
 
 function stopLogRecording() {
+    // Get the final text BEFORE nullifying recognition
+    var textToProcess = '';
+    if (logRecognition) {
+        // Get transcript from the DOM since we're about to lose access
+        textToProcess = document.getElementById('log-transcript').textContent || '';
+    }
+    
     logRecording = false;
     var btn = document.getElementById('log-mic-btn');
     btn.classList.remove('recording');
-    document.getElementById('log-status').textContent = 'Tap to capture';
+    btn.textContent = 'Speak';
     document.getElementById('log-transcript').classList.remove('active');
     
     if (logRecognition) {
-        try { logRecognition.stop(); } catch(e) {}
+        try { logRecognition.abort(); } catch(e) {} // Use abort to prevent onend restart
         logRecognition = null;
+    }
+    
+    // Process the transcript if we have one
+    if (textToProcess && textToProcess.trim()) {
+        document.getElementById('log-status').textContent = 'Processing with AI...';
+        addLogEntry(textToProcess.trim());
+    } else {
+        document.getElementById('log-status').textContent = 'Tap to speak';
     }
 }
 
