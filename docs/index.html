@@ -1956,47 +1956,69 @@ function startLogRecording() {
     document.getElementById('log-transcript').classList.add('active');
     
     logRecognition = new SpeechRecog();
-    logRecognition.continuous = false;
+    logRecognition.continuous = true;  // Keep listening continuously
     logRecognition.interimResults = true;
     logRecognition.lang = 'en-US';
+    logRecognition.maxAlternatives = 1;
     
     var finalText = '';
+    var lastUpdateTime = Date.now();
     
     logRecognition.onresult = function(e) {
+        lastUpdateTime = Date.now();
         var interimText = '';
+        
+        // Build complete transcript from all final results
+        finalText = '';
         for (var i = 0; i < e.results.length; i++) {
             if (e.results[i].isFinal) {
-                finalText += e.results[i][0].transcript;
+                finalText += e.results[i][0].transcript + ' ';
             } else {
-                interimText += e.results[i][0].transcript;
+                interimText = e.results[i][0].transcript;
             }
         }
-        // Show live transcript
-        var display = finalText || interimText;
+        
+        // Show live transcript (final + interim)
+        var display = (finalText + interimText).trim();
         if (display) {
             document.getElementById('log-transcript').textContent = display;
-            document.getElementById('log-status').textContent = 'Speaking...';
+            document.getElementById('log-status').textContent = 'Speaking... (' + Math.floor(display.split(' ').length / 150 * 60) + 's worth)';
         }
     };
     
     logRecognition.onerror = function(e) {
         console.error('Log speech error:', e.error);
+        // Don't stop on no-speech error in continuous mode
+        if (e.error === 'no-speech') {
+            console.log('Paused, waiting for speech...');
+            return;
+        }
         stopLogRecording();
         if (e.error === 'not-allowed') {
             toast('Mic access denied. Check Safari settings.');
-        } else if (e.error === 'no-speech') {
-            toast('No speech detected. Try again.');
         } else {
             toast('Error: ' + e.error);
         }
     };
     
     logRecognition.onend = function() {
-        if (finalText && finalText.trim()) {
+        // Only process if user manually stopped (not auto-ended)
+        if (logRecording && finalText && finalText.trim()) {
             document.getElementById('log-status').textContent = 'Processing...';
             addLogEntry(finalText.trim());
+            stopLogRecording();
+        } else if (logRecording) {
+            // Auto-restart if still in recording mode (handles Safari timeouts)
+            console.log('Recognition ended unexpectedly, restarting...');
+            try {
+                logRecognition.start();
+            } catch(e) {
+                console.error('Restart failed:', e);
+                stopLogRecording();
+            }
+        } else {
+            stopLogRecording();
         }
-        stopLogRecording();
     };
     
     try {
