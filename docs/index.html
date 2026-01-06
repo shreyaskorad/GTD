@@ -155,6 +155,13 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 .log-time { font-size:11px; color:var(--accent); font-weight:600; margin-bottom:6px; font-variant-numeric:tabular-nums; letter-spacing:0.5px; }
 .log-text { font-size:15px; line-height:1.5; }
 .log-category { display:inline-block; font-size:10px; color:var(--text3); background:var(--surface2); padding:3px 8px; border-radius:4px; margin-top:8px; text-transform:uppercase; letter-spacing:0.5px; }
+.status-badge { display:inline-block; font-size:9px; font-weight:600; padding:2px 6px; border-radius:4px; margin-left:8px; text-transform:uppercase; letter-spacing:0.3px; }
+.status-badge.done { background:#10b98120; color:#10b981; }
+.status-badge.doing { background:#f59e0b20; color:#f59e0b; }
+.status-badge.planned { background:#8b5cf620; color:#8b5cf6; }
+.log-entry.status-done { border-left:3px solid #10b981; }
+.log-entry.status-doing { border-left:3px solid #f59e0b; }
+.log-entry.status-planned { border-left:3px solid #8b5cf6; }
 .log-empty { text-align:center; padding:60px 40px; color:var(--text3); }
 .log-capture { margin:16px; padding:28px 20px; background:linear-gradient(135deg, var(--surface) 0%, var(--surface2) 100%); border-radius:20px; text-align:center; border:1px solid var(--border); }
 .log-mic-btn { width:80px; height:80px; border-radius:50%; border:none; background:var(--accent); color:#fff; font-size:32px; cursor:pointer; transition:all 0.2s; box-shadow:0 4px 20px rgba(59,130,246,0.3); }
@@ -2011,7 +2018,7 @@ function processLogEntryWithAI(entryId, rawText) {
     var now = new Date();
     var currentTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
     
-    var prompt = 'You are processing voice dictation for a life log. Current time is ' + currentTime + '.\n\nThe user described activities. Split into SEPARATE entries if multiple activities mentioned.\n\nCRITICAL - Infer appropriate times based on context:\n- "just finished X" = happened recently, maybe 5-30 min ago\n- "now doing X" or "currently X" = happening now (current time)\n- "earlier I did X" = happened 1-3 hours ago\n- "this morning I..." = estimate morning time\n- "about to X" or "heading to X" = current time\n- If sequence like "finished call, sent email, now on break" = space them logically (e.g., call ended 30min ago, email 15min ago, break now)\n\nFor each entry provide:\n1. text: Clean, concise description\n2. category: work, meeting, break, travel, personal, thinking, health, family, other\n3. minutesAgo: How many minutes ago this happened (0 = now, 30 = half hour ago, etc.)\n\nRaw speech: "' + rawText + '"\n\nRespond with ONLY valid JSON array (no markdown):\n[{"text": "activity", "category": "cat", "minutesAgo": 0}]\n\nOrder from OLDEST to NEWEST (highest minutesAgo first).';
+    var prompt = 'You are processing voice dictation for a life log. Current time is ' + currentTime + '.\n\nThe user described activities. Split into SEPARATE entries if multiple activities mentioned.\n\nCRITICAL - Infer appropriate times based on context:\n- "just finished X" = happened recently, maybe 5-30 min ago\n- "now doing X" or "currently X" = happening now (current time)\n- "earlier I did X" = happened 1-3 hours ago\n- "this morning I..." = estimate morning time\n- "about to X" or "heading to X" = current time\n- If sequence like "finished call, sent email, now on break" = space them logically (e.g., call ended 30min ago, email 15min ago, break now)\n\nCRITICAL - Detect completion status:\n- "done", "finished", "completed", "wrapped up", "closed" = status: "done"\n- "started", "working on", "doing", "in progress" = status: "doing"\n- "will do", "about to", "planning to", "need to" = status: "planned"\n- Otherwise = status: "logged" (neutral observation)\n\nFor each entry provide:\n1. text: Clean, concise description (remove filler words like "done with", just describe what was done)\n2. category: work, meeting, break, travel, personal, thinking, health, family, other\n3. minutesAgo: How many minutes ago this happened (0 = now, 30 = half hour ago, etc.)\n4. status: "done", "doing", "planned", or "logged"\n\nRaw speech: "' + rawText + '"\n\nRespond with ONLY valid JSON array (no markdown):\n[{"text": "activity", "category": "cat", "minutesAgo": 0, "status": "logged"}]\n\nOrder from OLDEST to NEWEST (highest minutesAgo first).';
     
     fetch(GITHUB_MODELS_URL, {
         method: 'POST',
@@ -2036,7 +2043,7 @@ function processLogEntryWithAI(entryId, rawText) {
                     // Process first entry - update the placeholder
                     var firstEntry = entries[0];
                     var firstTime = new Date(now.getTime() - ((firstEntry.minutesAgo || 0) * 60 * 1000));
-                    updateLogEntryWithTime(entryId, firstEntry.text || rawText, firstEntry.category || null, firstTime);
+                    updateLogEntryWithTime(entryId, firstEntry.text || rawText, firstEntry.category || null, firstTime, firstEntry.status || 'logged');
                     
                     // Create additional entries for the rest (if any)
                     if (entries.length > 1) {
@@ -2051,6 +2058,7 @@ function processLogEntryWithAI(entryId, rawText) {
                                 date: entryTime.toISOString().split('T')[0],
                                 time: entryTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }),
                                 category: entry.category || null,
+                                status: entry.status || 'logged',
                                 processing: false
                             };
                             // Add to lifeLog 
@@ -2094,11 +2102,12 @@ function updateLogEntry(entryId, text, category) {
     renderLogEntries();
 }
 
-function updateLogEntryWithTime(entryId, text, category, newTime) {
+function updateLogEntryWithTime(entryId, text, category, newTime, status) {
     for (var i = 0; i < lifeLog.length; i++) {
         if (lifeLog[i].id === entryId) {
             lifeLog[i].text = text;
             lifeLog[i].category = category;
+            lifeLog[i].status = status || 'logged';
             lifeLog[i].timestamp = newTime.toISOString();
             lifeLog[i].date = newTime.toISOString().split('T')[0];
             lifeLog[i].time = newTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
@@ -2196,10 +2205,16 @@ function renderLogEntries() {
     for (var i = 0; i < dayEntries.length; i++) {
         var entry = dayEntries[i];
         var processingClass = entry.processing ? ' processing' : '';
-        html += '<div class="log-entry' + processingClass + '">';
+        var statusClass = entry.status ? ' status-' + entry.status : '';
+        var statusLabel = '';
+        if (entry.status === 'done') statusLabel = '<span class="status-badge done">Done</span>';
+        else if (entry.status === 'doing') statusLabel = '<span class="status-badge doing">Doing</span>';
+        else if (entry.status === 'planned') statusLabel = '<span class="status-badge planned">Planned</span>';
+        
+        html += '<div class="log-entry' + processingClass + statusClass + '">';
         html += '<button class="log-delete-btn" onclick="event.stopPropagation();if(confirm(\'Delete?\')){deleteLogEntry(\'' + entry.id + '\')}" title="Delete">×</button>';
         html += '<button class="log-share-btn" onclick="event.stopPropagation();shareLogEntry(\'' + entry.id + '\')" title="Copy">C</button>';
-        html += '<div class="log-time">' + entry.time + (entry.processing ? ' <span class="loading"></span>' : '') + '</div>';
+        html += '<div class="log-time">' + entry.time + (entry.processing ? ' <span class="loading"></span>' : '') + statusLabel + '</div>';
         html += '<div class="log-text">' + entry.text + '</div>';
         if (entry.category) {
             html += '<div class="log-category">' + entry.category + '</div>';
