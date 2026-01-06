@@ -104,7 +104,12 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
 /* Result cards */
 .result-card { margin:16px; padding:20px; background:var(--surface); border-radius:var(--radius); }
 .result-number { font-size:40px; font-weight:700; color:var(--accent); }
-.result-label { font-size:14px; color:var(--text2); margin-top:4px; }
+.result-label { font-size:14px; color:var(--text2); margin-top:4px; text-align:center; }
+.result-count { font-size:48px; font-weight:700; color:var(--accent); text-align:center; }
+.result-actions { margin-top:16px; font-size:14px; line-height:1.8; }
+.result-actions div { padding:6px 0; border-bottom:1px solid var(--border); }
+.result-actions div:last-child { border-bottom:none; }
+.result-transcript { margin-top:16px; padding:12px; background:var(--surface2); border-radius:8px; font-size:13px; color:var(--text2); }
 .result-list { margin-top:16px; }
 .result-item { padding:10px 12px; background:var(--surface2); border-radius:8px; margin-bottom:8px; font-size:14px; }
 
@@ -246,6 +251,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
             <button class="capture-btn" id="mic-btn">Speak</button>
             <div class="capture-status" id="mic-status">Tap to speak</div>
             <div class="capture-time" id="mic-time">0:00</div>
+            <button class="btn btn-secondary hidden" id="capture-cancel" style="margin-top:16px;width:auto;padding:12px 32px;" onclick="cancelRecording()">Cancel</button>
         </div>
         
         <div class="result-card" id="result-box" style="display:none;">
@@ -274,10 +280,13 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
             <button class="log-mic-btn" id="log-mic-btn" onclick="toggleLogRecording()">Speak</button>
             <div class="log-status" id="log-status">Tap to speak</div>
             <div class="log-transcript" id="log-transcript"></div>
-            <div class="log-actions">
+            <div class="log-actions" id="log-actions-default">
                 <button class="log-action-btn" onclick="showLogTextInput()">Type</button>
                 <button class="log-action-btn" onclick="copyDaySummary()">Copy Day</button>
                 <button class="log-action-btn danger" onclick="clearDayLogs()">Clear Day</button>
+            </div>
+            <div class="log-actions hidden" id="log-actions-recording">
+                <button class="log-action-btn danger" onclick="cancelLogRecording()">Cancel</button>
             </div>
         </div>
         
@@ -1221,6 +1230,7 @@ function startRecording() {
     document.getElementById('mic-status').textContent = 'Listening...'; 
     document.getElementById('mic-time').textContent = '0:00';
     document.getElementById('result-box').style.display = 'none';
+    document.getElementById('capture-cancel').classList.remove('hidden');
     
     recognition.start();
     recordingTimer = setInterval(function() { 
@@ -1246,6 +1256,7 @@ function stopRecording() {
     micArea.classList.remove('recording');
     micBtn.classList.remove('recording'); 
     micBtn.textContent = 'Speak';
+    document.getElementById('capture-cancel').classList.add('hidden');
     
     // Reset stopping flag after a delay
     setTimeout(function() { isStopping = false; }, 500);
@@ -1262,6 +1273,29 @@ function stopRecording() {
     document.getElementById('result-content').innerHTML = '<div style="text-align:center;padding:20px;color:var(--text2)"><div class="loading"></div><div style="margin-top:12px;">Analyzing your recording...</div></div>';
     
     processWithAI(transcript);
+}
+
+function cancelRecording() {
+    isStopping = true;
+    isRecording = false; 
+    clearInterval(recordingTimer);
+    
+    try { recognition.abort(); } catch(e) {}
+    
+    var micArea = document.getElementById('capture-area');
+    var micBtn = document.getElementById('mic-btn');
+    
+    micArea.classList.remove('recording');
+    micBtn.classList.remove('recording'); 
+    micBtn.textContent = 'Speak';
+    document.getElementById('capture-cancel').classList.add('hidden');
+    document.getElementById('mic-status').textContent = 'Cancelled';
+    document.getElementById('mic-time').textContent = '0:00';
+    
+    setTimeout(function() { 
+        isStopping = false; 
+        document.getElementById('mic-status').textContent = 'Tap to speak';
+    }, 1500);
 }
 
 function processWithAI(text) {
@@ -1464,7 +1498,8 @@ function executeActions(actions, transcript, interpretation) {
     // Reset mic area
     var micArea = document.getElementById('capture-area');
     micArea.classList.remove('processing');
-    document.getElementById('mic-status').textContent = 'Tap to start recording';
+    document.getElementById('mic-status').textContent = 'Tap to speak';
+    document.getElementById('mic-time').textContent = '0:00';
     
     // Build result display
     var html = '';
@@ -1973,6 +2008,8 @@ function startLogRecording() {
     document.getElementById('log-status').textContent = 'Listening... 0:00';
     document.getElementById('log-transcript').textContent = '';
     document.getElementById('log-transcript').classList.add('active');
+    document.getElementById('log-actions-default').classList.add('hidden');
+    document.getElementById('log-actions-recording').classList.remove('hidden');
     
     // Update timer every second
     var timerInterval = setInterval(function() {
@@ -2084,6 +2121,8 @@ function stopLogRecording() {
     btn.classList.remove('recording');
     btn.textContent = 'Speak';
     document.getElementById('log-transcript').classList.remove('active');
+    document.getElementById('log-actions-default').classList.remove('hidden');
+    document.getElementById('log-actions-recording').classList.add('hidden');
     
     if (logRecognition) {
         try { logRecognition.abort(); } catch(e) {} // Use abort to prevent onend restart
@@ -2097,6 +2136,28 @@ function stopLogRecording() {
     } else {
         document.getElementById('log-status').textContent = 'Tap to speak';
     }
+}
+
+function cancelLogRecording() {
+    // Cancel without saving
+    logRecording = false;
+    var btn = document.getElementById('log-mic-btn');
+    btn.classList.remove('recording');
+    btn.textContent = 'Speak';
+    document.getElementById('log-transcript').textContent = '';
+    document.getElementById('log-transcript').classList.remove('active');
+    document.getElementById('log-status').textContent = 'Cancelled';
+    document.getElementById('log-actions-default').classList.remove('hidden');
+    document.getElementById('log-actions-recording').classList.add('hidden');
+    
+    if (logRecognition) {
+        try { logRecognition.abort(); } catch(e) {}
+        logRecognition = null;
+    }
+    
+    setTimeout(function() {
+        document.getElementById('log-status').textContent = 'Tap to speak';
+    }, 1500);
 }
 
 function addLogEntry(rawText) {
@@ -2269,10 +2330,28 @@ function clearDayLogs() {
 }
 
 function showLogTextInput() {
-    var text = prompt('What are you doing right now?');
-    if (text && text.trim()) {
-        addLogEntry(text.trim());
+    var html = '<div class="sheet-handle"></div>';
+    html += '<div class="sheet-title">Log Activity</div>';
+    html += '<div class="input-group"><textarea class="input" id="log-text-input" rows="4" placeholder="What are you doing? What did you just finish?" style="min-height:100px;resize:none;"></textarea></div>';
+    html += '<button class="btn btn-primary" onclick="submitLogText()">Add Entry</button>';
+    html += '<button class="btn btn-secondary" style="margin-top:8px" onclick="closeLogTextModal()">Cancel</button>';
+    document.getElementById('project-content').innerHTML = html;
+    document.getElementById('modal-project').classList.add('open');
+    setTimeout(function() { document.getElementById('log-text-input').focus(); }, 300);
+}
+
+function submitLogText() {
+    var text = document.getElementById('log-text-input').value.trim();
+    if (text) {
+        addLogEntry(text);
+        closeLogTextModal();
+    } else {
+        toast('Please enter some text');
     }
+}
+
+function closeLogTextModal() {
+    document.getElementById('modal-project').classList.remove('open');
 }
 
 function renderLogEntries() {
@@ -2421,11 +2500,13 @@ function logPrevDay() {
 
 function logNextDay() {
     var today = new Date();
+    today.setHours(23, 59, 59, 999); // End of today
+    
     var nextDay = new Date(logViewDate);
     nextDay.setDate(nextDay.getDate() + 1);
     
     // Don't go beyond today
-    if (nextDay <= today) {
+    if (nextDay.toISOString().split('T')[0] <= today.toISOString().split('T')[0]) {
         logViewDate = nextDay;
         renderLogEntries();
     }
