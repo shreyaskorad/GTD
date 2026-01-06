@@ -1148,14 +1148,19 @@ function switchView(name) {
 // ========== AI VOICE CAPTURE ==========
 var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 var recognition = null, isRecording = false, recordingTime = 0, recordingTimer = null, transcript = '';
+var lastCaptureIndex = 0;
 
 if (SR) {
     recognition = new SR(); 
     recognition.continuous = true; 
     recognition.interimResults = true;
     recognition.onresult = function(e) { 
-        for (var i = e.resultIndex; i < e.results.length; i++) {
-            if (e.results[i].isFinal) transcript += e.results[i][0].transcript + ' '; 
+        // Accumulate only NEW final results
+        for (var i = lastCaptureIndex; i < e.results.length; i++) {
+            if (e.results[i].isFinal) {
+                transcript += e.results[i][0].transcript + ' ';
+                lastCaptureIndex = i + 1;
+            }
         }
         // Show live transcript
         if (transcript.trim()) {
@@ -1163,8 +1168,11 @@ if (SR) {
         }
     };
     recognition.onend = function() { 
+        console.log('Capture recognition ended. isRecording:', isRecording, 'isStopping:', isStopping);
         // Only restart if still recording AND not stopping
         if (isRecording && !isStopping) {
+            console.log('Restarting recognition...');
+            lastCaptureIndex = 0; // Reset for next session
             try { recognition.start(); } catch(e) { console.log('Restart failed:', e); }
         }
     };
@@ -1173,8 +1181,13 @@ if (SR) {
         if (e.error === 'not-allowed') {
             document.getElementById('mic-status').textContent = 'Microphone access denied';
         }
-        // On error, also stop
-        if (e.error === 'aborted' || e.error === 'no-speech') {
+        // Don't stop on no-speech in continuous mode
+        if (e.error === 'no-speech') {
+            console.log('No speech detected, waiting...');
+            return;
+        }
+        // On other errors, stop
+        if (e.error === 'aborted') {
             isRecording = false;
             isStopping = false;
         }
@@ -1198,6 +1211,7 @@ document.getElementById('mic-btn').onclick = function() {
 
 function startRecording() {
     isRecording = true; recordingTime = 0; transcript = '';
+    lastCaptureIndex = 0; // Reset result index for new recording
     var micArea = document.getElementById('capture-area');
     var micBtn = document.getElementById('mic-btn');
     
