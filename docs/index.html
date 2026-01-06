@@ -1146,10 +1146,20 @@ function loadCompletedLog() {
 function deleteItem(id) { if (confirm('Delete?')) { items = items.filter(function(i) { return i.id !== id; }); save(); render(); renderProjects(); updateStats(); closeModal(); toast('Deleted'); } }
 
 function addItem() {
-    var item = { id: Date.now(), item: document.getElementById('f-item').value.trim(), priority: document.getElementById('f-priority').value, status: document.getElementById('f-status').value, category: document.getElementById('f-category').value, project: document.getElementById('f-project').value, dueDate: document.getElementById('f-due').value || null, notes: document.getElementById('f-notes').value };
-    if (!item.item) { toast('Enter task'); return; }
+    var itemText = document.getElementById('f-item').value.trim();
+    if (!itemText) { toast('Enter task'); return; }
+    var item = { 
+        id: Date.now(), 
+        item: itemText, 
+        priority: document.getElementById('f-priority').value, 
+        status: 'Next Action', 
+        category: document.getElementById('f-category').value, 
+        project: document.getElementById('f-project').value, 
+        dueDate: document.getElementById('f-due').value || null, 
+        notes: '' 
+    };
     items.unshift(item); save(); render(); renderProjects(); updateStats(); populateProjects();
-    document.getElementById('f-item').value = ''; document.getElementById('f-notes').value = ''; document.getElementById('f-due').value = '';
+    document.getElementById('f-item').value = ''; document.getElementById('f-due').value = '';
     toast('Added');
     closeAddModal();
 }
@@ -2382,18 +2392,15 @@ function renderLogEntries() {
     var container = document.getElementById('log-entries');
     
     // Use local date string (YYYY-MM-DD) to avoid timezone issues
-    var year = logViewDate.getFullYear();
-    var month = String(logViewDate.getMonth() + 1).padStart(2, '0');
-    var day = String(logViewDate.getDate()).padStart(2, '0');
-    var dateStr = year + '-' + month + '-' + day;
+    var dateStr = getLocalDateString(logViewDate);
     
     // Update date display
     var today = new Date();
     var yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
     
-    var todayStr = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
-    var yesterdayStr = yesterday.getFullYear() + '-' + String(yesterday.getMonth() + 1).padStart(2, '0') + '-' + String(yesterday.getDate()).padStart(2, '0');
+    var todayStr = getLocalDateString(today);
+    var yesterdayStr = getLocalDateString(yesterday);
     
     var displayText = 'Today';
     if (dateStr === yesterdayStr) {
