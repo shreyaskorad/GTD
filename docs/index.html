@@ -343,6 +343,22 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
                 </div>
             </div>
             
+            <div class="settings-label">Sync</div>
+            <div class="settings-group">
+                <div class="settings-item" onclick="syncToCloud()">
+                    <span class="settings-item-label">⬆️ Push to Cloud</span>
+                    <span class="settings-item-value" id="sync-push-status"></span>
+                </div>
+                <div class="settings-item" onclick="syncFromCloud()">
+                    <span class="settings-item-label">⬇️ Pull from Cloud</span>
+                    <span class="settings-item-value" id="sync-pull-status"></span>
+                </div>
+                <div class="settings-item" onclick="showSyncStatus()">
+                    <span class="settings-item-label">Sync Status</span>
+                    <span class="settings-item-value" id="sync-status">Not synced</span>
+                </div>
+            </div>
+            
             <div class="settings-label">Data</div>
             <div class="settings-group">
                 <div class="settings-item" onclick="exportJSON()">
@@ -360,7 +376,7 @@ header { padding:20px 20px 16px; display:flex; justify-content:space-between; al
                 </div>
             </div>
             
-            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.5.1</div>
+            <div style="text-align:center;padding:32px;color:var(--text3);font-size:12px;">GTD v7.6.0</div>
         </div>
     </div>
 </div>
@@ -432,10 +448,15 @@ var SESSION_KEY = 'gtd_session';
 var DEVICE_KEY = 'gtd_device_id';
 var LOG_KEY = 'gtd_completed_log';
 var LIFELOG_KEY = 'gtd_lifelog';
+var SYNC_GIST_KEY = 'gtd_sync_gist_id';
+var SYNC_TIME_KEY = 'gtd_last_sync';
 
 // GitHub Models API endpoint
 var GITHUB_MODELS_URL = 'https://models.inference.ai.azure.com/chat/completions';
 var MODEL = 'gpt-4o-mini'; // Fast and cheap, great for this use case
+
+// GitHub Gist API for sync
+var GIST_API_URL = 'https://api.github.com/gists';
 
 // ========== DATA (must be before any code that runs) ==========
 var items = [];
@@ -687,7 +708,7 @@ function init() {
     }
     // Set default filter to focus (Today view)
     filters.status = 'focus';
-    populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus();
+    populateProjects(); render(); renderProjects(); updateStats(); setupListeners(); updateTokenStatus(); updateSyncStatus();
     // Show FAB on tasks view
     document.getElementById('fab').classList.remove('hidden');
 }
@@ -1812,6 +1833,226 @@ function reloadSampleData() {
 }
 function resetAll() { if (confirm('Reset all?')) { localStorage.removeItem(STORAGE_KEY); location.reload(); } }
 function toast(msg) { var t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2000); }
+
+// ========== CLOUD SYNC (GitHub Gist) ==========
+function getSyncData() {
+    return {
+        items: items,
+        projects: projects,
+        lifeLog: lifeLog,
+        completedLog: loadCompletedLog(),
+        syncTime: new Date().toISOString(),
+        deviceId: getDeviceId()
+    };
+}
+
+function syncToCloud() {
+    var token = getGitHubToken();
+    if (!token) {
+        toast('Set GitHub Token first');
+        return;
+    }
+    
+    toast('Syncing...');
+    var data = getSyncData();
+    var gistId = localStorage.getItem(SYNC_GIST_KEY);
+    
+    var gistPayload = {
+        description: 'GTD App Sync Data - DO NOT DELETE',
+        public: false,
+        files: {
+            'gtd-sync.json': {
+                content: JSON.stringify(data, null, 2)
+            }
+        }
+    };
+    
+    var url = gistId ? GIST_API_URL + '/' + gistId : GIST_API_URL;
+    var method = gistId ? 'PATCH' : 'POST';
+    
+    fetch(url, {
+        method: method,
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json'
+        },
+        body: JSON.stringify(gistPayload)
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            if (response.status === 404 && gistId) {
+                // Gist was deleted, create new one
+                localStorage.removeItem(SYNC_GIST_KEY);
+                return syncToCloud();
+            }
+            throw new Error('Sync failed: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(function(gist) {
+        if (gist && gist.id) {
+            localStorage.setItem(SYNC_GIST_KEY, gist.id);
+            localStorage.setItem(SYNC_TIME_KEY, new Date().toISOString());
+            updateSyncStatus();
+            toast('Pushed to cloud ✓');
+        }
+    })
+    .catch(function(err) {
+        console.error('Sync error:', err);
+        toast('Sync failed: ' + err.message);
+    });
+}
+
+function syncFromCloud() {
+    var token = getGitHubToken();
+    if (!token) {
+        toast('Set GitHub Token first');
+        return;
+    }
+    
+    var gistId = localStorage.getItem(SYNC_GIST_KEY);
+    if (!gistId) {
+        // Try to find existing gist
+        findExistingGist(token);
+        return;
+    }
+    
+    toast('Pulling...');
+    
+    fetch(GIST_API_URL + '/' + gistId, {
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    })
+    .then(function(response) {
+        if (!response.ok) {
+            if (response.status === 404) {
+                localStorage.removeItem(SYNC_GIST_KEY);
+                toast('No cloud data found. Push first.');
+                return null;
+            }
+            throw new Error('Pull failed: ' + response.status);
+        }
+        return response.json();
+    })
+    .then(function(gist) {
+        if (!gist) return;
+        
+        var file = gist.files['gtd-sync.json'];
+        if (!file || !file.content) {
+            toast('No sync data in gist');
+            return;
+        }
+        
+        var data = JSON.parse(file.content);
+        
+        // Show confirmation with sync info
+        var syncTime = data.syncTime ? new Date(data.syncTime).toLocaleString() : 'Unknown';
+        var itemCount = data.items ? data.items.length : 0;
+        var logCount = data.lifeLog ? data.lifeLog.length : 0;
+        
+        if (!confirm('Replace local data with cloud data?\n\nCloud data from: ' + syncTime + '\nTasks: ' + itemCount + '\nLife Log entries: ' + logCount)) {
+            return;
+        }
+        
+        // Apply cloud data
+        if (data.items) items = data.items;
+        if (data.projects) projects = data.projects;
+        if (data.lifeLog) {
+            lifeLog = data.lifeLog;
+            saveLifeLog();
+        }
+        if (data.completedLog) {
+            localStorage.setItem(LOG_KEY, JSON.stringify(data.completedLog));
+        }
+        
+        save();
+        render();
+        renderProjects();
+        updateStats();
+        populateProjects();
+        localStorage.setItem(SYNC_TIME_KEY, new Date().toISOString());
+        updateSyncStatus();
+        toast('Pulled from cloud ✓');
+    })
+    .catch(function(err) {
+        console.error('Pull error:', err);
+        toast('Pull failed: ' + err.message);
+    });
+}
+
+function findExistingGist(token) {
+    toast('Looking for sync data...');
+    
+    fetch(GIST_API_URL + '?per_page=100', {
+        headers: {
+            'Authorization': 'Bearer ' + token,
+            'Accept': 'application/vnd.github.v3+json'
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(gists) {
+        for (var i = 0; i < gists.length; i++) {
+            if (gists[i].files && gists[i].files['gtd-sync.json']) {
+                localStorage.setItem(SYNC_GIST_KEY, gists[i].id);
+                toast('Found cloud data! Tap Pull again.');
+                updateSyncStatus();
+                return;
+            }
+        }
+        toast('No cloud data found. Push first to create.');
+    })
+    .catch(function(err) {
+        toast('Search failed: ' + err.message);
+    });
+}
+
+function showSyncStatus() {
+    var gistId = localStorage.getItem(SYNC_GIST_KEY);
+    var lastSync = localStorage.getItem(SYNC_TIME_KEY);
+    var token = getGitHubToken();
+    
+    var msg = 'Sync Status:\n\n';
+    msg += 'GitHub Token: ' + (token ? 'Set ✓' : 'Not set ✗') + '\n';
+    msg += 'Cloud Gist: ' + (gistId ? 'Linked ✓' : 'Not linked') + '\n';
+    msg += 'Last sync: ' + (lastSync ? new Date(lastSync).toLocaleString() : 'Never') + '\n\n';
+    msg += 'Local data:\n';
+    msg += '- Tasks: ' + items.length + '\n';
+    msg += '- Projects: ' + projects.length + '\n';
+    msg += '- Life Log: ' + lifeLog.length + ' entries\n';
+    
+    alert(msg);
+}
+
+function updateSyncStatus() {
+    var statusEl = document.getElementById('sync-status');
+    if (!statusEl) return;
+    
+    var lastSync = localStorage.getItem(SYNC_TIME_KEY);
+    var gistId = localStorage.getItem(SYNC_GIST_KEY);
+    
+    if (!gistId) {
+        statusEl.textContent = 'Not linked';
+        statusEl.style.color = 'var(--text3)';
+    } else if (lastSync) {
+        var ago = Math.round((Date.now() - new Date(lastSync).getTime()) / (1000 * 60));
+        if (ago < 1) {
+            statusEl.textContent = 'Just now';
+        } else if (ago < 60) {
+            statusEl.textContent = ago + 'm ago';
+        } else if (ago < 1440) {
+            statusEl.textContent = Math.round(ago / 60) + 'h ago';
+        } else {
+            statusEl.textContent = Math.round(ago / 1440) + 'd ago';
+        }
+        statusEl.style.color = 'var(--low)';
+    } else {
+        statusEl.textContent = 'Linked';
+        statusEl.style.color = 'var(--accent)';
+    }
+}
 
 // ========== COMPLETION LOG FUNCTIONS ==========
 function showCompletionLog() {
